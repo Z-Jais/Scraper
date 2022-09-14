@@ -18,7 +18,7 @@ import java.util.*
 import java.util.logging.Level
 
 class AnimationDigitalNetworkPlatform(scraper: Scraper) :
-    IPlatform(
+    IPlatform<Nothing>(
         scraper,
         "Animation Digital Network",
         "https://animationdigitalnetwork.fr/",
