@@ -2,11 +2,12 @@ package fr.jais.scraper
 
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.platforms.AnimationDigitalNetworkPlatform
+import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.platforms.IPlatform
 import fr.jais.scraper.utils.Logger
 
 class Scraper {
-    val platforms = listOf(AnimationDigitalNetworkPlatform(this))
+    val platforms = listOf(AnimationDigitalNetworkPlatform(this), CrunchyrollPlatform(this))
     private val countries = mutableSetOf<ICountry>()
 
     fun getCountries(): List<ICountry> =
@@ -21,6 +22,6 @@ class Scraper {
     }
 }
 
-fun main(args: Array<String>) {
+fun main() {
     Scraper()
 }

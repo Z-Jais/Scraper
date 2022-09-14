@@ -23,7 +23,7 @@ internal class AnimationDigitalNetworkPlatformTest {
 
     private fun testCalendar(): Calendar {
         val calendar = Calendar.getInstance()
-        calendar.set(2022, Calendar.SEPTEMBER, 13)
+        calendar.set(2022, Calendar.SEPTEMBER, 13, 23, 59, 0)
         return calendar
     }
 
@@ -36,10 +36,13 @@ internal class AnimationDigitalNetworkPlatformTest {
 
     @Test
     fun fromISODate() {
-        val isoTimestamp = platform.fromISOTimestamp(testISOTimestamp())
+        val isoTimestamp = platform.converter.fromISOTimestamp(testISOTimestamp())
         expect(2022) { isoTimestamp?.get(Calendar.YEAR) }
         expect(Calendar.SEPTEMBER) { isoTimestamp?.get(Calendar.MONTH) }
         expect(13) { isoTimestamp?.get(Calendar.DAY_OF_MONTH) }
+        expect(14) { isoTimestamp?.get(Calendar.HOUR_OF_DAY) }
+        expect(0) { isoTimestamp?.get(Calendar.MINUTE) }
+        expect(0) { isoTimestamp?.get(Calendar.SECOND) }
     }
 
     @Test
@@ -49,7 +52,7 @@ internal class AnimationDigitalNetworkPlatformTest {
 
     @Test
     fun convertAnime() {
-        val anime = platform.convertAnime(country, testEpisode() ?: return)
+        val anime = platform.converter.convertAnime(country, testEpisode() ?: return)
         expect("Overlord IV") { anime?.name }
         expect("Ainz Ooal Gown, ayant assis sa domination, a pour projet de fonder un royaume où toutes les races pourraient cohabiter en harmonie. Cependant, cette montée en puissance est mal perçue par les autres dirigeants qui surveillent de près l’évolution de Nazarick. Ainz Ooal Gown parviendra-t-il à maintenir son autorité, en dépit des complots fomentés envers sa nation ?") { anime?.description }
         expect("https://image.animationdigitalnetwork.fr/license/overlord/tv4/web/affiche_350x500.jpg") { anime?.image }
@@ -57,7 +60,7 @@ internal class AnimationDigitalNetworkPlatformTest {
 
     @Test
     fun convertEpisode() {
-        val episode = platform.convertEpisode(country, testEpisode() ?: return)
+        val episode = platform.converter.convertEpisode(country, testEpisode() ?: return)
         expect(4) { episode.season }
         expect(11) { episode.number }
         expect(EpisodeType.EPISODE) { episode.episodeType }

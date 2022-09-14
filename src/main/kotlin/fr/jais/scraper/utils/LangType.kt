@@ -6,7 +6,7 @@ enum class LangType(vararg data: String) {
     VOICE("vf", "french dub"),
     ;
 
-    private val data: List<String> = data.toList()
+    val data: List<String> = data.toList()
 
     companion object {
         fun fromString(string: String): LangType {
