@@ -6,10 +6,19 @@ import java.io.StringWriter
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.logging.*
+import java.util.logging.Formatter
 import java.util.logging.Logger
 
 object Logger : Logger("Scraper", null) {
-    class Formatter : java.util.logging.Formatter() {
+    class LogFormatter : Formatter() {
+        private val reset = "\u001B[0m"
+        private val red = "\u001B[31m"
+        private val green = "\u001B[32m"
+        private val yellow = "\u001B[33m"
+        private val blue = "\u001B[34m"
+        private val purple = "\u001B[35m"
+        private val cyan = "\u001B[36m"
+        private val white = "\u001B[37m"
         private val simpleDateFormat = SimpleDateFormat("HH:mm:ss dd/MM/yyyy", Locale.FRANCE)
 
         override fun format(record: LogRecord?): String {
@@ -20,12 +29,22 @@ object Logger : Logger("Scraper", null) {
             record?.thrown?.printStackTrace(pw)
             pw.close()
             val throwable: String = sw.toString()
-            return "[${this.simpleDateFormat.format(Date())} ${record?.level?.localizedName}] ${message}${throwable}${if (throwable.isEmpty()) System.lineSeparator() else ""}"
+            val color = when (record?.level) {
+                Level.SEVERE -> red
+                Level.WARNING -> yellow
+                Level.INFO -> green
+                Level.CONFIG -> blue
+                Level.FINE -> purple
+                Level.FINER -> cyan
+                Level.FINEST -> white
+                else -> reset
+            }
+            return "$color[${this.simpleDateFormat.format(Date())} ${record?.level?.localizedName}] ${message}${throwable}${if (throwable.isEmpty()) System.lineSeparator() else ""}${reset}"
         }
     }
 
     init {
-        val formatter = Formatter()
+        val formatter = LogFormatter()
 
         this.useParentHandlers = false
         val consoleHandler = ConsoleHandler()
