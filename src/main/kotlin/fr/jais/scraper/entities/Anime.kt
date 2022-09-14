@@ -1,3 +1,11 @@
 package fr.jais.scraper.entities
 
-data class Anime(val country: String, val name: String)
+import fr.jais.scraper.countries.ICountry
+
+data class Anime(
+    val country: ICountry,
+    val name: String,
+    val image: String,
+    val description: String?,
+    val genres: List<String>
+)

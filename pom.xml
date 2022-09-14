@@ -16,7 +16,8 @@
         <kotlin.code.style>official</kotlin.code.style>
         <kotlin.compiler.jvmTarget>11</kotlin.compiler.jvmTarget>
         <kotlin.version>1.7.10</kotlin.version>
-        <mainClass>fr.jais.scraper.MainKt</mainClass>
+        <mainClass>fr.jais.scraper.ScraperKt</mainClass>
+        <junit-jupiter.version>5.9.0</junit-jupiter.version>
     </properties>
 
     <repositories>
@@ -80,7 +81,13 @@
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter-engine</artifactId>
-            <version>5.9.0</version>
+            <version>${junit-jupiter.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>${junit-jupiter.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
