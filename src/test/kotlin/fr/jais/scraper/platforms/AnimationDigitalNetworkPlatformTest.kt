@@ -2,14 +2,16 @@ package fr.jais.scraper.platforms
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import fr.jais.scraper.Scraper
 import fr.jais.scraper.countries.FranceCountry
 import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.test.expect
 
 internal class AnimationDigitalNetworkPlatformTest {
+    private val scraper = Scraper()
     private val country = FranceCountry()
-    private val platform = AnimationDigitalNetworkPlatform()
+    private val platform = AnimationDigitalNetworkPlatform(scraper)
 
     private fun testEpisode(): JsonObject? {
         val json =

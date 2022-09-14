@@ -2,6 +2,7 @@ package fr.jais.scraper.platforms
 
 import com.google.gson.Gson
 import com.google.gson.JsonObject
+import fr.jais.scraper.Scraper
 import fr.jais.scraper.countries.FranceCountry
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Anime
@@ -11,8 +12,9 @@ import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
 
-class AnimationDigitalNetworkPlatform :
+class AnimationDigitalNetworkPlatform(scraper: Scraper) :
     IPlatform(
+        scraper,
         "Animation Digital Network",
         "https://animationdigitalnetwork.fr/",
         "",
@@ -63,8 +65,7 @@ class AnimationDigitalNetworkPlatform :
     }
 
     override fun getEpisodes(calendar: Calendar): List<Episode> {
-        // TODO: Get countries from list
-        val country = FranceCountry()
+        val country = scraper.getCountries(this).firstOrNull() ?: return emptyList()
         return getAPIContent(calendar)?.mapNotNull { convertEpisode(country, it) } ?: emptyList()
     }
 }
