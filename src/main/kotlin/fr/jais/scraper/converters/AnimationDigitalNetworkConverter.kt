@@ -27,23 +27,23 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         Logger.config("Convert anime from $showJson")
 
         Logger.info("Get name...")
-        val name = showJson.get("shortTitle")?.asString ?: showJson.get("title")?.asString
+        val name = showJson.get("shortTitle")?.asString() ?: showJson.get("title")?.asString()
         ?: throw NoAnimeNameFoundException("No name found")
         Logger.config("Name: $name")
 
         Logger.info("Get image...")
-        val image = showJson.get("image2x")?.asString?.toHTTPS() ?: throw NoAnimeImageFoundException("No image found")
+        val image = showJson.get("image2x")?.asString()?.toHTTPS() ?: throw NoAnimeImageFoundException("No image found")
         Logger.config("Image: $image")
 
         Logger.info("Get description...")
-        val description = showJson.get("summary")?.asString ?: run {
+        val description = showJson.get("summary")?.asString() ?: run {
             Logger.warning("No description found")
             null
         }
         Logger.config("Description: $description")
 
         Logger.info("Get genres...")
-        val genres = showJson.getAsJsonArray("genres")?.mapNotNull { it.asString } ?: emptyList()
+        val genres = showJson.getAsJsonArray("genres")?.mapNotNull { it.asString() } ?: emptyList()
         Logger.config("Genres: ${genres.joinToString(", ")}")
 
         if (!genres.any { it == "Animation japonaise" }) {
@@ -62,26 +62,26 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         Logger.config("Anime: $anime")
 
         Logger.info("Get release date...")
-        val releaseDate = fromISOTimestamp(jsonObject.get("releaseDate")?.asString)
+        val releaseDate = fromISOTimestamp(jsonObject.get("releaseDate")?.asString())
             ?: throw NoEpisodeReleaseDateFoundException("No release date found")
         Logger.config("Release date: ${releaseDate.toISO8601()}")
 
         Logger.info("Get season...")
-        val season = jsonObject.get("season")?.asString?.toIntOrNull() ?: run {
+        val season = jsonObject.get("season")?.asString()?.toIntOrNull() ?: run {
             Logger.warning("No season found, using 1")
             1
         }
         Logger.config("Season: $season")
 
         Logger.info("Get number...")
-        val number = jsonObject.get("shortNumber")?.asString?.toIntOrNull() ?: run {
+        val number = jsonObject.get("shortNumber")?.asString()?.toIntOrNull() ?: run {
             Logger.warning("No number found, using -1...")
             -1
         }
         Logger.config("Number: $number")
 
         Logger.info("Get episode type...")
-        val episodeType = when (jsonObject.get("shortNumber")?.asString) {
+        val episodeType = when (jsonObject.get("shortNumber")?.asString()) {
             "OAV" -> EpisodeType.SPECIAL
             "Film" -> EpisodeType.FILM
             else -> EpisodeType.EPISODE
@@ -89,33 +89,33 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         Logger.config("Episode type: $episodeType")
 
         Logger.info("Get lang type...")
-        val langType = LangType.fromString(jsonObject.get("languages")?.asJsonArray?.lastOrNull()?.asString ?: "")
+        val langType = LangType.fromString(jsonObject.get("languages")?.asJsonArray()?.lastOrNull()?.asString() ?: "")
         Logger.config("Lang type: $langType")
 
         if (langType == LangType.UNKNOWN) throw NoEpisodeLangTypeFoundException("No lang type found")
 
         Logger.info("Get id...")
-        val id = jsonObject.get("id")?.asLong ?: throw NoEpisodeIdFoundException("No id found")
+        val id = jsonObject.get("id")?.asLong() ?: throw NoEpisodeIdFoundException("No id found")
         Logger.config("Id: $id")
 
         Logger.info("Get title...")
-        val title = jsonObject.get("name")?.asString ?: run {
+        val title = jsonObject.get("name")?.asString() ?: run {
             Logger.warning("No title found")
             null
         }
         Logger.config("Title: $title")
 
         Logger.info("Get url...")
-        val url = jsonObject.get("url")?.asString?.toHTTPS() ?: throw NoEpisodeUrlFoundException("No url found")
+        val url = jsonObject.get("url")?.asString()?.toHTTPS() ?: throw NoEpisodeUrlFoundException("No url found")
         Logger.config("Url: $url")
 
         Logger.info("Get image...")
         val image =
-            jsonObject.get("image2x")?.asString?.toHTTPS() ?: throw NoEpisodeImageFoundException("No image found")
+            jsonObject.get("image2x")?.asString()?.toHTTPS() ?: throw NoEpisodeImageFoundException("No image found")
         Logger.config("Image: $image")
 
         Logger.info("Get duration...")
-        val duration = jsonObject.get("duration")?.asLong ?: run {
+        val duration = jsonObject.get("duration")?.asLong() ?: run {
             Logger.warning("No duration found, using -1...")
             -1
         }

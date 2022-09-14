@@ -23,10 +23,10 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         Logger.config("Convert anime from $jsonObject")
 
         Logger.info("Get name...")
-        val name = jsonObject.get("seriesTitle")?.asString ?: throw NoAnimeNameFoundException("No name found")
+        val name = jsonObject.get("seriesTitle")?.asString() ?: throw NoAnimeNameFoundException("No name found")
         Logger.config("Name: $name")
 
-        val image: String?
+        var image: String?
         var description: String?
 
         if (cache.containsKey(name)) {
@@ -40,32 +40,45 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
             description = animeCached?.description
             Logger.config("Description: $description")
         } else {
-            val episodeUrl = jsonObject.get("link")?.asString
+            val episodeUrl = jsonObject.get("link")?.asString()
             val animeId =
                 episodeUrl?.split("/")?.get(4) ?: throw NoAnimeFoundException("No anime id found in $episodeUrl")
-            val result = Browser(Browser.BrowserType.FIREFOX, "https://www.crunchyroll.com/fr/$animeId").launch()
+            val browser = Browser(Browser.BrowserType.FIREFOX, "https://www.crunchyroll.com/fr/$animeId")
+            val result = browser.launch()
 
             image = result.selectXpath("//*[@id=\"sidebar_elements\"]/li[1]/img").attr("src").toHTTPS()
-            description = result.getElementsByClass("more").first()?.text()
-            if (description.isNullOrBlank()) description = result.getElementsByClass("trunc-desc").text()
+
+            val divContent =
+                result.selectXpath("/html/body/div[@id='template_scroller']/div/div[@id='template_body']/div[3]/div")
+                    .text()
+
+            // Adult content
+            if (divContent.startsWith("This content may be inappropriate for some people.")) {
+                Logger.warning("Adult content detected, skipping...")
+                image = ""
+                description = null
+            } else {
+                description = result.getElementsByClass("more").first()?.text()
+                if (description.isNullOrBlank()) description = result.getElementsByClass("trunc-desc").text()
+            }
 
             cache[name] = Cache(animeId, image, description)
         }
 
-        if (image.isNullOrBlank()) throw NoAnimeImageFoundException("No image found")
+        if (image == null) throw NoAnimeImageFoundException("No image found")
 
         Logger.info("Get genres...")
-        val genres = jsonObject.get("keywords")?.asString?.split(", ") ?: emptyList()
+        val genres = jsonObject.get("keywords")?.asString()?.split(", ") ?: emptyList()
         Logger.config("Genres: ${genres.joinToString(", ")}")
 
         return Anime(checkedCountry, name, image, description, genres)
     }
 
     private fun isDub(jsonObject: JsonObject) = LangType.VOICE.data.any {
-        jsonObject.get("title")!!.asString.contains(
+        jsonObject.get("title")!!.asString()?.contains(
             "($it)",
             true
-        )
+        ) ?: false
     }
 
     fun convertEpisode(checkedCountry: ICountry, jsonObject: JsonObject): Episode {
@@ -76,19 +89,19 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         Logger.config("Anime: $anime")
 
         Logger.info("Get release date...")
-        val releaseDate = platform.fromTimestamp(jsonObject.get("pubDate")?.asString)
+        val releaseDate = platform.fromTimestamp(jsonObject.get("pubDate")?.asString())
             ?: throw NoEpisodeReleaseDateFoundException("No release date found")
         Logger.config("Release date: ${releaseDate.toISO8601()}")
 
         Logger.info("Get season...")
-        val season = jsonObject.get("season")?.asString?.toIntOrNull() ?: run {
+        val season = jsonObject.get("season")?.asString()?.toIntOrNull() ?: run {
             Logger.warning("No season found, using 1")
             1
         }
         Logger.config("Season: $season")
 
         Logger.info("Get number...")
-        val number = jsonObject.get("episodeNumber")?.asString?.toIntOrNull() ?: run {
+        val number = jsonObject.get("episodeNumber")?.asString()?.toIntOrNull() ?: run {
             Logger.warning("No number found, using -1...")
             -1
         }
@@ -103,30 +116,30 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         Logger.config("Lang type: $langType")
 
         Logger.info("Get id...")
-        val id = jsonObject.get("mediaId")?.asLong ?: throw NoEpisodeIdFoundException("No id found")
+        val id = jsonObject.get("mediaId")?.asLong() ?: throw NoEpisodeIdFoundException("No id found")
         Logger.config("Id: $id")
 
         Logger.info("Get title...")
-        val title = jsonObject.get("episodeTitle")?.asString ?: run {
+        val title = jsonObject.get("episodeTitle")?.asString() ?: run {
             Logger.warning("No title found")
             null
         }
         Logger.config("Title: $title")
 
         Logger.info("Get url...")
-        val url = jsonObject.get("link")?.asString?.toHTTPS() ?: throw NoEpisodeUrlFoundException("No url found")
+        val url = jsonObject.get("link")?.asString()?.toHTTPS() ?: throw NoEpisodeUrlFoundException("No url found")
         Logger.config("Url: $url")
 
         Logger.info("Get image...")
-        val thumbnails = jsonObject.getAsJsonArray("thumbnail")?.mapNotNull { it.asJsonObject }
+        val thumbnails = jsonObject.getAsJsonArray("thumbnail")?.mapNotNull { it.asJsonObject() }
             ?: throw NoEpisodeImageFoundException("No thumbnail available")
         val largeThumbnail = thumbnails.maxByOrNull { it.get("width").asLong }
         val image =
-            largeThumbnail?.get("url")?.asString?.toHTTPS() ?: throw NoEpisodeImageFoundException("No image found")
+            largeThumbnail?.get("url")?.asString()?.toHTTPS() ?: throw NoEpisodeImageFoundException("No image found")
         Logger.config("Image: $image")
 
         Logger.info("Get duration...")
-        val duration = jsonObject.get("duration")?.asLong ?: run {
+        val duration = jsonObject.get("duration")?.asLong() ?: run {
             Logger.warning("No duration found, using -1...")
             -1
         }

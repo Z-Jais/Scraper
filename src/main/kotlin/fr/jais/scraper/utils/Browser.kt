@@ -1,5 +1,6 @@
 package fr.jais.scraper.utils
 
+import com.microsoft.playwright.Page
 import com.microsoft.playwright.Playwright
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
@@ -9,6 +10,8 @@ class Browser(val type: BrowserType = BrowserType.CHROME, val url: String) {
         CHROME,
         FIREFOX,
     }
+
+    var screenshot: ByteArray? = null
 
     fun launch(): Document {
         Logger.info("Creating playwright...")
@@ -31,13 +34,7 @@ class Browser(val type: BrowserType = BrowserType.CHROME, val url: String) {
         Logger.info("Waiting for load...")
         page.waitForLoadState()
         val content = page.content()
-
-//        page.screenshot(
-//            Page.ScreenshotOptions()
-//                .setPath(File("screenshot.png").toPath())
-//                .setFullPage(true)
-//        )
-
+        screenshot = page.screenshot(Page.ScreenshotOptions().setFullPage(true))
         Logger.info("Closing browser...")
         page.close()
         context.close()
