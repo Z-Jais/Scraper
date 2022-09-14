@@ -19,4 +19,8 @@ abstract class IPlatform<T>(
     open fun getEpisodes(calendar: Calendar): List<Episode> = emptyList()
     open fun getNews(calendar: Calendar) {}
     open fun getMangas(calendar: Calendar) {}
+
+    fun resetCache() {
+        cache.clear()
+    }
 }
