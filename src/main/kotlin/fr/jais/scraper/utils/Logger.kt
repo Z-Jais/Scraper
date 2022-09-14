@@ -39,7 +39,7 @@ object Logger : Logger("Scraper", null) {
                 Level.FINEST -> white
                 else -> reset
             }
-            return "$color[${this.simpleDateFormat.format(Date())} ${record?.level?.localizedName}] ${message}${throwable}${if (throwable.isEmpty()) System.lineSeparator() else ""}${reset}"
+            return "$color[${this.simpleDateFormat.format(Date())} ${record?.level?.localizedName}] ${message}${throwable}${if (throwable.isEmpty()) System.lineSeparator() else ""}$reset"
         }
     }
 
