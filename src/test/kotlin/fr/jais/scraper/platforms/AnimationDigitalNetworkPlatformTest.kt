@@ -4,6 +4,8 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import fr.jais.scraper.Scraper
 import fr.jais.scraper.countries.FranceCountry
+import fr.jais.scraper.utils.EpisodeType
+import fr.jais.scraper.utils.LangType
 import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.test.expect
@@ -42,7 +44,7 @@ internal class AnimationDigitalNetworkPlatformTest {
 
     @Test
     fun getAPIContent() {
-        expect(14) { platform.getAPIContent(testCalendar())?.size }
+        expect(14) { platform.getAPIContent(country, testCalendar())?.size }
     }
 
     @Test
@@ -56,12 +58,14 @@ internal class AnimationDigitalNetworkPlatformTest {
     @Test
     fun convertEpisode() {
         val episode = platform.convertEpisode(country, testEpisode() ?: return)
-        expect(4) { episode?.season }
-        expect(11) { episode?.number }
-        expect("Des pièges bien agencés") { episode?.title }
-        expect("https://animationdigitalnetwork.fr/video/overlord-saison-4/19803-episode-11-des-pieges-bien-agences") { episode?.url }
-        expect("https://image.animationdigitalnetwork.fr/license/overlord/tv4/web/eps11_640x360.jpg") { episode?.image }
-        expect(1420) { episode?.duration }
+        expect(4) { episode.season }
+        expect(11) { episode.number }
+        expect(EpisodeType.EPISODE) { episode.episodeType }
+        expect(LangType.SUBTITLES) { episode.langType }
+        expect("Des pièges bien agencés") { episode.title }
+        expect("https://animationdigitalnetwork.fr/video/overlord-saison-4/19803-episode-11-des-pieges-bien-agences") { episode.url }
+        expect("https://image.animationdigitalnetwork.fr/license/overlord/tv4/web/eps11_640x360.jpg") { episode.image }
+        expect(1420) { episode.duration }
     }
 
     @Test

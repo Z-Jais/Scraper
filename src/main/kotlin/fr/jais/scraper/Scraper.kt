@@ -3,6 +3,7 @@ package fr.jais.scraper
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.platforms.AnimationDigitalNetworkPlatform
 import fr.jais.scraper.platforms.IPlatform
+import fr.jais.scraper.utils.Logger
 
 class Scraper {
     val platforms = listOf(AnimationDigitalNetworkPlatform(this))
@@ -15,6 +16,7 @@ class Scraper {
         countries.filter { platform.countries.contains(it.javaClass) }
 
     init {
+        Logger.info("Adding countries...")
         countries.addAll(getCountries())
     }
 }
