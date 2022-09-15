@@ -6,12 +6,20 @@ import fr.jais.scraper.platforms.AnimationDigitalNetworkPlatform
 import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.platforms.IPlatform
 import fr.jais.scraper.utils.Logger
+import fr.jais.scraper.utils.ThreadManager
 import fr.jais.scraper.utils.toISO8601
+import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
+import kotlin.system.exitProcess
 
 class Scraper {
+    enum class CheckingType {
+        SYNCHRONOUS,
+        ASYNCHRONOUS,
+    }
+
     val platforms = listOf(AnimationDigitalNetworkPlatform(this), CrunchyrollPlatform(this))
     private val countries = mutableSetOf<ICountry>()
 
@@ -26,21 +34,89 @@ class Scraper {
         countries.addAll(getCountries())
     }
 
-    fun getAllEpisodes(calendar: Calendar): List<Episode> {
+    fun getAllEpisodes(calendar: Calendar, checkingType: CheckingType = CheckingType.SYNCHRONOUS, platformType: IPlatform.PlatformType? = null): List<Episode> {
         calendar.timeZone = TimeZone.getTimeZone("UTC")
 
         val list = mutableListOf<Episode>()
-        val newFixedThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
-        val callables = platforms.map { platform -> Callable { list.addAll(platform.getEpisodes(calendar)) } }
+
         Logger.info("Get all episodes...")
         Logger.config("Calendar: ${calendar.toISO8601()}")
-        newFixedThreadPool.invokeAll(callables)
-        newFixedThreadPool.shutdown()
-        return list
+
+        val filter = platforms.filter {
+            if (platformType == null) true
+            else it.type == platformType
+        }
+
+        when (checkingType) {
+            CheckingType.ASYNCHRONOUS -> {
+                val newFixedThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
+                val callables = filter.map { platform -> Callable { list.addAll(platform.getEpisodes(calendar)) } }
+                newFixedThreadPool.invokeAll(callables)
+                newFixedThreadPool.shutdown()
+            }
+
+            CheckingType.SYNCHRONOUS -> {
+                filter.forEach { list.addAll(it.getEpisodes(calendar)) }
+            }
+        }
+
+        return list.filter { calendar.after(it.releaseDate) }.sortedBy { it.releaseDate }
+    }
+
+    fun startThreadCheck() {
+        ThreadManager.start {
+            while (true) {
+                getAllEpisodes(Calendar.getInstance()).forEach { println(it) }
+                // Wait 5 minutes
+                Thread.sleep(5 * 60 * 1000)
+            }
+        }
+    }
+
+    fun startThreadConsole() {
+        ThreadManager.start {
+            while (true) {
+                val line = readLine()
+                val split = line?.split(" ")
+                val command = split?.getOrNull(0) ?: continue
+                val args = split.subList(1, split.size)
+
+                when (command.lowercase()) {
+                    "exit" -> {
+                        ThreadManager.stopAll()
+                        exitProcess(0)
+                    }
+                    "check" -> {
+                        if (args.isEmpty()) {
+                            getAllEpisodes(Calendar.getInstance()).forEach { println(it) }
+                            return@start
+                        }
+
+                        val sdf = SimpleDateFormat("dd/MM/yyyy")
+
+                        args.forEach { date ->
+                            val calendar = Calendar.getInstance()
+                            calendar.timeZone = TimeZone.getTimeZone("UTC")
+                            calendar.time = sdf.parse(date)
+                            calendar.set(Calendar.HOUR_OF_DAY, 23)
+                            calendar.set(Calendar.MINUTE, 50)
+                            calendar.set(Calendar.SECOND, 0)
+                            calendar.set(Calendar.MILLISECOND, 0)
+
+                            Logger.info("Check for ${calendar.toISO8601()}")
+                            Logger.info("------------------------------")
+                            getAllEpisodes(calendar, platformType = IPlatform.PlatformType.API).forEach { println(it) }
+                            Logger.info("------------------------------")
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 
 fun main() {
     val scraper = Scraper()
-    scraper.getAllEpisodes(Calendar.getInstance()).forEach { println(it) }
+    scraper.startThreadCheck()
+    scraper.startThreadConsole()
 }

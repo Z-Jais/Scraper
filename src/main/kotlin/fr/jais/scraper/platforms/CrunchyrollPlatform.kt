@@ -11,6 +11,7 @@ import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.exceptions.CountryNotSupportedException
 import fr.jais.scraper.utils.Logger
+import fr.jais.scraper.utils.toISO8601
 import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*
@@ -18,6 +19,7 @@ import java.util.logging.Level
 
 class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
     scraper,
+    PlatformType.FLOWS,
     "Crunchyroll",
     "https://www.crunchyroll.com/",
     "",
@@ -52,10 +54,15 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
 
         return xmlToJson(content)
             ?.filter {
+                Logger.config("JSON: $it")
+                val releaseDate = fromTimestamp(it.get("pubDate")?.asString)
                 val countryRestrictions = it.getAsJsonObject("restriction")?.get("")?.asString?.split(" ")
                 val subtitles = it.get("subtitleLanguages")?.asString?.split(",")
+                Logger.config("Country restrictions: $countryRestrictions")
+                Logger.config("Subtitles: $subtitles")
+                Logger.config("Date: ${releaseDate?.toISO8601()}")
 
-                toISODate(fromTimestamp(it.get("pubDate")?.asString)) == toISODate(calendar)
+                toISODate(releaseDate) == toISODate(calendar)
                         && countryRestrictions?.any { r -> r == restriction } ?: false
                         && subtitles?.any { s -> s == "fr - fr" } ?: false
             }
@@ -70,8 +77,10 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
         return try {
             val apiUrl = "https://www.crunchyroll.com/rss/anime?lang=$lang"
             val content = URL(apiUrl).readText()
+            Logger.config("Content: $content")
             xmlToJsonWithFilter(checkedCountry, calendar, content)
         } catch (e: Exception) {
+            Logger.log(Level.SEVERE, "Error while getting API content", e)
             null
         }
     }
@@ -79,6 +88,7 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
     override fun getEpisodes(calendar: Calendar): List<Episode> {
         val countries = scraper.getCountries(this)
         return countries.flatMap { country ->
+            Logger.info("Getting episodes for $name in ${country.name}...")
             getAPIContent(country, calendar)?.mapNotNull {
                 try {
                     converter.convertEpisode(country, it)

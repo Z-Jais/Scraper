@@ -17,6 +17,7 @@ import java.util.logging.Level
 class AnimationDigitalNetworkPlatform(scraper: Scraper) :
     IPlatform(
         scraper,
+        PlatformType.API,
         "Animation Digital Network",
         "https://animationdigitalnetwork.fr/",
         "",
@@ -34,6 +35,7 @@ class AnimationDigitalNetworkPlatform(scraper: Scraper) :
             val content = URL(apiUrl).readText()
             Gson().fromJson(content, JsonObject::class.java)?.getAsJsonArray("videos")?.mapNotNull { it.asJsonObject }
         } catch (e: Exception) {
+            Logger.log(Level.SEVERE, "Error while getting API content", e)
             null
         }
     }
@@ -41,6 +43,7 @@ class AnimationDigitalNetworkPlatform(scraper: Scraper) :
     override fun getEpisodes(calendar: Calendar): List<Episode> {
         val countries = scraper.getCountries(this)
         return countries.flatMap { country ->
+            Logger.info("Getting episodes for $name in ${country.name}...")
             getAPIContent(country, calendar)?.mapNotNull {
                 try {
                     converter.convertEpisode(country, it)
