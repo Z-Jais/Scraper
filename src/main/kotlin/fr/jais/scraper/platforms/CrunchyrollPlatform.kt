@@ -11,7 +11,6 @@ import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.exceptions.CountryNotSupportedException
 import fr.jais.scraper.utils.Logger
-import fr.jais.scraper.utils.toISO8601
 import java.net.URL
 import java.text.SimpleDateFormat
 import java.util.*

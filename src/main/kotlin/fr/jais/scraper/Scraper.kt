@@ -5,6 +5,7 @@ import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.platforms.AnimationDigitalNetworkPlatform
 import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.platforms.IPlatform
+import fr.jais.scraper.platforms.NetflixPlatform
 import fr.jais.scraper.utils.Logger
 import fr.jais.scraper.utils.ThreadManager
 import fr.jais.scraper.utils.toISO8601
@@ -20,7 +21,7 @@ class Scraper {
         ASYNCHRONOUS,
     }
 
-    val platforms = listOf(AnimationDigitalNetworkPlatform(this), CrunchyrollPlatform(this))
+    val platforms = listOf(AnimationDigitalNetworkPlatform(this), CrunchyrollPlatform(this), NetflixPlatform(this))
     private val countries = mutableSetOf<ICountry>()
 
     fun getCountries(): List<ICountry> =
@@ -34,7 +35,11 @@ class Scraper {
         countries.addAll(getCountries())
     }
 
-    fun getAllEpisodes(calendar: Calendar, checkingType: CheckingType = CheckingType.SYNCHRONOUS, platformType: IPlatform.PlatformType? = null): List<Episode> {
+    fun getAllEpisodes(
+        calendar: Calendar,
+        checkingType: CheckingType = CheckingType.SYNCHRONOUS,
+        platformType: IPlatform.PlatformType? = null
+    ): List<Episode> {
         calendar.timeZone = TimeZone.getTimeZone("UTC")
 
         val list = mutableListOf<Episode>()
@@ -86,6 +91,7 @@ class Scraper {
                         ThreadManager.stopAll()
                         exitProcess(0)
                     }
+
                     "check" -> {
                         if (args.isEmpty()) {
                             getAllEpisodes(Calendar.getInstance()).forEach { println(it) }
