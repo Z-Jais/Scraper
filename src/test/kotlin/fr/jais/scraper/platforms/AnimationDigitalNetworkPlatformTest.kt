@@ -38,10 +38,11 @@ internal class AnimationDigitalNetworkPlatformTest {
     @Test
     fun fromISODate() {
         val isoTimestamp = platform.converter.fromISOTimestamp(testISOTimestamp())
+        isoTimestamp?.timeZone = TimeZone.getTimeZone("UTC")
         expect(2022) { isoTimestamp?.get(Calendar.YEAR) }
         expect(Calendar.SEPTEMBER) { isoTimestamp?.get(Calendar.MONTH) }
         expect(13) { isoTimestamp?.get(Calendar.DAY_OF_MONTH) }
-        expect(16) { isoTimestamp?.get(Calendar.HOUR_OF_DAY) }
+        expect(14) { isoTimestamp?.get(Calendar.HOUR_OF_DAY) }
         expect(0) { isoTimestamp?.get(Calendar.MINUTE) }
         expect(0) { isoTimestamp?.get(Calendar.SECOND) }
     }
