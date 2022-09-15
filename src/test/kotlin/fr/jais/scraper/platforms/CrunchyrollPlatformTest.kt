@@ -41,6 +41,7 @@ internal class CrunchyrollPlatformTest {
 
     private fun testCalendar(): Calendar {
         val calendar = Calendar.getInstance()
+        calendar.timeZone = TimeZone.getTimeZone("UTC")
         calendar.set(2022, Calendar.SEPTEMBER, 13, 23, 59, 0)
         return calendar
     }
@@ -73,11 +74,6 @@ internal class CrunchyrollPlatformTest {
     fun xmlToJsonWithFilter() {
         val json = platform.xmlToJsonWithFilter(country, testCalendar(), testXml())
         expect(1) { json?.size }
-    }
-
-    @Test
-    fun getAPIContent() {
-        expect(1) { platform.getAPIContent(country, testCalendar())?.size }
     }
 
     @Test
