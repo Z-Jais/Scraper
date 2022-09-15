@@ -54,13 +54,9 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
 
         return xmlToJson(content)
             ?.filter {
-                Logger.config("JSON: $it")
                 val releaseDate = fromTimestamp(it.get("pubDate")?.asString)
                 val countryRestrictions = it.getAsJsonObject("restriction")?.get("")?.asString?.split(" ")
                 val subtitles = it.get("subtitleLanguages")?.asString?.split(",")
-                Logger.config("Country restrictions: $countryRestrictions")
-                Logger.config("Subtitles: $subtitles")
-                Logger.config("Date: ${releaseDate?.toISO8601()}")
 
                 toISODate(releaseDate) == toISODate(calendar)
                         && countryRestrictions?.any { r -> r == restriction } ?: false
@@ -77,7 +73,6 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
         return try {
             val apiUrl = "https://www.crunchyroll.com/rss/anime?lang=$lang"
             val content = URL(apiUrl).readText()
-            Logger.config("Content: $content")
             xmlToJsonWithFilter(checkedCountry, calendar, content)
         } catch (e: Exception) {
             Logger.log(Level.SEVERE, "Error while getting API content", e)
