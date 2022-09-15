@@ -16,7 +16,9 @@ import java.util.*
 class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNetworkPlatform) {
     fun fromISOTimestamp(iso8601string: String?): Calendar? {
         if (iso8601string.isNullOrBlank()) return null
-        val date = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(iso8601string)
+        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+        simpleDateFormat.timeZone = TimeZone.getTimeZone("UTC")
+        val date = simpleDateFormat.parse(iso8601string)
         val calendar = Calendar.getInstance()
         calendar.time = date
         return calendar

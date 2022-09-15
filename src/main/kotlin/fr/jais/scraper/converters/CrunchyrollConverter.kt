@@ -15,6 +15,7 @@ import fr.jais.scraper.exceptions.episodes.NoEpisodeReleaseDateFoundException
 import fr.jais.scraper.exceptions.episodes.NoEpisodeUrlFoundException
 import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.utils.*
+import java.util.*
 
 class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
     data class Cache(val id: String, val image: String, val description: String?)
@@ -98,6 +99,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         Logger.info("Get release date...")
         val releaseDate = platform.fromTimestamp(jsonObject.get("pubDate")?.asString())
             ?: throw NoEpisodeReleaseDateFoundException("No release date found")
+        releaseDate.timeZone = TimeZone.getTimeZone("UTC")
         Logger.config("Release date: ${releaseDate.toISO8601()}")
 
         Logger.info("Get season...")

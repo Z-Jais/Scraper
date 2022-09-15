@@ -9,7 +9,6 @@ import fr.jais.scraper.utils.EpisodeType
 import fr.jais.scraper.utils.LangType
 import fr.jais.scraper.utils.Resource
 import org.junit.jupiter.api.Test
-import java.io.File
 import java.util.*
 import kotlin.test.expect
 
@@ -42,7 +41,7 @@ internal class AnimationDigitalNetworkPlatformTest {
         expect(2022) { isoTimestamp?.get(Calendar.YEAR) }
         expect(Calendar.SEPTEMBER) { isoTimestamp?.get(Calendar.MONTH) }
         expect(13) { isoTimestamp?.get(Calendar.DAY_OF_MONTH) }
-        expect(14) { isoTimestamp?.get(Calendar.HOUR_OF_DAY) }
+        expect(16) { isoTimestamp?.get(Calendar.HOUR_OF_DAY) }
         expect(0) { isoTimestamp?.get(Calendar.MINUTE) }
         expect(0) { isoTimestamp?.get(Calendar.SECOND) }
     }

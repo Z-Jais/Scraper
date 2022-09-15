@@ -1,35 +1,51 @@
 package fr.jais.scraper.converters
 
-import com.google.gson.JsonObject
-import fr.jais.scraper.countries.FranceCountry
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Anime
 import fr.jais.scraper.entities.Episode
-import fr.jais.scraper.exceptions.CountryNotSupportedException
-import fr.jais.scraper.exceptions.animes.NoAnimeFoundException
-import fr.jais.scraper.exceptions.animes.NoAnimeImageFoundException
-import fr.jais.scraper.exceptions.animes.NoAnimeNameFoundException
-import fr.jais.scraper.exceptions.episodes.NoEpisodeIdFoundException
-import fr.jais.scraper.exceptions.episodes.NoEpisodeImageFoundException
-import fr.jais.scraper.exceptions.episodes.NoEpisodeReleaseDateFoundException
-import fr.jais.scraper.exceptions.episodes.NoEpisodeUrlFoundException
-import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.platforms.NetflixPlatform
-import fr.jais.scraper.utils.*
-import java.util.Calendar
+import java.text.SimpleDateFormat
+import java.util.*
 
 class NetflixConverter(private val platform: NetflixPlatform) {
-    fun convertAnime(checkedCountry: ICountry, netflixContent: NetflixPlatform.NetflixContent, netflixAnime: NetflixPlatform.NetflixAnime): Anime {
-        return Anime(checkedCountry, netflixAnime.name, netflixContent.image, netflixAnime.description, netflixAnime.genres)
+    fun toISODate(calendar: Calendar): String = SimpleDateFormat("yyyy-MM-dd").format(calendar.time)
+
+    fun fromISOTimestamp(iso8601string: String?): Calendar? {
+        if (iso8601string.isNullOrBlank()) return null
+        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+        simpleDateFormat.timeZone = TimeZone.getTimeZone("UTC")
+        val date = simpleDateFormat.parse(iso8601string)
+        val calendar = Calendar.getInstance()
+        calendar.time = date
+        return calendar
     }
 
-    fun convertEpisode(checkedCountry: ICountry, calendar: Calendar, netflixContent: NetflixPlatform.NetflixContent, netflixEpisode: NetflixPlatform.NetflixEpisode): Episode {
+    fun convertAnime(
+        checkedCountry: ICountry,
+        netflixContent: NetflixPlatform.NetflixContent,
+        netflixAnime: NetflixPlatform.NetflixAnime
+    ): Anime {
+        return Anime(
+            checkedCountry,
+            netflixAnime.name,
+            netflixContent.image,
+            netflixAnime.description,
+            netflixAnime.genres
+        )
+    }
+
+    fun convertEpisode(
+        checkedCountry: ICountry,
+        calendar: Calendar,
+        netflixContent: NetflixPlatform.NetflixContent,
+        netflixEpisode: NetflixPlatform.NetflixEpisode
+    ): Episode {
         val anime = convertAnime(checkedCountry, netflixContent, netflixEpisode.netflixAnime)
 
         return Episode(
             platform,
             anime,
-            calendar,
+            fromISOTimestamp("${toISODate(calendar)}T${netflixContent.releaseTime}Z")!!,
             netflixContent.season,
             netflixEpisode.number,
             netflixContent.episodeType,

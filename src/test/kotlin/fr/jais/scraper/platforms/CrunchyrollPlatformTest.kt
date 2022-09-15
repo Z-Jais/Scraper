@@ -9,7 +9,6 @@ import fr.jais.scraper.utils.EpisodeType
 import fr.jais.scraper.utils.LangType
 import fr.jais.scraper.utils.Resource
 import org.junit.jupiter.api.Test
-import java.io.File
 import java.util.*
 import kotlin.test.expect
 
