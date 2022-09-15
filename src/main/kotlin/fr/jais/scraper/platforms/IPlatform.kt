@@ -10,7 +10,6 @@ abstract class IPlatform(
     val type: PlatformType,
     val name: String,
     val url: String,
-    val image: String,
     val countries: List<Class<out ICountry>>
 ) {
     enum class PlatformType {

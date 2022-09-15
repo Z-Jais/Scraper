@@ -21,7 +21,6 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
     PlatformType.FLOWS,
     "Crunchyroll",
     "https://www.crunchyroll.com/",
-    "",
     listOf(FranceCountry::class.java)
 ) {
     val converter = CrunchyrollConverter(this)

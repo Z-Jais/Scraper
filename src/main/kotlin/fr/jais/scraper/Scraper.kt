@@ -95,7 +95,7 @@ class Scraper {
                     "check" -> {
                         if (args.isEmpty()) {
                             getAllEpisodes(Calendar.getInstance()).forEach { println(it) }
-                            return@start
+                            continue
                         }
 
                         val sdf = SimpleDateFormat("dd/MM/yyyy")

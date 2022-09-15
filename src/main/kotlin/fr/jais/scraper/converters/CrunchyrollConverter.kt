@@ -1,9 +1,11 @@
 package fr.jais.scraper.converters
 
 import com.google.gson.JsonObject
+import fr.jais.scraper.countries.FranceCountry
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Anime
 import fr.jais.scraper.entities.Episode
+import fr.jais.scraper.exceptions.CountryNotSupportedException
 import fr.jais.scraper.exceptions.animes.NoAnimeFoundException
 import fr.jais.scraper.exceptions.animes.NoAnimeImageFoundException
 import fr.jais.scraper.exceptions.animes.NoAnimeNameFoundException
@@ -40,10 +42,15 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
             description = animeCached?.description
             Logger.config("Description: $description")
         } else {
+            val country = when (checkedCountry) {
+                is FranceCountry -> "fr"
+                else -> throw CountryNotSupportedException("Country not supported")
+            }
+
             val episodeUrl = jsonObject.get("link")?.asString()
             val animeId =
                 episodeUrl?.split("/")?.get(4) ?: throw NoAnimeFoundException("No anime id found in $episodeUrl")
-            val browser = Browser(Browser.BrowserType.FIREFOX, "https://www.crunchyroll.com/fr/$animeId")
+            val browser = Browser(Browser.BrowserType.FIREFOX, "https://www.crunchyroll.com/$country/$animeId")
             val result = browser.launch()
 
             image = result.selectXpath("//*[@id=\"sidebar_elements\"]/li[1]/img").attr("src").toHTTPS()
