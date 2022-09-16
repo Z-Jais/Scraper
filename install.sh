@@ -28,3 +28,7 @@ cd ./tmp || exit
 docker build -t scraper .
 # Run docker container
 docker run -it scraper
+
+cd .. || exit
+# Remove tmp folder
+rm -rf ./tmp
