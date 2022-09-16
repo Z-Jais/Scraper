@@ -24,7 +24,7 @@ class Scraper {
     }
 
     val platforms = listOf(AnimationDigitalNetworkPlatform(this), CrunchyrollPlatform(this), NetflixPlatform(this))
-    private val countries = platforms.flatMap { it.countries }.distinct().map { it.getConstructor().newInstance() }
+    val countries = platforms.flatMap { it.countries }.distinct().map { it.getConstructor().newInstance() }
     private val commands = listOf(ExitCommand(this), CheckCommand(this))
 
     fun getCountries(platform: IPlatform): List<ICountry> =

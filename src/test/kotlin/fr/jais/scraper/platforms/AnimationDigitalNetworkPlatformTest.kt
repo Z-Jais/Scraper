@@ -70,6 +70,6 @@ internal class AnimationDigitalNetworkPlatformTest {
     @Test
     fun getEpisodes() {
         val episodes = platform.getEpisodes(testCalendar())
-        expect(14) { episodes.size }
+        expect(3) { episodes.size }
     }
 }

@@ -8,7 +8,7 @@ internal class ScraperTest {
 
     @Test
     fun getCountries() {
-        val countries = scraper.getCountries()
+        val countries = scraper.countries
         assertEquals(1, countries.size)
         assertEquals("France", countries[0].name)
     }
