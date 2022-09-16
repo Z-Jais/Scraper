@@ -4,6 +4,7 @@ import com.google.gson.JsonObject
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Anime
 import fr.jais.scraper.entities.Episode
+import fr.jais.scraper.exceptions.NotSimulcastAnimeException
 import fr.jais.scraper.exceptions.animes.NoAnimeFoundException
 import fr.jais.scraper.exceptions.animes.NoAnimeImageFoundException
 import fr.jais.scraper.exceptions.animes.NoAnimeNameFoundException
@@ -12,14 +13,22 @@ import fr.jais.scraper.platforms.AnimationDigitalNetworkPlatform
 import fr.jais.scraper.utils.*
 
 class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNetworkPlatform) {
+    private val animeNameSeasonRegex = Regex(".* - Saison \\d")
+
     fun convertAnime(checkedCountry: ICountry, jsonObject: JsonObject): Anime? {
         val showJson = jsonObject.getAsJsonObject("show") ?: throw NoAnimeFoundException("No show found")
         Logger.config("Convert anime from $showJson")
 
         Logger.info("Get name...")
-        val name = showJson.get("shortTitle")?.asString() ?: showJson.get("title")?.asString()
+        var name = showJson.get("shortTitle")?.asString() ?: showJson.get("title")?.asString()
         ?: throw NoAnimeNameFoundException("No name found")
         Logger.config("Name: $name")
+
+        if (name.matches(animeNameSeasonRegex)) {
+            Logger.warning("Anime name contains season number, removing it...")
+            // Remove the match part of the name
+            name = name.replace(Regex(" - Saison \\d"), "")
+        }
 
         Logger.info("Get image...")
         val image = showJson.get("image2x")?.asString()?.toHTTPS() ?: throw NoAnimeImageFoundException("No image found")
@@ -40,6 +49,12 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
             Logger.warning("Not a Japanese anime, skipping...")
             return null
         }
+
+        Logger.info("Checking if anime is simulcasted...")
+        val simulcasted = showJson.get("simulcast")?.asBoolean ?: false
+        Logger.config("Simulcasted: $simulcasted")
+
+        if (!simulcasted) throw NotSimulcastAnimeException("Anime is not simulcasted")
 
         return Anime(checkedCountry.getCountry(), name, image, description, genres)
     }

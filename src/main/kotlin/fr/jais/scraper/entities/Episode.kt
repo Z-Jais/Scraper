@@ -11,6 +11,7 @@ data class Episode(
     val number: Int,
     val episodeType: EpisodeType,
     val langType: LangType,
+    @Transient
     val id: Long,
     var title: String?,
     val url: String,
