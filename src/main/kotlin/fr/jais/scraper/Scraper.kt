@@ -66,12 +66,24 @@ class Scraper {
             }
         }
 
+        Logger.info("Get all episodes done.")
         val episodes = list.filter { calendar.after(it.releaseDate) }.sortedBy { it.releaseDate }
+        Logger.config("Episodes: ${episodes.size}")
 
-        val database = Database()
-        val episodesInDatabase = database.load()
-        episodesInDatabase.addAll(episodes.filter { !episodesInDatabase.any { epDb -> it.hash == epDb.hash } })
-        database.save(episodesInDatabase)
+        if (episodes.isNotEmpty()) {
+            val database = Database()
+            Logger.info("Loading database...")
+            val episodesInDatabase = database.load()
+            val episodesToAdd = episodes.filter { episodesInDatabase.none { epDb -> it.hash == epDb.hash } }
+            Logger.config("Episodes to add: ${episodesToAdd.size}")
+
+            if (episodesToAdd.isNotEmpty()) {
+                Logger.info("Adding episodes to database...")
+                episodesInDatabase.addAll(episodesInDatabase)
+                database.save(episodesInDatabase)
+                Logger.info("Adding episodes to database done.")
+            }
+        }
 
         return episodes
     }
