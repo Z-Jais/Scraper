@@ -44,8 +44,6 @@ class Scraper {
         checkingType: CheckingType = CheckingType.SYNCHRONOUS,
         platformType: IPlatform.PlatformType? = null
     ): List<Episode> {
-        calendar.timeZone = TimeZone.getTimeZone("UTC")
-
         val list = mutableListOf<Episode>()
 
         Logger.info("Get all episodes...")
@@ -112,9 +110,8 @@ class Scraper {
 
                             for (i in dayInMonth downTo 1) {
                                 val checkedCalendar = Calendar.getInstance()
-                                checkedCalendar.timeZone = TimeZone.getTimeZone("UTC")
                                 checkedCalendar.set(Calendar.DAY_OF_MONTH, i)
-                                checkedCalendar.set(Calendar.HOUR_OF_DAY, 21)
+                                checkedCalendar.set(Calendar.HOUR_OF_DAY, 23)
                                 checkedCalendar.set(Calendar.MINUTE, 50)
                                 checkedCalendar.set(Calendar.SECOND, 0)
                                 checkedCalendar.set(Calendar.MILLISECOND, 0)
@@ -135,7 +132,6 @@ class Scraper {
 
                         args.forEach { date ->
                             val calendar = Calendar.getInstance()
-                            calendar.timeZone = TimeZone.getTimeZone("UTC")
                             calendar.time = sdf.parse(date)
                             calendar.set(Calendar.HOUR_OF_DAY, 23)
                             calendar.set(Calendar.MINUTE, 50)

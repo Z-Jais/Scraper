@@ -10,20 +10,8 @@ import fr.jais.scraper.exceptions.animes.NoAnimeNameFoundException
 import fr.jais.scraper.exceptions.episodes.*
 import fr.jais.scraper.platforms.AnimationDigitalNetworkPlatform
 import fr.jais.scraper.utils.*
-import java.text.SimpleDateFormat
-import java.util.*
 
 class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNetworkPlatform) {
-    fun fromISOTimestamp(iso8601string: String?): Calendar? {
-        if (iso8601string.isNullOrBlank()) return null
-        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
-        simpleDateFormat.timeZone = TimeZone.getTimeZone("UTC")
-        val date = simpleDateFormat.parse(iso8601string)
-        val calendar = Calendar.getInstance()
-        calendar.time = date
-        return calendar
-    }
-
     fun convertAnime(checkedCountry: ICountry, jsonObject: JsonObject): Anime? {
         val showJson = jsonObject.getAsJsonObject("show") ?: throw NoAnimeFoundException("No show found")
         Logger.config("Convert anime from $showJson")
@@ -64,7 +52,7 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         Logger.config("Anime: $anime")
 
         Logger.info("Get release date...")
-        val releaseDate = fromISOTimestamp(jsonObject.get("releaseDate")?.asString())
+        val releaseDate = CalendarConverter.fromUTCDate(jsonObject.get("releaseDate")?.asString())
             ?: throw NoEpisodeReleaseDateFoundException("No release date found")
         Logger.config("Release date: ${releaseDate.toISO8601()}")
 
@@ -126,7 +114,7 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         return Episode(
             platform.getPlatform(),
             anime,
-            releaseDate,
+            releaseDate.toISO8601(),
             season,
             number,
             episodeType,

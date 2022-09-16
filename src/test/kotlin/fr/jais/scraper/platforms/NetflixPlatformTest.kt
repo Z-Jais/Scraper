@@ -1,7 +1,6 @@
 package fr.jais.scraper.platforms
 
 import fr.jais.scraper.Scraper
-import fr.jais.scraper.countries.FranceCountry
 import fr.jais.scraper.utils.Decoder
 import fr.jais.scraper.utils.Resource
 import org.jsoup.Jsoup
@@ -11,7 +10,6 @@ import kotlin.test.expect
 
 internal class NetflixPlatformTest {
     private val scraper = Scraper()
-    private val country = FranceCountry()
     private val platform = NetflixPlatform(scraper)
 
     private fun testEpisode(): Document? {

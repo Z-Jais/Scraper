@@ -4,10 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import fr.jais.scraper.Scraper
 import fr.jais.scraper.countries.FranceCountry
-import fr.jais.scraper.utils.Decoder
-import fr.jais.scraper.utils.EpisodeType
-import fr.jais.scraper.utils.LangType
-import fr.jais.scraper.utils.Resource
+import fr.jais.scraper.utils.*
 import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.test.expect
@@ -39,13 +36,17 @@ internal class CrunchyrollPlatformTest {
 
     @Test
     fun fromISODate() {
-        val isoTimestamp = platform.fromTimestamp(testISOTimestamp())
+        val isoTimestamp = CalendarConverter.fromGMTLine(testISOTimestamp())
+        isoTimestamp?.timeZone = TimeZone.getTimeZone("UTC")
+
         expect(2022) { isoTimestamp?.get(Calendar.YEAR) }
         expect(Calendar.SEPTEMBER) { isoTimestamp?.get(Calendar.MONTH) }
         expect(13) { isoTimestamp?.get(Calendar.DAY_OF_MONTH) }
         expect(18) { isoTimestamp?.get(Calendar.HOUR_OF_DAY) }
         expect(0) { isoTimestamp?.get(Calendar.MINUTE) }
         expect(0) { isoTimestamp?.get(Calendar.SECOND) }
+
+        expect("2022-09-13T18:00:00Z") { isoTimestamp?.toISO8601() }
     }
 
     @Test
