@@ -4,10 +4,7 @@ import com.google.gson.JsonObject
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Anime
 import fr.jais.scraper.entities.Episode
-import fr.jais.scraper.exceptions.NotSimulcastAnimeException
-import fr.jais.scraper.exceptions.animes.NoAnimeFoundException
-import fr.jais.scraper.exceptions.animes.NoAnimeImageFoundException
-import fr.jais.scraper.exceptions.animes.NoAnimeNameFoundException
+import fr.jais.scraper.exceptions.animes.*
 import fr.jais.scraper.exceptions.episodes.*
 import fr.jais.scraper.platforms.AnimationDigitalNetworkPlatform
 import fr.jais.scraper.utils.*
@@ -15,7 +12,7 @@ import fr.jais.scraper.utils.*
 class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNetworkPlatform) {
     private val animeNameSeasonRegex = Regex(".* - Saison \\d")
 
-    fun convertAnime(checkedCountry: ICountry, jsonObject: JsonObject): Anime? {
+    fun convertAnime(checkedCountry: ICountry, jsonObject: JsonObject): Anime {
         val showJson = jsonObject.getAsJsonObject("show") ?: throw NoAnimeFoundException("No show found")
         Logger.config("Convert anime from $showJson")
 
@@ -45,10 +42,7 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         val genres = showJson.getAsJsonArray("genres")?.mapNotNull { it.asString() } ?: emptyList()
         Logger.config("Genres: ${genres.joinToString(", ")}")
 
-        if (!genres.any { it == "Animation japonaise" }) {
-            Logger.warning("Not a Japanese anime, skipping...")
-            return null
-        }
+        if (!genres.any { it == "Animation japonaise" }) throw NotJapaneseAnimeException("Anime is not a Japanese anime")
 
         Logger.info("Checking if anime is simulcasted...")
         val simulcasted = showJson.get("simulcast")?.asBoolean ?: false
@@ -63,7 +57,7 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         Logger.config("Convert episode from $jsonObject")
 
         Logger.info("Convert anime...")
-        val anime = convertAnime(checkedCountry, jsonObject) ?: throw NoAnimeFoundException("No anime found")
+        val anime = convertAnime(checkedCountry, jsonObject)
         Logger.config("Anime: $anime")
 
         Logger.info("Get release date...")
