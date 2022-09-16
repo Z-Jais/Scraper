@@ -6,6 +6,7 @@ import fr.jais.scraper.platforms.AnimationDigitalNetworkPlatform
 import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.platforms.IPlatform
 import fr.jais.scraper.platforms.NetflixPlatform
+import fr.jais.scraper.utils.Database
 import fr.jais.scraper.utils.Logger
 import fr.jais.scraper.utils.ThreadManager
 import fr.jais.scraper.utils.toISO8601
@@ -65,7 +66,14 @@ class Scraper {
             }
         }
 
-        return list.filter { calendar.after(it.releaseDate) }.sortedBy { it.releaseDate }
+        val episodes = list.filter { calendar.after(it.releaseDate) }.sortedBy { it.releaseDate }
+
+        val database = Database()
+        val episodesInDatabase = database.load()
+        episodesInDatabase.addAll(episodes.filter { !episodesInDatabase.any { epDb -> it.hash == epDb.hash } })
+        database.save(episodesInDatabase)
+
+        return episodes
     }
 
     fun startThreadCheck() {

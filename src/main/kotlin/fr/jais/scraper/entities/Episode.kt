@@ -20,7 +20,8 @@ data class Episode(
     val image: String,
     val duration: Long
 ) {
+    val hash = "${platform.name.substring(1..4).uppercase()}-$id-${langType.name.uppercase()}"
     override fun toString(): String {
-        return "Episode(platform=$platform, anime=$anime, releaseDate=${releaseDate.toISO8601()}, season=$season, number=$number, episodeType=$episodeType, langType=$langType, id=$id, title=$title, url='$url', image='$image', duration=$duration)"
+        return "Episode(platform=$platform, anime=$anime, releaseDate=${releaseDate.toISO8601()}, season=$season, number=$number, episodeType=$episodeType, langType=$langType, id=$id, title=$title, url='$url', image='$image', duration=$duration, hash='$hash')"
     }
 }
