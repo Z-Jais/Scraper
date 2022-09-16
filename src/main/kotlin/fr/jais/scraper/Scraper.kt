@@ -17,6 +17,8 @@ import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import kotlin.system.exitProcess
 
+private const val separator = "------------------------------"
+
 class Scraper {
     enum class CheckingType {
         SYNCHRONOUS,
@@ -49,10 +51,7 @@ class Scraper {
         Logger.info("Get all episodes...")
         Logger.config("Calendar: ${calendar.toISO8601()}")
 
-        val filter = platforms.filter {
-            if (platformType == null) true
-            else it.type == platformType
-        }
+        val filter = platforms.filter { platformType == null || it.type == platformType }
 
         when (checkingType) {
             CheckingType.ASYNCHRONOUS -> {
@@ -70,22 +69,7 @@ class Scraper {
         Logger.info("Get all episodes done.")
         val episodes = list.filter { calendar.after(it.releaseDate) }.sortedBy { it.releaseDate }
         Logger.config("Episodes: ${episodes.size}")
-
-        if (episodes.isNotEmpty()) {
-            val database = Database()
-            Logger.info("Loading database...")
-            val episodesInDatabase = database.load()
-            val episodesToAdd = episodes.filter { episodesInDatabase.none { epDb -> it.hash == epDb.hash } }
-            Logger.config("Episodes to add: ${episodesToAdd.size}")
-
-            if (episodesToAdd.isNotEmpty()) {
-                Logger.info("Adding episodes to database...")
-                episodesInDatabase.addAll(episodesInDatabase)
-                database.save(episodesInDatabase)
-                Logger.info("Adding episodes to database done.")
-            }
-        }
-
+        Database.save(episodes)
         return episodes
     }
 
@@ -93,6 +77,7 @@ class Scraper {
         ThreadManager.start {
             while (true) {
                 getAllEpisodes(Calendar.getInstance()).forEach { println(it) }
+
                 // Wait 5 minutes
                 Thread.sleep(5 * 60 * 1000)
             }
@@ -117,10 +102,34 @@ class Scraper {
                     }
 
                     "check" -> {
-                        if (args.isEmpty()) {
-                            getAllEpisodes(Calendar.getInstance()).forEach { println(it) }
+                        if (args.isEmpty()) continue
+
+                        val list = mutableListOf<Episode>()
+
+                        if (args.firstOrNull() == "--month") {
+                            val calendar = Calendar.getInstance()
+                            val dayInMonth = calendar.get(Calendar.DAY_OF_MONTH) - 1
+
+                            for (i in dayInMonth downTo 1) {
+                                val checkedCalendar = Calendar.getInstance()
+                                checkedCalendar.timeZone = TimeZone.getTimeZone("UTC")
+                                checkedCalendar.set(Calendar.DAY_OF_MONTH, i)
+                                checkedCalendar.set(Calendar.HOUR_OF_DAY, 21)
+                                checkedCalendar.set(Calendar.MINUTE, 50)
+                                checkedCalendar.set(Calendar.SECOND, 0)
+                                checkedCalendar.set(Calendar.MILLISECOND, 0)
+
+                                Logger.info("Check for ${checkedCalendar.toISO8601()}")
+                                Logger.info(separator)
+                                list.addAll(getAllEpisodes(checkedCalendar, platformType = IPlatform.PlatformType.API))
+                                Logger.info(separator)
+                            }
+
+                            list.sortedBy { it.releaseDate }.forEach { println(it) }
+
                             continue
                         }
+
 
                         val sdf = SimpleDateFormat("dd/MM/yyyy")
 
@@ -134,10 +143,12 @@ class Scraper {
                             calendar.set(Calendar.MILLISECOND, 0)
 
                             Logger.info("Check for ${calendar.toISO8601()}")
-                            Logger.info("------------------------------")
-                            getAllEpisodes(calendar, platformType = IPlatform.PlatformType.API).forEach { println(it) }
-                            Logger.info("------------------------------")
+                            Logger.info(separator)
+                            list.addAll(getAllEpisodes(calendar, platformType = IPlatform.PlatformType.API))
+                            Logger.info(separator)
                         }
+
+                        list.sortedBy { it.releaseDate }.forEach { println(it) }
                     }
                 }
             }

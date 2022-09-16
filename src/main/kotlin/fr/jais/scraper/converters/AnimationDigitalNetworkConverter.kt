@@ -53,7 +53,7 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
             return null
         }
 
-        return Anime(checkedCountry, name, image, description, genres)
+        return Anime(checkedCountry.getCountry(), name, image, description, genres)
     }
 
     fun convertEpisode(checkedCountry: ICountry, jsonObject: JsonObject): Episode {
@@ -124,7 +124,7 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         Logger.config("Duration: $duration")
 
         return Episode(
-            platform,
+            platform.getPlatform(),
             anime,
             releaseDate,
             season,

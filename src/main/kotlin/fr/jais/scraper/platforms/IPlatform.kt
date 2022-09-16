@@ -3,6 +3,7 @@ package fr.jais.scraper.platforms
 import fr.jais.scraper.Scraper
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Episode
+import fr.jais.scraper.entities.Platform
 import java.util.*
 
 abstract class IPlatform(
@@ -16,6 +17,8 @@ abstract class IPlatform(
         API,
         FLOWS,
     }
+
+    fun getPlatform() = Platform(name, url)
 
     open fun getEpisodes(calendar: Calendar): List<Episode> = emptyList()
     open fun getNews(calendar: Calendar) {}

@@ -26,7 +26,7 @@ class NetflixConverter(private val platform: NetflixPlatform) {
         netflixAnime: NetflixPlatform.NetflixAnime
     ): Anime {
         return Anime(
-            checkedCountry,
+            checkedCountry.getCountry(),
             netflixAnime.name,
             netflixContent.image,
             netflixAnime.description,
@@ -43,7 +43,7 @@ class NetflixConverter(private val platform: NetflixPlatform) {
         val anime = convertAnime(checkedCountry, netflixContent, netflixEpisode.netflixAnime)
 
         return Episode(
-            platform,
+            platform.getPlatform(),
             anime,
             fromISOTimestamp("${toISODate(calendar)}T${netflixContent.releaseTime}Z")!!,
             netflixContent.season,

@@ -79,7 +79,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         val genres = jsonObject.get("keywords")?.asString()?.split(", ") ?: emptyList()
         Logger.config("Genres: ${genres.joinToString(", ")}")
 
-        return Anime(checkedCountry, name, image, description, genres)
+        return Anime(checkedCountry.getCountry(), name, image, description, genres)
     }
 
     private fun isDub(jsonObject: JsonObject) = LangType.VOICE.data.any {
@@ -155,7 +155,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         Logger.config("Duration: $duration")
 
         return Episode(
-            platform,
+            platform.getPlatform(),
             anime,
             releaseDate,
             season,
