@@ -9,8 +9,8 @@ import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.exceptions.CountryNotSupportedException
 import fr.jais.scraper.utils.Logger
+import fr.jais.scraper.utils.toDate
 import java.net.URL
-import java.text.SimpleDateFormat
 import java.util.*
 import java.util.logging.Level
 
@@ -24,13 +24,11 @@ class AnimationDigitalNetworkPlatform(scraper: Scraper) :
     ) {
     val converter = AnimationDigitalNetworkConverter(this)
 
-    fun toISODate(calendar: Calendar): String = SimpleDateFormat("yyyy-MM-dd").format(calendar.time)
-
     fun getAPIContent(checkedCountry: ICountry, calendar: Calendar): List<JsonObject>? {
         if (checkedCountry !is FranceCountry) throw CountryNotSupportedException("Country not supported")
 
         return try {
-            val apiUrl = "https://gw.api.animationdigitalnetwork.fr/video/calendar?date=${toISODate(calendar)}"
+            val apiUrl = "https://gw.api.animationdigitalnetwork.fr/video/calendar?date=${calendar.toDate()}"
             val content = URL(apiUrl).readText()
             Gson().fromJson(content, JsonObject::class.java)?.getAsJsonArray("videos")?.mapNotNull { it.asJsonObject }
         } catch (e: Exception) {

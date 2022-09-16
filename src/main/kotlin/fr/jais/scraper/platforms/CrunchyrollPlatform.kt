@@ -10,9 +10,10 @@ import fr.jais.scraper.countries.FranceCountry
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.exceptions.CountryNotSupportedException
+import fr.jais.scraper.utils.CalendarConverter
 import fr.jais.scraper.utils.Logger
+import fr.jais.scraper.utils.toDate
 import java.net.URL
-import java.text.SimpleDateFormat
 import java.util.*
 import java.util.logging.Level
 
@@ -29,17 +30,6 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
         Gson().fromJson(ObjectMapper().writeValueAsString(XmlMapper().readTree(content)), JsonObject::class.java)
             ?.getAsJsonObject("channel")?.getAsJsonArray("item")?.mapNotNull { it.asJsonObject }
 
-    fun fromTimestamp(s: String?): Calendar? {
-        if (s.isNullOrBlank()) return null
-        val date = SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH).parse(s)
-        val calendar = Calendar.getInstance()
-        calendar.time = date
-        calendar.timeZone = TimeZone.getTimeZone("UTC")
-        return calendar
-    }
-
-    fun toISODate(calendar: Calendar?): String = SimpleDateFormat("yyyy-MM-dd").format(calendar?.time)
-
     fun xmlToJsonWithFilter(
         checkedCountry: ICountry,
         calendar: Calendar,
@@ -52,11 +42,11 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
 
         return xmlToJson(content)
             ?.filter {
-                val releaseDate = fromTimestamp(it.get("pubDate")?.asString)
+                val releaseDate = CalendarConverter.fromGMTLine(it.get("pubDate")?.asString)
                 val countryRestrictions = it.getAsJsonObject("restriction")?.get("")?.asString?.split(" ")
                 val subtitles = it.get("subtitleLanguages")?.asString?.split(",")
 
-                toISODate(releaseDate) == toISODate(calendar)
+                releaseDate?.toDate() == calendar.toDate()
                         && countryRestrictions?.any { r -> r == restriction } ?: false
                         && subtitles?.any { s -> s == "fr - fr" } ?: false
             }

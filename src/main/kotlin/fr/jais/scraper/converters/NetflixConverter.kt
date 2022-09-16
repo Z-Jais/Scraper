@@ -4,21 +4,12 @@ import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Anime
 import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.platforms.NetflixPlatform
+import fr.jais.scraper.utils.CalendarConverter
 import java.text.SimpleDateFormat
 import java.util.*
 
 class NetflixConverter(private val platform: NetflixPlatform) {
-    fun toISODate(calendar: Calendar): String = SimpleDateFormat("yyyy-MM-dd").format(calendar.time)
-
-    fun fromISOTimestamp(iso8601string: String?): Calendar? {
-        if (iso8601string.isNullOrBlank()) return null
-        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
-        simpleDateFormat.timeZone = TimeZone.getTimeZone("UTC")
-        val date = simpleDateFormat.parse(iso8601string)
-        val calendar = Calendar.getInstance()
-        calendar.time = date
-        return calendar
-    }
+    fun toISODate(calendar: Calendar): String = SimpleDateFormat("yyyy-MM-dd").format(Date.from(calendar.toInstant()))
 
     fun convertAnime(
         checkedCountry: ICountry,
@@ -45,7 +36,7 @@ class NetflixConverter(private val platform: NetflixPlatform) {
         return Episode(
             platform.getPlatform(),
             anime,
-            fromISOTimestamp("${toISODate(calendar)}T${netflixContent.releaseTime}Z")!!,
+            CalendarConverter.toUTCDate("${toISODate(calendar)}T${netflixContent.releaseTime}Z"),
             netflixContent.season,
             netflixEpisode.number,
             netflixContent.episodeType,

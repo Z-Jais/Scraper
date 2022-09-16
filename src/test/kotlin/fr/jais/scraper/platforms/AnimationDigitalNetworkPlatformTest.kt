@@ -4,10 +4,7 @@ import com.google.gson.Gson
 import com.google.gson.JsonObject
 import fr.jais.scraper.Scraper
 import fr.jais.scraper.countries.FranceCountry
-import fr.jais.scraper.utils.Decoder
-import fr.jais.scraper.utils.EpisodeType
-import fr.jais.scraper.utils.LangType
-import fr.jais.scraper.utils.Resource
+import fr.jais.scraper.utils.*
 import org.junit.jupiter.api.Test
 import java.util.*
 import kotlin.test.expect
@@ -31,20 +28,17 @@ internal class AnimationDigitalNetworkPlatformTest {
     private fun testISOTimestamp(): String = "2022-09-13T14:00:00Z"
 
     @Test
-    fun toISODate() {
-        expect("2022-09-13") { platform.toISODate(testCalendar()) }
-    }
-
-    @Test
     fun fromISODate() {
-        val isoTimestamp = platform.converter.fromISOTimestamp(testISOTimestamp())
-        isoTimestamp?.timeZone = TimeZone.getTimeZone("UTC")
+        val isoTimestamp = CalendarConverter.fromUTCDate(testISOTimestamp())
+
         expect(2022) { isoTimestamp?.get(Calendar.YEAR) }
         expect(Calendar.SEPTEMBER) { isoTimestamp?.get(Calendar.MONTH) }
         expect(13) { isoTimestamp?.get(Calendar.DAY_OF_MONTH) }
         expect(14) { isoTimestamp?.get(Calendar.HOUR_OF_DAY) }
         expect(0) { isoTimestamp?.get(Calendar.MINUTE) }
         expect(0) { isoTimestamp?.get(Calendar.SECOND) }
+
+        expect("2022-09-13T14:00:00Z") { isoTimestamp?.toISO8601() }
     }
 
     @Test
@@ -76,6 +70,6 @@ internal class AnimationDigitalNetworkPlatformTest {
     @Test
     fun getEpisodes() {
         val episodes = platform.getEpisodes(testCalendar())
-        expect(14) { episodes.size }
+        expect(3) { episodes.size }
     }
 }
