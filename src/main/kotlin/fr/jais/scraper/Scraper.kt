@@ -5,14 +5,19 @@ import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.platforms.AnimationDigitalNetworkPlatform
 import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.platforms.IPlatform
+import fr.jais.scraper.platforms.NetflixPlatform
+import fr.jais.scraper.utils.Database
 import fr.jais.scraper.utils.Logger
 import fr.jais.scraper.utils.ThreadManager
 import fr.jais.scraper.utils.toISO8601
+import java.lang.Integer.min
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import kotlin.system.exitProcess
+
+private const val separator = "------------------------------"
 
 class Scraper {
     enum class CheckingType {
@@ -20,7 +25,7 @@ class Scraper {
         ASYNCHRONOUS,
     }
 
-    val platforms = listOf(AnimationDigitalNetworkPlatform(this), CrunchyrollPlatform(this))
+    val platforms = listOf(AnimationDigitalNetworkPlatform(this), CrunchyrollPlatform(this), NetflixPlatform(this))
     private val countries = mutableSetOf<ICountry>()
 
     fun getCountries(): List<ICountry> =
@@ -34,7 +39,11 @@ class Scraper {
         countries.addAll(getCountries())
     }
 
-    fun getAllEpisodes(calendar: Calendar, checkingType: CheckingType = CheckingType.SYNCHRONOUS, platformType: IPlatform.PlatformType? = null): List<Episode> {
+    fun getAllEpisodes(
+        calendar: Calendar,
+        checkingType: CheckingType = CheckingType.SYNCHRONOUS,
+        platformType: IPlatform.PlatformType? = null
+    ): List<Episode> {
         calendar.timeZone = TimeZone.getTimeZone("UTC")
 
         val list = mutableListOf<Episode>()
@@ -42,10 +51,7 @@ class Scraper {
         Logger.info("Get all episodes...")
         Logger.config("Calendar: ${calendar.toISO8601()}")
 
-        val filter = platforms.filter {
-            if (platformType == null) true
-            else it.type == platformType
-        }
+        val filter = platforms.filter { platformType == null || it.type == platformType }
 
         when (checkingType) {
             CheckingType.ASYNCHRONOUS -> {
@@ -60,13 +66,18 @@ class Scraper {
             }
         }
 
-        return list.filter { calendar.after(it.releaseDate) }.sortedBy { it.releaseDate }
+        Logger.info("Get all episodes done.")
+        val episodes = list.filter { calendar.after(it.releaseDate) }.sortedBy { it.releaseDate }
+        Logger.config("Episodes: ${episodes.size}")
+        Database.save(episodes)
+        return episodes
     }
 
     fun startThreadCheck() {
         ThreadManager.start {
             while (true) {
                 getAllEpisodes(Calendar.getInstance()).forEach { println(it) }
+
                 // Wait 5 minutes
                 Thread.sleep(5 * 60 * 1000)
             }
@@ -75,22 +86,50 @@ class Scraper {
 
     fun startThreadConsole() {
         ThreadManager.start {
+            val scanner = Scanner(System.`in`)
+
             while (true) {
-                val line = readLine()
-                val split = line?.split(" ")
-                val command = split?.getOrNull(0) ?: continue
-                val args = split.subList(1, split.size)
+                val line = scanner.nextLine()
+                val allArgs = line.split(" ")
+
+                val command = allArgs[0]
+                val args = allArgs.subList(min(1, allArgs.size), allArgs.size)
 
                 when (command.lowercase()) {
                     "exit" -> {
                         ThreadManager.stopAll()
                         exitProcess(0)
                     }
+
                     "check" -> {
-                        if (args.isEmpty()) {
-                            getAllEpisodes(Calendar.getInstance()).forEach { println(it) }
-                            return@start
+                        if (args.isEmpty()) continue
+
+                        val list = mutableListOf<Episode>()
+
+                        if (args.firstOrNull() == "--month") {
+                            val calendar = Calendar.getInstance()
+                            val dayInMonth = calendar.get(Calendar.DAY_OF_MONTH) - 1
+
+                            for (i in dayInMonth downTo 1) {
+                                val checkedCalendar = Calendar.getInstance()
+                                checkedCalendar.timeZone = TimeZone.getTimeZone("UTC")
+                                checkedCalendar.set(Calendar.DAY_OF_MONTH, i)
+                                checkedCalendar.set(Calendar.HOUR_OF_DAY, 21)
+                                checkedCalendar.set(Calendar.MINUTE, 50)
+                                checkedCalendar.set(Calendar.SECOND, 0)
+                                checkedCalendar.set(Calendar.MILLISECOND, 0)
+
+                                Logger.info("Check for ${checkedCalendar.toISO8601()}")
+                                Logger.info(separator)
+                                list.addAll(getAllEpisodes(checkedCalendar, platformType = IPlatform.PlatformType.API))
+                                Logger.info(separator)
+                            }
+
+                            list.sortedBy { it.releaseDate }.forEach { println(it) }
+
+                            continue
                         }
+
 
                         val sdf = SimpleDateFormat("dd/MM/yyyy")
 
@@ -104,10 +143,12 @@ class Scraper {
                             calendar.set(Calendar.MILLISECOND, 0)
 
                             Logger.info("Check for ${calendar.toISO8601()}")
-                            Logger.info("------------------------------")
-                            getAllEpisodes(calendar, platformType = IPlatform.PlatformType.API).forEach { println(it) }
-                            Logger.info("------------------------------")
+                            Logger.info(separator)
+                            list.addAll(getAllEpisodes(calendar, platformType = IPlatform.PlatformType.API))
+                            Logger.info(separator)
                         }
+
+                        list.sortedBy { it.releaseDate }.forEach { println(it) }
                     }
                 }
             }

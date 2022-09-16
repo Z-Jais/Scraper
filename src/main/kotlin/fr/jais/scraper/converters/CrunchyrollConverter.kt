@@ -1,9 +1,11 @@
 package fr.jais.scraper.converters
 
 import com.google.gson.JsonObject
+import fr.jais.scraper.countries.FranceCountry
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Anime
 import fr.jais.scraper.entities.Episode
+import fr.jais.scraper.exceptions.CountryNotSupportedException
 import fr.jais.scraper.exceptions.animes.NoAnimeFoundException
 import fr.jais.scraper.exceptions.animes.NoAnimeImageFoundException
 import fr.jais.scraper.exceptions.animes.NoAnimeNameFoundException
@@ -13,6 +15,7 @@ import fr.jais.scraper.exceptions.episodes.NoEpisodeReleaseDateFoundException
 import fr.jais.scraper.exceptions.episodes.NoEpisodeUrlFoundException
 import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.utils.*
+import java.util.*
 
 class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
     data class Cache(val id: String, val image: String, val description: String?)
@@ -40,10 +43,15 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
             description = animeCached?.description
             Logger.config("Description: $description")
         } else {
+            val country = when (checkedCountry) {
+                is FranceCountry -> "fr"
+                else -> throw CountryNotSupportedException("Country not supported")
+            }
+
             val episodeUrl = jsonObject.get("link")?.asString()
             val animeId =
                 episodeUrl?.split("/")?.get(4) ?: throw NoAnimeFoundException("No anime id found in $episodeUrl")
-            val browser = Browser(Browser.BrowserType.FIREFOX, "https://www.crunchyroll.com/fr/$animeId")
+            val browser = Browser(Browser.BrowserType.FIREFOX, "https://www.crunchyroll.com/$country/$animeId")
             val result = browser.launch()
 
             image = result.selectXpath("//*[@id=\"sidebar_elements\"]/li[1]/img").attr("src").toHTTPS()
@@ -71,7 +79,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         val genres = jsonObject.get("keywords")?.asString()?.split(", ") ?: emptyList()
         Logger.config("Genres: ${genres.joinToString(", ")}")
 
-        return Anime(checkedCountry, name, image, description, genres)
+        return Anime(checkedCountry.getCountry(), name, image, description, genres)
     }
 
     private fun isDub(jsonObject: JsonObject) = LangType.VOICE.data.any {
@@ -91,6 +99,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         Logger.info("Get release date...")
         val releaseDate = platform.fromTimestamp(jsonObject.get("pubDate")?.asString())
             ?: throw NoEpisodeReleaseDateFoundException("No release date found")
+        releaseDate.timeZone = TimeZone.getTimeZone("UTC")
         Logger.config("Release date: ${releaseDate.toISO8601()}")
 
         Logger.info("Get season...")
@@ -146,7 +155,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         Logger.config("Duration: $duration")
 
         return Episode(
-            platform,
+            platform.getPlatform(),
             anime,
             releaseDate,
             season,

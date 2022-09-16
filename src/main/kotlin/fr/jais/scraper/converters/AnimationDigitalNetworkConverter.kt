@@ -16,7 +16,9 @@ import java.util.*
 class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNetworkPlatform) {
     fun fromISOTimestamp(iso8601string: String?): Calendar? {
         if (iso8601string.isNullOrBlank()) return null
-        val date = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'").parse(iso8601string)
+        val simpleDateFormat = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
+        simpleDateFormat.timeZone = TimeZone.getTimeZone("UTC")
+        val date = simpleDateFormat.parse(iso8601string)
         val calendar = Calendar.getInstance()
         calendar.time = date
         return calendar
@@ -51,7 +53,7 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
             return null
         }
 
-        return Anime(checkedCountry, name, image, description, genres)
+        return Anime(checkedCountry.getCountry(), name, image, description, genres)
     }
 
     fun convertEpisode(checkedCountry: ICountry, jsonObject: JsonObject): Episode {
@@ -122,7 +124,7 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         Logger.config("Duration: $duration")
 
         return Episode(
-            platform,
+            platform.getPlatform(),
             anime,
             releaseDate,
             season,

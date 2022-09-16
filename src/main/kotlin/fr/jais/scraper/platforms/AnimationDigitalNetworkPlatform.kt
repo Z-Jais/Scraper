@@ -20,7 +20,6 @@ class AnimationDigitalNetworkPlatform(scraper: Scraper) :
         PlatformType.API,
         "Animation Digital Network",
         "https://animationdigitalnetwork.fr/",
-        "",
         listOf(FranceCountry::class.java)
     ) {
     val converter = AnimationDigitalNetworkConverter(this)
