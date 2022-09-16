@@ -16,6 +16,8 @@ class Database {
             return field
         }
 
-    fun load(): MutableList<Episode> = gson.fromJson(file.readText(), Array<Episode>::class.java)?.toMutableList() ?: mutableListOf()
+    fun load(): MutableList<Episode> =
+        gson.fromJson(file.readText(), Array<Episode>::class.java)?.toMutableList() ?: mutableListOf()
+
     fun save(episodes: List<Episode>) = file.writeText(gson.toJson(episodes))
 }

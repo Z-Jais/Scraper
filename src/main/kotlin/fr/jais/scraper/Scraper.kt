@@ -10,6 +10,7 @@ import fr.jais.scraper.utils.Database
 import fr.jais.scraper.utils.Logger
 import fr.jais.scraper.utils.ThreadManager
 import fr.jais.scraper.utils.toISO8601
+import java.lang.Integer.min
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Callable
@@ -100,11 +101,14 @@ class Scraper {
 
     fun startThreadConsole() {
         ThreadManager.start {
+            val scanner = Scanner(System.`in`)
+
             while (true) {
-                val line = readLine()
-                val split = line?.split(" ")
-                val command = split?.getOrNull(0) ?: continue
-                val args = split.subList(1, split.size)
+                val line = scanner.nextLine()
+                val allArgs = line.split(" ")
+
+                val command = allArgs[0]
+                val args = allArgs.subList(min(1, allArgs.size), allArgs.size)
 
                 when (command.lowercase()) {
                     "exit" -> {
