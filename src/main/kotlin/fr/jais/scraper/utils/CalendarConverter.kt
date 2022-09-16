@@ -8,23 +8,25 @@ object CalendarConverter {
     private val utcFormatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
     private val gmtLineFormatter = SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH)
     private val utcWithTimezoneFormatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
+    val timeZone = TimeZone.getTimeZone("UTC")
 
     fun toUTCDate(iso8601string: String?): String {
-        this.utcFormatter.timeZone = TimeZone.getTimeZone("UTC")
+        this.utcFormatter.timeZone = timeZone
         return this.utcFormatter.format(Date.from(ZonedDateTime.parse(iso8601string).toInstant()))
     }
 
     fun fromUTCTimestampString(iso8601calendar: Calendar?): String {
-        this.utcFormatter.timeZone = TimeZone.getTimeZone("UTC")
+        this.utcFormatter.timeZone = timeZone
         return this.utcFormatter.format(Date.from(iso8601calendar?.toInstant()))
     }
 
     fun fromUTCDate(iso8601string: String?): Calendar? {
         if (iso8601string.isNullOrBlank()) return null
         val calendar = Calendar.getInstance()
-        this.utcFormatter.timeZone = TimeZone.getTimeZone("UTC")
+        this.utcFormatter.timeZone = timeZone
         val date = this.utcFormatter.parse(toUTCDate(iso8601string))
         calendar.time = date
+        calendar.timeZone = timeZone
         return calendar
     }
 

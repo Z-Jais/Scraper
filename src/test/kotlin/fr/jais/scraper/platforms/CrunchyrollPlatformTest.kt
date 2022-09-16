@@ -30,14 +30,8 @@ internal class CrunchyrollPlatformTest {
     private fun testISOTimestamp(): String = "Tue, 13 Sep 2022 18:00:00 GMT"
 
     @Test
-    fun toISODate() {
-        expect("2022-09-13") { platform.toISODate(testCalendar()) }
-    }
-
-    @Test
     fun fromISODate() {
         val isoTimestamp = CalendarConverter.fromGMTLine(testISOTimestamp())
-        isoTimestamp?.timeZone = TimeZone.getTimeZone("UTC")
 
         expect(2022) { isoTimestamp?.get(Calendar.YEAR) }
         expect(Calendar.SEPTEMBER) { isoTimestamp?.get(Calendar.MONTH) }

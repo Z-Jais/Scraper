@@ -9,7 +9,7 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class NetflixConverter(private val platform: NetflixPlatform) {
-    fun toISODate(calendar: Calendar): String = SimpleDateFormat("yyyy-MM-dd").format(calendar.time)
+    fun toISODate(calendar: Calendar): String = SimpleDateFormat("yyyy-MM-dd").format(Date.from(calendar.toInstant()))
 
     fun convertAnime(
         checkedCountry: ICountry,

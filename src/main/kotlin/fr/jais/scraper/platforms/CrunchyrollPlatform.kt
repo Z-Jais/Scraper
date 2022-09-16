@@ -12,8 +12,8 @@ import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.exceptions.CountryNotSupportedException
 import fr.jais.scraper.utils.CalendarConverter
 import fr.jais.scraper.utils.Logger
+import fr.jais.scraper.utils.toDate
 import java.net.URL
-import java.text.SimpleDateFormat
 import java.util.*
 import java.util.logging.Level
 
@@ -29,8 +29,6 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
     fun xmlToJson(content: String) =
         Gson().fromJson(ObjectMapper().writeValueAsString(XmlMapper().readTree(content)), JsonObject::class.java)
             ?.getAsJsonObject("channel")?.getAsJsonArray("item")?.mapNotNull { it.asJsonObject }
-
-    fun toISODate(calendar: Calendar?): String = SimpleDateFormat("yyyy-MM-dd").format(calendar?.time)
 
     fun xmlToJsonWithFilter(
         checkedCountry: ICountry,
@@ -48,7 +46,7 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
                 val countryRestrictions = it.getAsJsonObject("restriction")?.get("")?.asString?.split(" ")
                 val subtitles = it.get("subtitleLanguages")?.asString?.split(",")
 
-                toISODate(releaseDate) == toISODate(calendar)
+                releaseDate?.toDate() == calendar.toDate()
                         && countryRestrictions?.any { r -> r == restriction } ?: false
                         && subtitles?.any { s -> s == "fr - fr" } ?: false
             }

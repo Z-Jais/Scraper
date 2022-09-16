@@ -6,10 +6,7 @@ import fr.jais.scraper.platforms.AnimationDigitalNetworkPlatform
 import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.platforms.IPlatform
 import fr.jais.scraper.platforms.NetflixPlatform
-import fr.jais.scraper.utils.Database
-import fr.jais.scraper.utils.Logger
-import fr.jais.scraper.utils.ThreadManager
-import fr.jais.scraper.utils.toISO8601
+import fr.jais.scraper.utils.*
 import java.lang.Integer.min
 import java.text.SimpleDateFormat
 import java.util.*
@@ -39,7 +36,7 @@ class Scraper {
         countries.addAll(getCountries())
     }
 
-    fun getAllEpisodes(
+    private fun getAllEpisodes(
         calendar: Calendar,
         checkingType: CheckingType = CheckingType.SYNCHRONOUS,
         platformType: IPlatform.PlatformType? = null
@@ -65,7 +62,8 @@ class Scraper {
         }
 
         Logger.info("Get all episodes done.")
-        val episodes = list.filter { calendar.after(it.releaseDate) }.sortedBy { it.releaseDate }
+        val episodes = list.filter { calendar.after(CalendarConverter.fromUTCDate(it.releaseDate)) }
+            .sortedBy { CalendarConverter.fromUTCDate(it.releaseDate) }
         Logger.config("Episodes: ${episodes.size}")
         Database.save(episodes)
         return episodes
@@ -80,6 +78,10 @@ class Scraper {
                 Thread.sleep(5 * 60 * 1000)
             }
         }
+    }
+
+    private fun setCheckedCalendar(calendar: Calendar): Calendar {
+        return CalendarConverter.fromUTCDate("${SimpleDateFormat("yyyy-MM-dd").format(Date.from(calendar.toInstant()))}T23:50:00Z")!!
     }
 
     fun startThreadConsole() {
@@ -109,12 +111,9 @@ class Scraper {
                             val dayInMonth = calendar.get(Calendar.DAY_OF_MONTH) - 1
 
                             for (i in dayInMonth downTo 1) {
-                                val checkedCalendar = Calendar.getInstance()
-                                checkedCalendar.set(Calendar.DAY_OF_MONTH, i)
-                                checkedCalendar.set(Calendar.HOUR_OF_DAY, 23)
-                                checkedCalendar.set(Calendar.MINUTE, 50)
-                                checkedCalendar.set(Calendar.SECOND, 0)
-                                checkedCalendar.set(Calendar.MILLISECOND, 0)
+                                var checkedCalendar = Calendar.getInstance()
+                                checkedCalendar.add(Calendar.DAY_OF_MONTH, -i)
+                                checkedCalendar = setCheckedCalendar(checkedCalendar)
 
                                 Logger.info("Check for ${checkedCalendar.toISO8601()}")
                                 Logger.info(separator)
@@ -131,12 +130,9 @@ class Scraper {
                         val sdf = SimpleDateFormat("dd/MM/yyyy")
 
                         args.forEach { date ->
-                            val calendar = Calendar.getInstance()
+                            var calendar = Calendar.getInstance()
                             calendar.time = sdf.parse(date)
-                            calendar.set(Calendar.HOUR_OF_DAY, 23)
-                            calendar.set(Calendar.MINUTE, 50)
-                            calendar.set(Calendar.SECOND, 0)
-                            calendar.set(Calendar.MILLISECOND, 0)
+                            calendar = setCheckedCalendar(calendar)
 
                             Logger.info("Check for ${calendar.toISO8601()}")
                             Logger.info(separator)
