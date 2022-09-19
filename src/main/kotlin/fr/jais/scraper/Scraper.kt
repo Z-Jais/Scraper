@@ -1,14 +1,11 @@
 package fr.jais.scraper
 
-import fr.jais.scraper.commands.CheckCommand
-import fr.jais.scraper.commands.ExitCommand
+import fr.jais.scraper.commands.ICommand
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Episode
-import fr.jais.scraper.platforms.AnimationDigitalNetworkPlatform
-import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.platforms.IPlatform
-import fr.jais.scraper.platforms.NetflixPlatform
 import fr.jais.scraper.utils.*
+import org.reflections.Reflections
 import java.lang.Integer.min
 import java.util.*
 import java.util.concurrent.Callable
@@ -21,9 +18,11 @@ class Scraper {
         ASYNCHRONOUS,
     }
 
-    val platforms = listOf(AnimationDigitalNetworkPlatform(this), CrunchyrollPlatform(this), NetflixPlatform(this))
+    private val mainPackage = "fr.jais.scraper."
+
+    val platforms = Reflections("${mainPackage}platforms").getSubTypesOf(IPlatform::class.java).mapNotNull { it.getConstructor(Scraper::class.java).newInstance(this) }
     val countries = platforms.flatMap { it.countries }.distinct().map { it.getConstructor().newInstance() }
-    private val commands = listOf(ExitCommand(this), CheckCommand(this))
+    private val commands = Reflections("${mainPackage}commands").getSubTypesOf(ICommand::class.java).mapNotNull { it.getConstructor(Scraper::class.java).newInstance(this) }
 
     fun getCountries(platform: IPlatform): List<ICountry> =
         countries.filter { platform.countries.contains(it.javaClass) }
@@ -71,7 +70,7 @@ class Scraper {
     fun startThreadCheck() {
         ThreadManager.start {
             while (true) {
-                getAllEpisodes(Calendar.getInstance()).forEach { println(it) }
+                getAllEpisodes(Calendar.getInstance(), CheckingType.ASYNCHRONOUS).forEach { println(it) }
 
                 // Wait 5 minutes
                 Thread.sleep(5 * 60 * 1000)

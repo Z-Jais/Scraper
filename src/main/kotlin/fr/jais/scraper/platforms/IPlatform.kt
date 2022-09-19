@@ -21,8 +21,14 @@ abstract class IPlatform(
     fun getPlatform() = Platform(name, url)
 
     open fun getEpisodes(calendar: Calendar): List<Episode> = emptyList()
-    open fun getNews(calendar: Calendar) {}
-    open fun getMangas(calendar: Calendar) {}
+    open fun getNews(calendar: Calendar) {
+        // Can be implemented
+    }
+
+    open fun getMangas(calendar: Calendar) {
+        // Can be implemented
+    }
+
     override fun toString(): String {
         return "IPlatform(name='$name', url='$url', countries=$countries)"
     }
