@@ -43,8 +43,9 @@ class WakanimPlatform(scraper: Scraper) : IPlatform(
     )
 
     val converter = WakanimConverter(this)
-    private val cacheCatalogue = mutableListOf<WakanimCatalogue>()
+    val cacheCatalogue = mutableListOf<WakanimCatalogue>()
     private val cacheAgenda = mutableListOf<WakanimAgendaEpisode>()
+    private var lastCheck = 0L
 
     private fun getCatalogue(): List<WakanimCatalogue> {
         val content = Gson().fromJson(URL("https://account.wakanim.tv/api/catalogue").readText(), JsonArray::class.java) ?: throw CatalogueNotFoundException("Wakanim catalogue not found")
@@ -59,7 +60,7 @@ class WakanimPlatform(scraper: Scraper) : IPlatform(
         }
     }
 
-    private fun getAgendaEpisode(checkedCountry: ICountry, calendar: Calendar): List<WakanimAgendaEpisode> {
+    fun getAgendaEpisode(checkedCountry: ICountry, calendar: Calendar): List<WakanimAgendaEpisode> {
         val lang = when (checkedCountry) {
             is FranceCountry -> "fr"
             else -> throw CountryNotSupportedException("Country not supported")
@@ -100,15 +101,18 @@ class WakanimPlatform(scraper: Scraper) : IPlatform(
     }
 
     override fun getEpisodes(calendar: Calendar): List<Episode> {
-        if (cacheCatalogue.isEmpty()) {
-            cacheCatalogue.addAll(getCatalogue())
-        }
-
+        addCacheCatalogue()
         val countries = scraper.getCountries(this)
+
+        val needCheck = System.currentTimeMillis() - lastCheck > 1 * 60 * 60 * 1000
+
+        if (needCheck) {
+            lastCheck = System.currentTimeMillis()
+        }
 
         return countries.flatMap { country ->
             try {
-                if (cacheAgenda.none { it.iCountry == country }) {
+                if (needCheck || cacheAgenda.none { it.iCountry == country }) {
                     Logger.info("Get agenda for ${country.name}...")
                     val agenda = getAgendaEpisode(country, calendar)
                     Logger.config("Agenda for ${country.name} found (${agenda.size} episodes)")
@@ -121,6 +125,12 @@ class WakanimPlatform(scraper: Scraper) : IPlatform(
                 Logger.log(Level.SEVERE, "Error while converting episode", e)
                 emptyList()
             }
+        }
+    }
+
+    fun addCacheCatalogue() {
+        if (cacheCatalogue.isEmpty()) {
+            cacheCatalogue.addAll(getCatalogue())
         }
     }
 
