@@ -16,7 +16,13 @@ import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.utils.*
 
 class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
-    data class CrunchyrollAnime(val iCountry: ICountry, val id: String, val name: String, val image: String, val description: String?)
+    data class CrunchyrollAnime(
+        val iCountry: ICountry,
+        val id: String,
+        val name: String,
+        val image: String,
+        val description: String?
+    )
 
     val cache = mutableListOf<CrunchyrollAnime>()
 

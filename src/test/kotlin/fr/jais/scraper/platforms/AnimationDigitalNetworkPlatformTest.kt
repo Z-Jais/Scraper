@@ -16,7 +16,7 @@ internal class AnimationDigitalNetworkPlatformTest {
 
     private fun testEpisode(): JsonObject? {
         val gzip = Resource.get("animation_digital_network.txt")
-        return Gson().fromJson(Decoder.fromGzip(gzip!!), JsonObject::class.java)
+        return Gson().fromJson(Gzip.decode(gzip!!), JsonObject::class.java)
     }
 
     private fun testCalendar(): Calendar {

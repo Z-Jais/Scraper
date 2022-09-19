@@ -1,10 +1,14 @@
 package fr.jais.scraper.converters
 
 import fr.jais.scraper.entities.Episode
-import fr.jais.scraper.exceptions.episodes.*
+import fr.jais.scraper.exceptions.episodes.EpisodeIdNotFoundException
+import fr.jais.scraper.exceptions.episodes.EpisodeNotAvailableException
+import fr.jais.scraper.exceptions.episodes.EpisodeNumberNotFoundException
 import fr.jais.scraper.platforms.WakanimPlatform
-import fr.jais.scraper.utils.*
-import java.util.Calendar
+import fr.jais.scraper.utils.Browser
+import fr.jais.scraper.utils.CalendarConverter
+import fr.jais.scraper.utils.Logger
+import java.util.*
 import kotlin.math.pow
 
 private const val EPISODE_NOT_AVAILABLE_YET = "Episode not available yet"
@@ -17,7 +21,9 @@ class WakanimConverter(private val platform: WakanimPlatform) {
             return cache[wakanimAgendaEpisode]!!
         }
 
-        if (calendar.before(CalendarConverter.fromUTCDate(wakanimAgendaEpisode.releaseDate))) throw EpisodeNotAvailableException(EPISODE_NOT_AVAILABLE_YET)
+        if (calendar.before(CalendarConverter.fromUTCDate(wakanimAgendaEpisode.releaseDate))) throw EpisodeNotAvailableException(
+            EPISODE_NOT_AVAILABLE_YET
+        )
 
         val type = wakanimAgendaEpisode.tmpUrl.split("/")[6]
         val content = Browser(Browser.BrowserType.FIREFOX, wakanimAgendaEpisode.tmpUrl).launch()
@@ -30,12 +36,15 @@ class WakanimConverter(private val platform: WakanimPlatform) {
             if (content.selectFirst("NoEpisodes") != null) throw EpisodeNotAvailableException(EPISODE_NOT_AVAILABLE_YET)
 
             content.select(".slider_item").firstOrNull {
-                it.hasClass("-big") && it.select("slider_item_number").text().toIntOrNull() == wakanimAgendaEpisode.number
+                it.hasClass("-big") && it.select("slider_item_number").text()
+                    .toIntOrNull() == wakanimAgendaEpisode.number
             }
         }
 
         Logger.info("Get number...")
-        val number = card?.select(".slider_item_number")?.text()?.toIntOrNull() ?: throw EpisodeNumberNotFoundException("Episode number not found")
+        val number = card?.select(".slider_item_number")?.text()?.toIntOrNull() ?: throw EpisodeNumberNotFoundException(
+            "Episode number not found"
+        )
         Logger.config("Number: $number")
 
         if (number != wakanimAgendaEpisode.number) throw EpisodeNotAvailableException(EPISODE_NOT_AVAILABLE_YET)

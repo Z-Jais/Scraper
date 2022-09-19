@@ -16,10 +16,10 @@ internal class CrunchyrollPlatformTest {
 
     private fun testEpisode(): JsonObject? {
         val gzip = Resource.get("crunchyroll_episode.txt")
-        return Gson().fromJson(Decoder.fromGzip(gzip!!), JsonObject::class.java)
+        return Gson().fromJson(Gzip.decode(gzip!!), JsonObject::class.java)
     }
 
-    private fun testXml() = Decoder.fromGzip(Resource.get("crunchyroll_xml.txt")!!)
+    private fun testXml() = Gzip.decode(Resource.get("crunchyroll_xml.txt")!!)
 
     private fun testCalendar(): Calendar {
         val calendar = Calendar.getInstance()

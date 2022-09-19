@@ -13,9 +13,11 @@ import java.util.logging.Level
 class Scraper {
     private val mainPackage = "fr.jais.scraper."
 
-    val platforms = Reflections("${mainPackage}platforms").getSubTypesOf(IPlatform::class.java).mapNotNull { it.getConstructor(Scraper::class.java).newInstance(this) }
+    val platforms = Reflections("${mainPackage}platforms").getSubTypesOf(IPlatform::class.java)
+        .mapNotNull { it.getConstructor(Scraper::class.java).newInstance(this) }
     val countries = platforms.flatMap { it.countries }.distinct().mapNotNull { it.getConstructor().newInstance() }
-    private val commands = Reflections("${mainPackage}commands").getSubTypesOf(ICommand::class.java).mapNotNull { it.getConstructor(Scraper::class.java).newInstance(this) }
+    private val commands = Reflections("${mainPackage}commands").getSubTypesOf(ICommand::class.java)
+        .mapNotNull { it.getConstructor(Scraper::class.java).newInstance(this) }
 
     fun getCountries(platform: IPlatform): List<ICountry> =
         countries.filter { platform.countries.contains(it.javaClass) }

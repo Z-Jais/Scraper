@@ -48,12 +48,14 @@ class WakanimPlatform(scraper: Scraper) : IPlatform(
     private var lastCheck = 0L
 
     private fun getCatalogue(): List<WakanimCatalogue> {
-        val content = Gson().fromJson(URL("https://account.wakanim.tv/api/catalogue").readText(), JsonArray::class.java) ?: throw CatalogueNotFoundException("Wakanim catalogue not found")
+        val content = Gson().fromJson(URL("https://account.wakanim.tv/api/catalogue").readText(), JsonArray::class.java)
+            ?: throw CatalogueNotFoundException("Wakanim catalogue not found")
         return content.filter { it?.isJsonObject == true }.mapNotNull { element ->
             val obj = element.asJsonObject
             WakanimCatalogue(
                 obj.get("name")?.asString() ?: throw AnimeNameNotFoundException("Wakanim anime name not found"),
-                obj.get("imageUrl")?.asString()?.toHTTPS() ?: throw AnimeImageNotFoundException("Wakanim anime image not found"),
+                obj.get("imageUrl")?.asString()?.toHTTPS()
+                    ?: throw AnimeImageNotFoundException("Wakanim anime image not found"),
                 obj.get("smallSummary")?.asString(),
                 obj.get("genres")?.asJsonArray?.mapNotNull { it.asJsonObject()?.get("name")?.asString() } ?: emptyList()
             )
@@ -67,20 +69,31 @@ class WakanimPlatform(scraper: Scraper) : IPlatform(
         }
 
         val date = calendar.toFrenchDate()
-        val content = Browser(Browser.BrowserType.FIREFOX, "https://www.wakanim.tv/$lang/v2/agenda/getevents?s=$date&e=$date&free=false").launch()
+        val content = Browser(
+            Browser.BrowserType.FIREFOX,
+            "https://www.wakanim.tv/$lang/v2/agenda/getevents?s=$date&e=$date&free=false"
+        ).launch()
 
         return content.select(".Calendar-ep").mapNotNull {
             val textSplit = it?.text()?.split(" ") ?: return@mapNotNull null
             val releaseDate = "${calendar.toDate()}T${textSplit[0]}:00Z"
             val toIndex = textSplit.indexOf("Séries")
             val anime = textSplit.subList(1, toIndex).joinToString(" ")
-            val number = textSplit[textSplit.size - 2].replace(" ", "").toIntOrNull() ?: throw EpisodeNumberNotFoundException("Episode number not found")
+            val number = textSplit[textSplit.size - 2].replace(" ", "").toIntOrNull()
+                ?: throw EpisodeNumberNotFoundException("Episode number not found")
             val etc = textSplit.subList(toIndex + 1, textSplit.size - 2).joinToString(" ")
-            val episodeType = if (etc.contains("Film", true)) { EpisodeType.FILM } else if (etc.contains("Spécial", true) || etc.contains("OAV", true)) { EpisodeType.SPECIAL } else { EpisodeType.EPISODE }
+            val episodeType = if (etc.contains("Film", true)) {
+                EpisodeType.FILM
+            } else if (etc.contains("Spécial", true) || etc.contains("OAV", true)) {
+                EpisodeType.SPECIAL
+            } else {
+                EpisodeType.EPISODE
+            }
             val langType = LangType.fromString(textSplit[textSplit.size - 1].replace(" ", ""))
             val tmpUrl = "https://www.wakanim.tv${it.selectFirst(".Calendar-linkImg")?.attr("href")}"
 
-            val catalogue = this.cacheCatalogue.firstOrNull { catalogue -> catalogue.name.equals(anime, true) } ?: throw CatalogueNotFoundException("Wakanim catalogue not found")
+            val catalogue = this.cacheCatalogue.firstOrNull { catalogue -> catalogue.name.equals(anime, true) }
+                ?: throw CatalogueNotFoundException("Wakanim catalogue not found")
 
             WakanimAgendaEpisode(
                 checkedCountry,

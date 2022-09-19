@@ -14,3 +14,4 @@ fun JsonElement.asString(): String? = if (this.isJsonNull) null else this.asStri
 fun JsonElement.asJsonArray(): JsonArray? = if (this.isJsonArray) this.asJsonArray else null
 fun JsonElement.asLong(): Long? = if (this.isJsonNull) null else this.asLong
 fun JsonElement.asJsonObject(): JsonObject? = if (this.isJsonObject) this.asJsonObject else null
+fun Double.toString(numberOfDecimals: Int): String = String.format("%.${numberOfDecimals}f", this)

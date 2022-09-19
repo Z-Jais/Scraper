@@ -18,7 +18,7 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
 
         Logger.info("Get name...")
         var name = showJson.get("shortTitle")?.asString() ?: showJson.get("title")?.asString()
-            ?: throw AnimeNameNotFoundException("No name found")
+        ?: throw AnimeNameNotFoundException("No name found")
         Logger.config("Name: $name")
 
         if (name.matches(animeNameSeasonRegex)) {
@@ -28,7 +28,8 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         }
 
         Logger.info("Get image...")
-        val image = showJson.get("image2x")?.asString()?.toHTTPS() ?: throw AnimeImageNotFoundException("No image found")
+        val image =
+            showJson.get("image2x")?.asString()?.toHTTPS() ?: throw AnimeImageNotFoundException("No image found")
         Logger.config("Image: $image")
 
         Logger.info("Get description...")

@@ -1,5 +1,6 @@
 package fr.jais.scraper.entities
 
+import fr.jais.scraper.exceptions.CountryNotSupportedException
 import fr.jais.scraper.utils.EpisodeType
 import fr.jais.scraper.utils.LangType
 
@@ -18,10 +19,20 @@ data class Episode(
     val image: String,
     val duration: Long
 ) {
-    val hash = "${platform.name.substring(0 until 4).uppercase()}-$id-${langType.name.uppercase()}"
+    val hash = "${platform.name.substring(0 until 4).uppercase()}-$id-${suffix()}"
 
     init {
         title = title?.ifBlank { null }
+    }
+
+    private fun suffix(): String {
+        return when (anime.country.code) {
+            "fr" -> {
+                if (langType == LangType.SUBTITLES) "VOSTFR" else "VF"
+            }
+
+            else -> throw CountryNotSupportedException("Country ${anime.country.code} is not supported")
+        }
     }
 
     override fun toString(): String {
