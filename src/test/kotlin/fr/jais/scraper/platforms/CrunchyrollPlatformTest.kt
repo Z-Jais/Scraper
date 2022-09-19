@@ -51,7 +51,7 @@ internal class CrunchyrollPlatformTest {
 
     @Test
     fun xmlToJsonWithFilter() {
-        val json = platform.xmlToJsonWithFilter(country, testCalendar(), testXml())
+        val json = platform.xmlToJsonWithEpisodeFilter(country, testCalendar(), testXml())
         expect(1) { json?.size }
     }
 

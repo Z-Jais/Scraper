@@ -3,6 +3,7 @@ package fr.jais.scraper
 import fr.jais.scraper.commands.ICommand
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Episode
+import fr.jais.scraper.entities.News
 import fr.jais.scraper.platforms.IPlatform
 import fr.jais.scraper.utils.*
 import org.reflections.Reflections
@@ -42,8 +43,25 @@ class Scraper {
                 )
             )
         Logger.config("Episodes: ${episodes.size}")
-        Database.save(episodes)
+        Database.saveEpisodes(episodes)
         return episodes
+    }
+
+    fun getAllNews(calendar: Calendar): List<News> {
+        Logger.config("Calendar: ${calendar.toISO8601()}")
+
+        Logger.info("Get all news...")
+        val news = platforms
+            .flatMap { it.getNews(calendar) }
+            .filter { calendar.after(CalendarConverter.fromUTCDate(it.releaseDate)) }
+            .sortedWith(
+                compareBy(
+                    { CalendarConverter.fromUTCDate(it.releaseDate) }
+                )
+            )
+        Logger.config("News: ${news.size}")
+        Database.saveNews(news)
+        return news
     }
 
     fun startThreadCheck() {
@@ -61,6 +79,7 @@ class Scraper {
                 }
 
                 getAllEpisodes(calendar).forEach { println(it) }
+                getAllNews(calendar).forEach { println(it) }
 
                 // Wait 5 minutes
                 Thread.sleep(5 * 60 * 1000)
