@@ -29,6 +29,10 @@ abstract class IPlatform(
         // Can be implemented
     }
 
+    open fun reset() {
+        // Can be implemented
+    }
+
     override fun toString(): String {
         return "IPlatform(name='$name', url='$url', countries=$countries)"
     }

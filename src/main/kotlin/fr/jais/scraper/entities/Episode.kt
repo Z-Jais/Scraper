@@ -18,7 +18,7 @@ data class Episode(
     val image: String,
     val duration: Long
 ) {
-    val hash = "${platform.name.substring(0..4).uppercase()}-$id-${langType.name.uppercase()}"
+    val hash = "${platform.name.substring(0 until 4).uppercase()}-$id-${langType.name.uppercase()}"
 
     init {
         title = title?.ifBlank { null }

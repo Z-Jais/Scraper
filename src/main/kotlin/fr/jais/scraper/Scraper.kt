@@ -8,20 +8,13 @@ import fr.jais.scraper.utils.*
 import org.reflections.Reflections
 import java.lang.Integer.min
 import java.util.*
-import java.util.concurrent.Callable
-import java.util.concurrent.Executors
 import java.util.logging.Level
 
 class Scraper {
-    enum class CheckingType {
-        SYNCHRONOUS,
-        ASYNCHRONOUS,
-    }
-
     private val mainPackage = "fr.jais.scraper."
 
     val platforms = Reflections("${mainPackage}platforms").getSubTypesOf(IPlatform::class.java).mapNotNull { it.getConstructor(Scraper::class.java).newInstance(this) }
-    val countries = platforms.flatMap { it.countries }.distinct().map { it.getConstructor().newInstance() }
+    val countries = platforms.flatMap { it.countries }.distinct().mapNotNull { it.getConstructor().newInstance() }
     private val commands = Reflections("${mainPackage}commands").getSubTypesOf(ICommand::class.java).mapNotNull { it.getConstructor(Scraper::class.java).newInstance(this) }
 
     fun getCountries(platform: IPlatform): List<ICountry> =
@@ -29,31 +22,15 @@ class Scraper {
 
     fun getAllEpisodes(
         calendar: Calendar,
-        checkingType: CheckingType = CheckingType.SYNCHRONOUS,
         platformType: IPlatform.PlatformType? = null
     ): List<Episode> {
-        val list = mutableListOf<Episode>()
-
-        Logger.info("Get all episodes...")
         Logger.config("Calendar: ${calendar.toISO8601()}")
 
-        val filter = platforms.filter { platformType == null || it.type == platformType }
-
-        when (checkingType) {
-            CheckingType.ASYNCHRONOUS -> {
-                val newFixedThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
-                val callables = filter.map { platform -> Callable { list.addAll(platform.getEpisodes(calendar)) } }
-                newFixedThreadPool.invokeAll(callables)
-                newFixedThreadPool.shutdown()
-            }
-
-            CheckingType.SYNCHRONOUS -> {
-                filter.forEach { list.addAll(it.getEpisodes(calendar)) }
-            }
-        }
-
-        Logger.info("Get all episodes done.")
-        val episodes = list.filter { calendar.after(CalendarConverter.fromUTCDate(it.releaseDate)) }
+        Logger.info("Get all episodes...")
+        val episodes = platforms
+            .filter { platformType == null || it.type == platformType }
+            .flatMap { it.getEpisodes(calendar) }
+            .filter { calendar.after(CalendarConverter.fromUTCDate(it.releaseDate)) }
             .sortedWith(
                 compareBy(
                     { CalendarConverter.fromUTCDate(it.releaseDate) },
@@ -69,8 +46,19 @@ class Scraper {
 
     fun startThreadCheck() {
         ThreadManager.start {
+            var lastCheck = Calendar.getInstance().toDate()
+
             while (true) {
-                getAllEpisodes(Calendar.getInstance(), CheckingType.ASYNCHRONOUS).forEach { println(it) }
+                val calendar = Calendar.getInstance()
+                val today = calendar.toDate()
+
+                if (lastCheck != today) {
+                    Logger.info("Reset all platforms...")
+                    lastCheck = today
+                    platforms.forEach { it.reset() }
+                }
+
+                getAllEpisodes(calendar).forEach { println(it) }
 
                 // Wait 5 minutes
                 Thread.sleep(5 * 60 * 1000)

@@ -82,4 +82,8 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
             } ?: emptyList()
         }
     }
+
+    override fun reset() {
+        converter.cache.clear()
+    }
 }
