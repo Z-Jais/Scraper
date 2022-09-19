@@ -9,12 +9,12 @@ class Database {
     data class DB(val episodes: MutableList<Episode> = mutableListOf(), val news: MutableList<News> = mutableListOf())
 
     private val gson = Gson()
-    private val file = File("database")
+    private val file = File("database.txt")
 
     fun load(): DB =
         gson.fromJson(
             try {
-                Gzip.decode(file.readBytes())
+                Gzip.decode(file.readText())
             } catch (e: Exception) {
                 "{}"
             },
@@ -22,12 +22,12 @@ class Database {
         ) ?: DB()
 
     private fun save(db: DB) {
-        val json = gson.toJson(db).toByteArray()
-        val jsonSizeInMiB = json.size.toDouble() / 1024.0
+        val json = gson.toJson(db)
+        val jsonSizeInMiB = json.toByteArray().size.toDouble() / 1024.0
         val gzip = Gzip.encode(json)
-        val gzipSizeInMiB = gzip.size.toDouble() / 1024.0
+        val gzipSizeInMiB = gzip.toByteArray().size.toDouble() / 1024.0
         Logger.config("Database size: ${jsonSizeInMiB.toString(2)} KiB -> ${gzipSizeInMiB.toString(2)} KiB")
-        file.writeBytes(gzip)
+        file.writeText(gzip)
     }
 
     companion object {

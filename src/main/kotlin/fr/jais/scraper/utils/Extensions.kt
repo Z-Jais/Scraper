@@ -3,6 +3,8 @@ package fr.jais.scraper.utils
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
+import java.math.BigInteger
+import java.security.MessageDigest
 import java.util.*
 
 fun String.toHTTPS() = this.replace("http://", "https://")
@@ -15,3 +17,8 @@ fun JsonElement.asJsonArray(): JsonArray? = if (this.isJsonArray) this.asJsonArr
 fun JsonElement.asLong(): Long? = if (this.isJsonNull) null else this.asLong
 fun JsonElement.asJsonObject(): JsonObject? = if (this.isJsonObject) this.asJsonObject else null
 fun Double.toString(numberOfDecimals: Int): String = String.format("%.${numberOfDecimals}f", this)
+
+fun String.toMD5(): String {
+    val md = MessageDigest.getInstance("MD5")
+    return BigInteger(1, md.digest(this.toByteArray())).toString(16).padStart(32, '0')
+}

@@ -21,12 +21,7 @@ object Gzip {
         return String(compressed)
     }
 
-    fun encode(string: String): String {
-        val gzip = GZIPInputStream(ByteArrayInputStream(string.toByteArray()))
-        val compressed = gzip.readBytes()
-        gzip.close()
-        return Base64.getEncoder().encodeToString(compressed)
-    }
+    fun encode(string: String): String = Base64.getEncoder().encodeToString(encode(string.toByteArray()))
 
     fun encode(bytes: ByteArray): ByteArray {
         val bos = ByteArrayOutputStream(bytes.size)
