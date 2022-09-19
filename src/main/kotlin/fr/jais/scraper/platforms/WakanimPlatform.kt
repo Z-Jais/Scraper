@@ -42,8 +42,8 @@ class WakanimPlatform(scraper: Scraper) : IPlatform(
         val tmpUrl: String
     )
 
-    val converter = WakanimConverter(this)
-    val cacheCatalogue = mutableListOf<WakanimCatalogue>()
+    private val converter = WakanimConverter(this)
+    private val cacheCatalogue = mutableListOf<WakanimCatalogue>()
     private val cacheAgenda = mutableListOf<WakanimAgendaEpisode>()
     private var lastCheck = 0L
 
@@ -62,7 +62,7 @@ class WakanimPlatform(scraper: Scraper) : IPlatform(
         }
     }
 
-    fun getAgendaEpisode(checkedCountry: ICountry, calendar: Calendar): List<WakanimAgendaEpisode> {
+    private fun getAgendaEpisode(checkedCountry: ICountry, calendar: Calendar): List<WakanimAgendaEpisode> {
         val lang = when (checkedCountry) {
             is FranceCountry -> "fr"
             else -> throw CountryNotSupportedException("Country not supported")
@@ -141,7 +141,7 @@ class WakanimPlatform(scraper: Scraper) : IPlatform(
         }
     }
 
-    fun addCacheCatalogue() {
+    private fun addCacheCatalogue() {
         if (cacheCatalogue.isEmpty()) {
             cacheCatalogue.addAll(getCatalogue())
         }
