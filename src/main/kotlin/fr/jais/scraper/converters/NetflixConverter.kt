@@ -5,12 +5,10 @@ import fr.jais.scraper.entities.Anime
 import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.platforms.NetflixPlatform
 import fr.jais.scraper.utils.CalendarConverter
-import java.text.SimpleDateFormat
+import fr.jais.scraper.utils.toDate
 import java.util.*
 
 class NetflixConverter(private val platform: NetflixPlatform) {
-    fun toISODate(calendar: Calendar): String = SimpleDateFormat("yyyy-MM-dd").format(Date.from(calendar.toInstant()))
-
     fun convertAnime(
         checkedCountry: ICountry,
         netflixContent: NetflixPlatform.NetflixContent,
@@ -36,7 +34,7 @@ class NetflixConverter(private val platform: NetflixPlatform) {
         return Episode(
             platform.getPlatform(),
             anime,
-            CalendarConverter.toUTCDate("${toISODate(calendar)}T${netflixContent.releaseTime}Z"),
+            CalendarConverter.toUTCDate("${calendar.toDate()}T${netflixContent.releaseTime}Z"),
             netflixContent.season,
             netflixEpisode.number,
             netflixContent.episodeType,

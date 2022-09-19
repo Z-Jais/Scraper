@@ -13,12 +13,12 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
     private val animeNameSeasonRegex = Regex(".* - Saison \\d")
 
     fun convertAnime(checkedCountry: ICountry, jsonObject: JsonObject): Anime {
-        val showJson = jsonObject.getAsJsonObject("show") ?: throw NoAnimeFoundException("No show found")
+        val showJson = jsonObject.getAsJsonObject("show") ?: throw AnimeNotFoundException("No show found")
         Logger.config("Convert anime from $showJson")
 
         Logger.info("Get name...")
         var name = showJson.get("shortTitle")?.asString() ?: showJson.get("title")?.asString()
-            ?: throw NoAnimeNameFoundException("No name found")
+            ?: throw AnimeNameNotFoundException("No name found")
         Logger.config("Name: $name")
 
         if (name.matches(animeNameSeasonRegex)) {
@@ -28,7 +28,7 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         }
 
         Logger.info("Get image...")
-        val image = showJson.get("image2x")?.asString()?.toHTTPS() ?: throw NoAnimeImageFoundException("No image found")
+        val image = showJson.get("image2x")?.asString()?.toHTTPS() ?: throw AnimeImageNotFoundException("No image found")
         Logger.config("Image: $image")
 
         Logger.info("Get description...")
@@ -62,7 +62,7 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
 
         Logger.info("Get release date...")
         val releaseDate = CalendarConverter.fromUTCDate(jsonObject.get("releaseDate")?.asString())
-            ?: throw NoEpisodeReleaseDateFoundException("No release date found")
+            ?: throw EpisodeReleaseDateNotFoundException("No release date found")
         Logger.config("Release date: ${releaseDate.toISO8601()}")
 
         Logger.info("Get season...")
@@ -91,10 +91,10 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         val langType = LangType.fromString(jsonObject.get("languages")?.asJsonArray()?.lastOrNull()?.asString() ?: "")
         Logger.config("Lang type: $langType")
 
-        if (langType == LangType.UNKNOWN) throw NoEpisodeLangTypeFoundException("No lang type found")
+        if (langType == LangType.UNKNOWN) throw EpisodeLangTypeNotFoundException("No lang type found")
 
         Logger.info("Get id...")
-        val id = jsonObject.get("id")?.asLong() ?: throw NoEpisodeIdFoundException("No id found")
+        val id = jsonObject.get("id")?.asLong() ?: throw EpisodeIdNotFoundException("No id found")
         Logger.config("Id: $id")
 
         Logger.info("Get title...")
@@ -105,12 +105,12 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         Logger.config("Title: $title")
 
         Logger.info("Get url...")
-        val url = jsonObject.get("url")?.asString()?.toHTTPS() ?: throw NoEpisodeUrlFoundException("No url found")
+        val url = jsonObject.get("url")?.asString()?.toHTTPS() ?: throw EpisodeUrlNotFoundException("No url found")
         Logger.config("Url: $url")
 
         Logger.info("Get image...")
         val image =
-            jsonObject.get("image2x")?.asString()?.toHTTPS() ?: throw NoEpisodeImageFoundException("No image found")
+            jsonObject.get("image2x")?.asString()?.toHTTPS() ?: throw EpisodeImageNotFoundException("No image found")
         Logger.config("Image: $image")
 
         Logger.info("Get duration...")

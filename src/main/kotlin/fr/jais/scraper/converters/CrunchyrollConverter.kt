@@ -6,13 +6,13 @@ import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Anime
 import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.exceptions.CountryNotSupportedException
-import fr.jais.scraper.exceptions.animes.NoAnimeFoundException
-import fr.jais.scraper.exceptions.animes.NoAnimeImageFoundException
-import fr.jais.scraper.exceptions.animes.NoAnimeNameFoundException
-import fr.jais.scraper.exceptions.episodes.NoEpisodeIdFoundException
-import fr.jais.scraper.exceptions.episodes.NoEpisodeImageFoundException
-import fr.jais.scraper.exceptions.episodes.NoEpisodeReleaseDateFoundException
-import fr.jais.scraper.exceptions.episodes.NoEpisodeUrlFoundException
+import fr.jais.scraper.exceptions.animes.AnimeImageNotFoundException
+import fr.jais.scraper.exceptions.animes.AnimeNameNotFoundException
+import fr.jais.scraper.exceptions.animes.AnimeNotFoundException
+import fr.jais.scraper.exceptions.episodes.EpisodeIdNotFoundException
+import fr.jais.scraper.exceptions.episodes.EpisodeImageNotFoundException
+import fr.jais.scraper.exceptions.episodes.EpisodeReleaseDateNotFoundException
+import fr.jais.scraper.exceptions.episodes.EpisodeUrlNotFoundException
 import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.utils.*
 
@@ -25,7 +25,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         Logger.config("Convert anime from $jsonObject")
 
         Logger.info("Get name...")
-        val name = jsonObject.get("seriesTitle")?.asString() ?: throw NoAnimeNameFoundException("No name found")
+        val name = jsonObject.get("seriesTitle")?.asString() ?: throw AnimeNameNotFoundException("No name found")
         Logger.config("Name: $name")
 
         var image: String?
@@ -49,7 +49,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
 
             val episodeUrl = jsonObject.get("link")?.asString()
             val animeId =
-                episodeUrl?.split("/")?.get(4) ?: throw NoAnimeFoundException("No anime id found in $episodeUrl")
+                episodeUrl?.split("/")?.get(4) ?: throw AnimeNotFoundException("No anime id found in $episodeUrl")
             val browser = Browser(Browser.BrowserType.FIREFOX, "https://www.crunchyroll.com/$country/$animeId")
             val result = browser.launch()
 
@@ -72,7 +72,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
             cache[name] = Cache(animeId, image, description)
         }
 
-        if (image == null) throw NoAnimeImageFoundException("No image found")
+        if (image == null) throw AnimeImageNotFoundException("No image found")
 
         Logger.info("Get genres...")
         val genres = jsonObject.get("keywords")?.asString()?.split(", ") ?: emptyList()
@@ -97,7 +97,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
 
         Logger.info("Get release date...")
         val releaseDate = CalendarConverter.fromGMTLine(jsonObject.get("pubDate")?.asString())
-            ?: throw NoEpisodeReleaseDateFoundException("No release date found")
+            ?: throw EpisodeReleaseDateNotFoundException("No release date found")
         Logger.config("Release date: ${releaseDate.toISO8601()}")
 
         Logger.info("Get season...")
@@ -123,7 +123,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         Logger.config("Lang type: $langType")
 
         Logger.info("Get id...")
-        val id = jsonObject.get("mediaId")?.asLong() ?: throw NoEpisodeIdFoundException("No id found")
+        val id = jsonObject.get("mediaId")?.asLong() ?: throw EpisodeIdNotFoundException("No id found")
         Logger.config("Id: $id")
 
         Logger.info("Get title...")
@@ -134,15 +134,15 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         Logger.config("Title: $title")
 
         Logger.info("Get url...")
-        val url = jsonObject.get("link")?.asString()?.toHTTPS() ?: throw NoEpisodeUrlFoundException("No url found")
+        val url = jsonObject.get("link")?.asString()?.toHTTPS() ?: throw EpisodeUrlNotFoundException("No url found")
         Logger.config("Url: $url")
 
         Logger.info("Get image...")
         val thumbnails = jsonObject.getAsJsonArray("thumbnail")?.mapNotNull { it.asJsonObject() }
-            ?: throw NoEpisodeImageFoundException("No thumbnail available")
+            ?: throw EpisodeImageNotFoundException("No thumbnail available")
         val largeThumbnail = thumbnails.maxByOrNull { it.get("width").asLong }
         val image =
-            largeThumbnail?.get("url")?.asString()?.toHTTPS() ?: throw NoEpisodeImageFoundException("No image found")
+            largeThumbnail?.get("url")?.asString()?.toHTTPS() ?: throw EpisodeImageNotFoundException("No image found")
         Logger.config("Image: $image")
 
         Logger.info("Get duration...")

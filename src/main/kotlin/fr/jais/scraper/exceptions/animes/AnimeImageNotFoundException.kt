@@ -2,4 +2,4 @@ package fr.jais.scraper.exceptions.animes
 
 import fr.jais.scraper.exceptions.AnimeException
 
-class NoAnimeFoundException(s: String) : AnimeException(s)
+class AnimeImageNotFoundException(s: String) : AnimeException(s)

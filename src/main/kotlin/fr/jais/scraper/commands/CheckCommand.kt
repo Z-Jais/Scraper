@@ -25,35 +25,13 @@ class CheckCommand(scraper: Scraper) : ICommand(scraper, "check", "Check episode
             if (args.size == 1) {
                 val calendar = Calendar.getInstance()
                 val dayInMonth = calendar.get(Calendar.DAY_OF_MONTH) - 1
-
-                for (i in dayInMonth downTo 1) {
-                    var checkedCalendar = Calendar.getInstance()
-                    checkedCalendar.add(Calendar.DAY_OF_MONTH, -i)
-                    checkedCalendar = setCheckedCalendar(checkedCalendar)
-
-                    Logger.info("Check for ${checkedCalendar.toISO8601()}")
-                    Logger.info(separator)
-                    list.addAll(scraper.getAllEpisodes(checkedCalendar, platformType = IPlatform.PlatformType.API))
-                    Logger.info(separator)
-                }
-
+                checkForDay(dayInMonth, list)
                 list.forEach { println(it) }
                 return
             }
 
             val month = (args[1].toIntOrNull() ?: 1) * 30
-
-            for (i in month downTo 1) {
-                var checkedCalendar = Calendar.getInstance()
-                checkedCalendar.add(Calendar.DAY_OF_MONTH, -i)
-                checkedCalendar = setCheckedCalendar(checkedCalendar)
-
-                Logger.info("Check for ${checkedCalendar.toISO8601()}")
-                Logger.info(separator)
-                list.addAll(scraper.getAllEpisodes(checkedCalendar, platformType = IPlatform.PlatformType.API))
-                Logger.info(separator)
-            }
-
+            checkForDay(month, list)
             list.forEach { println(it) }
             return
         }
@@ -72,5 +50,18 @@ class CheckCommand(scraper: Scraper) : ICommand(scraper, "check", "Check episode
         }
 
         list.forEach { println(it) }
+    }
+
+    private fun checkForDay(dayInMonth: Int, list: MutableList<Episode>) {
+        for (i in dayInMonth downTo 1) {
+            var checkedCalendar = Calendar.getInstance()
+            checkedCalendar.add(Calendar.DAY_OF_MONTH, -i)
+            checkedCalendar = setCheckedCalendar(checkedCalendar)
+
+            Logger.info("Check for ${checkedCalendar.toISO8601()}")
+            Logger.info(separator)
+            list.addAll(scraper.getAllEpisodes(checkedCalendar, platformType = IPlatform.PlatformType.API))
+            Logger.info(separator)
+        }
     }
 }
