@@ -16,7 +16,7 @@ internal class AnimationDigitalNetworkPlatformTest {
 
     private fun testEpisode(): JsonObject? {
         val gzip = Resource.get("animation_digital_network.txt")
-        return Gson().fromJson(Decoder.fromGzip(gzip!!), JsonObject::class.java)
+        return Gson().fromJson(Gzip.decode(gzip!!), JsonObject::class.java)
     }
 
     private fun testCalendar(): Calendar {
@@ -49,9 +49,9 @@ internal class AnimationDigitalNetworkPlatformTest {
     @Test
     fun convertAnime() {
         val anime = platform.converter.convertAnime(country, testEpisode() ?: return)
-        expect("Overlord IV") { anime?.name }
-        expect("Ainz Ooal Gown, ayant assis sa domination, a pour projet de fonder un royaume où toutes les races pourraient cohabiter en harmonie. Cependant, cette montée en puissance est mal perçue par les autres dirigeants qui surveillent de près l’évolution de Nazarick. Ainz Ooal Gown parviendra-t-il à maintenir son autorité, en dépit des complots fomentés envers sa nation ?") { anime?.description }
-        expect("https://image.animationdigitalnetwork.fr/license/overlord/tv4/web/affiche_350x500.jpg") { anime?.image }
+        expect("Overlord IV") { anime.name }
+        expect("Ainz Ooal Gown, ayant assis sa domination, a pour projet de fonder un royaume où toutes les races pourraient cohabiter en harmonie. Cependant, cette montée en puissance est mal perçue par les autres dirigeants qui surveillent de près l’évolution de Nazarick. Ainz Ooal Gown parviendra-t-il à maintenir son autorité, en dépit des complots fomentés envers sa nation ?") { anime.description }
+        expect("https://image.animationdigitalnetwork.fr/license/overlord/tv4/web/affiche_350x500.jpg") { anime.image }
     }
 
     @Test

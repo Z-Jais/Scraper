@@ -6,7 +6,6 @@ import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Anime
 import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.exceptions.CountryNotSupportedException
-import fr.jais.scraper.exceptions.animes.AnimeImageNotFoundException
 import fr.jais.scraper.exceptions.animes.AnimeNameNotFoundException
 import fr.jais.scraper.exceptions.animes.AnimeNotFoundException
 import fr.jais.scraper.exceptions.episodes.EpisodeIdNotFoundException
@@ -17,9 +16,15 @@ import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.utils.*
 
 class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
-    data class Cache(val id: String, val image: String, val description: String?)
+    data class CrunchyrollAnime(
+        val iCountry: ICountry,
+        val id: String,
+        val name: String,
+        val image: String,
+        val description: String?
+    )
 
-    private val cache = HashMap<String, Cache>()
+    val cache = mutableListOf<CrunchyrollAnime>()
 
     fun convertAnime(checkedCountry: ICountry, jsonObject: JsonObject): Anime {
         Logger.config("Convert anime from $jsonObject")
@@ -31,15 +36,15 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         var image: String?
         var description: String?
 
-        if (cache.containsKey(name)) {
-            val animeCached = cache[name]
+        if (cache.any { getInCache(it, checkedCountry, name) }) {
+            val animeCached = cache.first { getInCache(it, checkedCountry, name) }
 
             Logger.info("Get image...")
-            image = animeCached?.image
+            image = animeCached.image
             Logger.config("Image: $image")
 
             Logger.info("Get description...")
-            description = animeCached?.description
+            description = animeCached.description
             Logger.config("Description: $description")
         } else {
             val country = when (checkedCountry) {
@@ -69,10 +74,8 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
                 if (description.isNullOrBlank()) description = result.getElementsByClass("trunc-desc").text()
             }
 
-            cache[name] = Cache(animeId, image, description)
+            cache.add(CrunchyrollAnime(checkedCountry, animeId, name, image, description))
         }
-
-        if (image == null) throw AnimeImageNotFoundException("No image found")
 
         Logger.info("Get genres...")
         val genres = jsonObject.get("keywords")?.asString()?.split(", ") ?: emptyList()
@@ -80,6 +83,12 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
 
         return Anime(checkedCountry.getCountry(), name, image, description, genres)
     }
+
+    private fun getInCache(
+        crunchyrollAnime: CrunchyrollAnime,
+        iCountry: ICountry,
+        name: String
+    ) = crunchyrollAnime.iCountry == iCountry && crunchyrollAnime.name.equals(name, true)
 
     private fun isDub(jsonObject: JsonObject) = LangType.VOICE.data.any {
         jsonObject.get("title")!!.asString()?.contains(

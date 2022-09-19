@@ -1,24 +1,31 @@
 package fr.jais.scraper.utils
 
-import com.google.gson.GsonBuilder
+import com.google.gson.Gson
 import fr.jais.scraper.entities.Episode
 import java.io.File
 
 class Database {
-    private val gson = GsonBuilder().setPrettyPrinting().create()
-    private val file = File("database.json")
+    private val gson = Gson()
+    private val file = File("database")
 
     fun load(): MutableList<Episode> =
         gson.fromJson(
             try {
-                file.readText()
+                Gzip.decode(file.readBytes())
             } catch (e: Exception) {
                 "[]"
             },
             Array<Episode>::class.java
         )?.toMutableList() ?: mutableListOf()
 
-    fun save(episodes: List<Episode>) = file.writeText(gson.toJson(episodes))
+    private fun save(episodes: List<Episode>) {
+        val json = gson.toJson(episodes).toByteArray()
+        val jsonSizeInMiB = json.size.toDouble() / 1024.0
+        val gzip = Gzip.encode(json)
+        val gzipSizeInMiB = gzip.size.toDouble() / 1024.0
+        Logger.config("Database size: ${jsonSizeInMiB.toString(2)} KiB -> ${gzipSizeInMiB.toString(2)} KiB")
+        file.writeBytes(gzip)
+    }
 
     companion object {
         fun save(episodes: List<Episode>) {
