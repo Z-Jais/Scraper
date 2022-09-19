@@ -33,7 +33,7 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
     fun xmlToJsonWithFilter(
         checkedCountry: ICountry,
         calendar: Calendar,
-        content: String,
+        content: String
     ): List<JsonObject>? {
         val restriction = when (checkedCountry) {
             is FranceCountry -> "fr"
@@ -46,9 +46,9 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
                 val countryRestrictions = it.getAsJsonObject("restriction")?.get("")?.asString?.split(" ")
                 val subtitles = it.get("subtitleLanguages")?.asString?.split(",")
 
-                releaseDate?.toDate() == calendar.toDate()
-                        && countryRestrictions?.any { r -> r == restriction } ?: false
-                        && subtitles?.any { s -> s == "fr - fr" } ?: false
+                releaseDate?.toDate() == calendar.toDate() &&
+                    countryRestrictions?.any { r -> r == restriction } ?: false &&
+                    subtitles?.any { s -> s == "fr - fr" } ?: false
             }
     }
 

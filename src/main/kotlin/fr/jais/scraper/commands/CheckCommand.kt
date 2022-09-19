@@ -6,9 +6,10 @@ import fr.jais.scraper.platforms.IPlatform
 import fr.jais.scraper.utils.CalendarConverter
 import fr.jais.scraper.utils.Logger
 import fr.jais.scraper.utils.toISO8601
-import java.io.File.separator
 import java.text.SimpleDateFormat
 import java.util.*
+
+private const val separator = "------------------------------"
 
 class CheckCommand(scraper: Scraper) : ICommand(scraper, "check", "Check episode availability") {
     private fun setCheckedCalendar(calendar: Calendar): Calendar {
@@ -56,7 +57,6 @@ class CheckCommand(scraper: Scraper) : ICommand(scraper, "check", "Check episode
             list.forEach { println(it) }
             return
         }
-
 
         val sdf = SimpleDateFormat("dd/MM/yyyy")
 

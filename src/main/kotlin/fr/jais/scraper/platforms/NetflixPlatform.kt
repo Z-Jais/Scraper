@@ -24,7 +24,7 @@ class NetflixPlatform(scraper: Scraper) : IPlatform(
     data class NetflixAnime(
         val name: String,
         val description: String,
-        val genres: List<String>,
+        val genres: List<String>
     )
 
     data class NetflixEpisode(
@@ -42,7 +42,7 @@ class NetflixPlatform(scraper: Scraper) : IPlatform(
         val season: Int = 1,
         val releaseTime: String = "07:01:00",
         val episodeType: EpisodeType = EpisodeType.EPISODE,
-        val langType: LangType = LangType.SUBTITLES,
+        val langType: LangType = LangType.SUBTITLES
     )
 
     val converter = NetflixConverter(this)

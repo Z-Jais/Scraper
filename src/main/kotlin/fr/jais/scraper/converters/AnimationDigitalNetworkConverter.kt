@@ -18,7 +18,7 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
 
         Logger.info("Get name...")
         var name = showJson.get("shortTitle")?.asString() ?: showJson.get("title")?.asString()
-        ?: throw NoAnimeNameFoundException("No name found")
+            ?: throw NoAnimeNameFoundException("No name found")
         Logger.config("Name: $name")
 
         if (name.matches(animeNameSeasonRegex)) {

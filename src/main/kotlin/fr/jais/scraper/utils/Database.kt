@@ -14,7 +14,8 @@ class Database {
                 file.readText()
             } catch (e: Exception) {
                 "[]"
-            }, Array<Episode>::class.java
+            },
+            Array<Episode>::class.java
         )?.toMutableList() ?: mutableListOf()
 
     fun save(episodes: List<Episode>) = file.writeText(gson.toJson(episodes))

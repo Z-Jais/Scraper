@@ -15,8 +15,6 @@ import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.logging.Level
 
-private const val separator = "------------------------------"
-
 class Scraper {
     enum class CheckingType {
         SYNCHRONOUS,
@@ -62,7 +60,8 @@ class Scraper {
                     { CalendarConverter.fromUTCDate(it.releaseDate) },
                     { it.anime.name.lowercase() },
                     { it.season },
-                    { it.number })
+                    { it.number }
+                )
             )
         Logger.config("Episodes: ${episodes.size}")
         Database.save(episodes)
