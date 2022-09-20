@@ -9,16 +9,10 @@ import java.util.*
 
 abstract class IPlatform(
     val scraper: Scraper,
-    val type: PlatformType,
     val name: String,
     val url: String,
     val countries: List<Class<out ICountry>>
 ) {
-    enum class PlatformType {
-        API,
-        FLOWS,
-    }
-
     fun getPlatform() = Platform(name, url)
 
     open fun getEpisodes(calendar: Calendar): List<Episode> = emptyList()

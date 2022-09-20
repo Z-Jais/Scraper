@@ -19,7 +19,6 @@ import java.util.logging.Level
 
 class AnimeNewsNetworkPlatform(scraper: Scraper) : IPlatform(
     scraper,
-    PlatformType.FLOWS,
     "Anime News Network",
     "https://www.animenewsnetwork.com/",
     listOf(FranceCountry::class.java)
@@ -43,7 +42,7 @@ class AnimeNewsNetworkPlatform(scraper: Scraper) : IPlatform(
                     it.get("category")?.asJsonArray?.mapNotNull { c -> c.asString }?.joinToString(", ")
                 }
                 releaseDate?.toDate() == calendar.toDate() &&
-                        (category?.contains("Anime", true) == true || category?.contains("Manga", true) == true)
+                    (category?.contains("Anime", true) == true || category?.contains("Manga", true) == true)
             }
     }
 

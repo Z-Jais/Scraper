@@ -16,7 +16,6 @@ import java.util.logging.Level
 
 class NetflixPlatform(scraper: Scraper) : IPlatform(
     scraper,
-    PlatformType.FLOWS,
     "Netflix",
     "https://www.netflix.com/",
     listOf(FranceCountry::class.java)

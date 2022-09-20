@@ -20,7 +20,6 @@ import java.util.logging.Level
 
 class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
     scraper,
-    PlatformType.FLOWS,
     "Crunchyroll",
     "https://www.crunchyroll.com/",
     listOf(FranceCountry::class.java)
@@ -48,8 +47,8 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
                 val subtitles = it.get("subtitleLanguages")?.asString?.split(",")
 
                 releaseDate?.toDate() == calendar.toDate() &&
-                        countryRestrictions?.any { r -> r == restriction } ?: false &&
-                        subtitles?.any { s -> s == "fr - fr" } ?: false
+                    countryRestrictions?.any { r -> r == restriction } ?: false &&
+                    subtitles?.any { s -> s == "fr - fr" } ?: false
             }
     }
 

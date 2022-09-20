@@ -20,7 +20,6 @@ import java.util.logging.Level
 
 class WakanimPlatform(scraper: Scraper) : IPlatform(
     scraper,
-    PlatformType.API,
     "Wakanim",
     "https://wakanim.tv/",
     listOf(FranceCountry::class.java)

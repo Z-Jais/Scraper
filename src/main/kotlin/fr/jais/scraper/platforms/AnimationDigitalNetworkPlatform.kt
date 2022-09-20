@@ -17,7 +17,6 @@ import java.util.logging.Level
 class AnimationDigitalNetworkPlatform(scraper: Scraper) :
     IPlatform(
         scraper,
-        PlatformType.API,
         "Animation Digital Network",
         "https://animationdigitalnetwork.fr/",
         listOf(FranceCountry::class.java)
