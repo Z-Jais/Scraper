@@ -5,6 +5,7 @@ import fr.jais.scraper.entities.Anime
 import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.platforms.NetflixPlatform
 import fr.jais.scraper.utils.CalendarConverter
+import fr.jais.scraper.utils.Logger
 import fr.jais.scraper.utils.toDate
 import java.util.*
 
@@ -29,7 +30,10 @@ class NetflixConverter(private val platform: NetflixPlatform) {
         netflixContent: NetflixPlatform.NetflixContent,
         netflixEpisode: NetflixPlatform.NetflixEpisode
     ): Episode {
+        // ----- ANIME -----
+        Logger.info("Convert anime...")
         val anime = convertAnime(checkedCountry, netflixContent, netflixEpisode.netflixAnime)
+        Logger.config("Anime: $anime")
 
         return Episode(
             platform.getPlatform(),

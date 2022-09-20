@@ -15,21 +15,25 @@ class AnimeNewsNetworkConverter(private val platform: AnimeNewsNetworkPlatform) 
     fun convertNews(checkedCountry: ICountry, jsonObject: JsonObject): News {
         Logger.config("Convert news from $jsonObject")
 
+        // ----- RELEASE DATE -----
         Logger.info("Get release date...")
         val releaseDate = CalendarConverter.fromGMTLine(jsonObject.get("pubDate")?.asString())
             ?: throw NewsReleaseDateNotFoundException("No release date found")
         Logger.config("Release date: ${releaseDate.toISO8601()}")
 
+        // ----- TITLE -----
         Logger.info("Get title...")
         val title = jsonObject.get("title")?.asString() ?: throw NewsTitleNotFoundException("No title found")
         Logger.config("Title: $title")
 
+        // ----- DESCRIPTION -----
         Logger.info("Get description...")
         val description = Jsoup.parse(
             jsonObject.get("title")?.asString() ?: throw NewsDescriptionNotFoundException("No description found")
         ).text()
         Logger.config("description: $description")
 
+        // ----- URL -----
         Logger.info("Get url...")
         val url = jsonObject.get("link")?.asString()?.toHTTPS() ?: throw NewsUrlNotFoundException("No url found")
         Logger.config("Url: $url")

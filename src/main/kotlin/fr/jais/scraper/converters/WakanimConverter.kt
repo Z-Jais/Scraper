@@ -18,6 +18,7 @@ class WakanimConverter(private val platform: WakanimPlatform) {
 
     fun convertEpisode(calendar: Calendar, wakanimAgendaEpisode: WakanimPlatform.WakanimAgendaEpisode): Episode {
         if (cache.containsKey(wakanimAgendaEpisode)) {
+            Logger.info("Get episode from cache")
             return cache[wakanimAgendaEpisode]!!
         }
 
@@ -41,6 +42,7 @@ class WakanimConverter(private val platform: WakanimPlatform) {
             }
         }
 
+        // ----- NUMBER -----
         Logger.info("Get number...")
         val number = card?.select(".slider_item_number")?.text()?.toIntOrNull() ?: throw EpisodeNumberNotFoundException(
             "Episode number not found"
@@ -49,20 +51,24 @@ class WakanimConverter(private val platform: WakanimPlatform) {
 
         if (number != wakanimAgendaEpisode.number) throw EpisodeNotAvailableException(EPISODE_NOT_AVAILABLE_YET)
 
+        // ----- URL -----
         Logger.info("Get url...")
         val url = "https://www.wakanim.tv${card.select(".slider_item_star").attr("href")}"
         Logger.config("Url: $url")
 
+        // ----- ID -----
         Logger.info("Get id...")
         val id = url.split("/")[7].toLongOrNull() ?: throw EpisodeIdNotFoundException("Episode id not found")
         Logger.config("Id: $id")
 
+        // ----- IMAGE -----
         Logger.info("Get image...")
         val image = "https:${card.select("img").attr("src")}"
         Logger.config("Image: $image")
 
         val cardSeasonText = card.select(".slider_item_season").text()
 
+        // ----- SEASON -----
         Logger.info("Get season...")
         val season = if (cardSeasonText.contains("Saison", true)) {
             val split = cardSeasonText.split(" ")
@@ -72,6 +78,7 @@ class WakanimConverter(private val platform: WakanimPlatform) {
         }
         Logger.config("Season: $season")
 
+        // ----- DURATION -----
         val cardDuration = card.select(".slider_item_duration").text().split(":")
         Logger.info("Get duration...")
         var duration = cardDuration.mapIndexed { i, t ->
