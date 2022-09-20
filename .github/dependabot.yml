@@ -8,7 +8,6 @@ updates:
       - "Ziedelth"
     reviewers:
       - "Ziedelth"
-    target-branch: "dev"
 
   - package-ecosystem: "github-actions"
     directory: "/"
@@ -18,4 +17,3 @@ updates:
       - "Ziedelth"
     reviewers:
       - "Ziedelth"
-    target-branch: "dev"
