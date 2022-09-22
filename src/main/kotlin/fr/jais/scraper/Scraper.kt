@@ -2,13 +2,14 @@ package fr.jais.scraper
 
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Episode
+import fr.jais.scraper.entities.Manga
 import fr.jais.scraper.entities.News
 import fr.jais.scraper.platforms.*
 import fr.jais.scraper.utils.*
 import java.util.*
 
 class Scraper {
-    val platforms = listOf(AnimationDigitalNetworkPlatform(this), AnimeNewsNetworkPlatform(this), CrunchyrollPlatform(this), NetflixPlatform(this), WakanimPlatform(this))
+    val platforms = listOf(AnimationDigitalNetworkPlatform(this), AnimeNewsNetworkPlatform(this), CrunchyrollPlatform(this), MangaNewsPlatform(this), NetflixPlatform(this), WakanimPlatform(this))
     val countries = platforms.flatMap { it.countries }.distinct().mapNotNull { it.getConstructor().newInstance() }
 
     fun getCountries(platform: IPlatform): List<ICountry> =
@@ -49,9 +50,19 @@ class Scraper {
         return news
     }
 
+    private fun getAllMangas(calendar: Calendar): List<Manga> {
+        Logger.config("Calendar: ${calendar.toISO8601()}")
+
+        Logger.info("Get all mangas...")
+        val mangas = platforms.flatMap { it.getMangas(calendar) }
+        Logger.config("Mangas: ${mangas.size}")
+        Database.saveMangas(mangas)
+        return mangas
+    }
+
     fun startThreadCheck() {
         ThreadManager.start {
-            var lastCheck = Calendar.getInstance().toDate()
+            var lastCheck: String? = null
 
             while (true) {
                 val calendar = Calendar.getInstance()
@@ -61,6 +72,9 @@ class Scraper {
                     Logger.info("Reset all platforms...")
                     lastCheck = today
                     platforms.forEach { it.reset() }
+
+                    // Start mangas detection
+                    getAllMangas(calendar).forEach { println(it) }
                 }
 
                 getAllEpisodes(calendar).forEach { println(it) }

@@ -11,6 +11,9 @@ fun String.toHTTPS() = this.replace("http://", "https://")
 fun Calendar.toISO8601(): String = CalendarConverter.fromUTCTimestampString(this)
 fun Calendar.toDate(): String = CalendarConverter.fromUTCTimestampString(this).substringBefore("T")
 fun Calendar.toFrenchDate(): String = toDate().split("-").reversed().joinToString("-")
+fun Calendar.getYear(): String = toDate().split("-").first()
+fun Calendar.getMonth(): String = toDate().split("-")[1]
+fun Calendar.getDay(): String = toDate().split("-").last()
 
 fun JsonElement.asString(): String? = if (this.isJsonNull) null else this.asString?.trim()
 fun JsonElement.asJsonArray(): JsonArray? = if (this.isJsonArray) this.asJsonArray else null
