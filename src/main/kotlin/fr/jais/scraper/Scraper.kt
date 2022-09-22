@@ -3,16 +3,12 @@ package fr.jais.scraper
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.entities.News
-import fr.jais.scraper.platforms.IPlatform
+import fr.jais.scraper.platforms.*
 import fr.jais.scraper.utils.*
-import org.reflections.Reflections
 import java.util.*
 
 class Scraper {
-    private val mainPackage = "fr.jais.scraper."
-
-    val platforms = Reflections("${mainPackage}platforms").getSubTypesOf(IPlatform::class.java)
-        .mapNotNull { it.getConstructor(Scraper::class.java).newInstance(this) }
+    val platforms = listOf(AnimationDigitalNetworkPlatform(this), AnimeNewsNetworkPlatform(this), CrunchyrollPlatform(this), NetflixPlatform(this), WakanimPlatform(this))
     val countries = platforms.flatMap { it.countries }.distinct().mapNotNull { it.getConstructor().newInstance() }
 
     fun getCountries(platform: IPlatform): List<ICountry> =
