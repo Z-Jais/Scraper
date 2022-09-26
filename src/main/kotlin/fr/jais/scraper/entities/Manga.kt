@@ -14,7 +14,9 @@ data class Manga(
     var age: Int? = null,
     var price: Double? = null
 ) {
-    val hash = "${platform.name.substring(0 until 4).uppercase()}-${"$platform${anime.name}$releaseDate$ref$ean".toMD5().substring(0 until 12).uppercase()}"
+    val hash = "${platform.name.substring(0 until 4).uppercase()}-${
+        "$platform${anime.name}$releaseDate$ref$ean".toMD5().substring(0 until 12).uppercase()
+    }"
 
     override fun toString(): String {
         return "Manga(platform=$platform, anime=$anime, releaseDate='$releaseDate', url='$url', cover='$cover', editor='$editor', ref=$ref, ean=$ean, age=$age, price=$price, hash='$hash')"

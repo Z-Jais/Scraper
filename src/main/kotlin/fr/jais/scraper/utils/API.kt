@@ -45,7 +45,8 @@ object API {
     }
 
     private fun getAnimeByHash(country: Country, anime: Anime): JsonObject? {
-        val hash = anime.name.lowercase().filter { it.isLetterOrDigit() || it.isWhitespace() || it == '-' }.trim().replace("\\s+".toRegex(), "-").replace("--", "-")
+        val hash = anime.name.lowercase().filter { it.isLetterOrDigit() || it.isWhitespace() || it == '-' }.trim()
+            .replace("\\s+".toRegex(), "-").replace("--", "-")
         val response = get("${URL}animes/country/${country.tag}/search/hash/$hash")
         return if (response.statusCode() == 200) Gson().fromJson(response.body(), JsonObject::class.java) else null
     }
@@ -97,7 +98,13 @@ object API {
         return if (response.statusCode() == 201) Gson().fromJson(response.body(), JsonObject::class.java) else null
     }
 
-    private fun toEpisode(platform: JsonObject, anime: JsonObject, episodeType: JsonObject, langType: JsonObject, episode: Episode): JsonObject {
+    private fun toEpisode(
+        platform: JsonObject,
+        anime: JsonObject,
+        episodeType: JsonObject,
+        langType: JsonObject,
+        episode: Episode
+    ): JsonObject {
         return JsonObject()
             .apply { add("platform", JsonObject().apply { addProperty("uuid", platform["uuid"].asString) }) }
             .apply { add("anime", JsonObject().apply { addProperty("uuid", anime["uuid"].asString) }) }
@@ -114,14 +121,22 @@ object API {
     }
 
     fun saveEpisodes(episodes: List<Episode>) {
-        val countriesApi = episodes.map { it.anime.country }.distinctBy { it.tag }.map { it to (getCountry(it) ?: createCountry(it)) }
-        val platformsApi = episodes.map { it.platform }.distinctBy { it.name }.map { it to (getPlatform(it) ?: createPlatform(it)) }
-        val episodeTypesApi = episodes.map { it.episodeType }.distinctBy { it.name }.map { it to (getEpisodeType(it) ?: createEpisodeType(it)) }
-        val langTypesApi = episodes.map { it.langType }.distinctBy { it.name }.map { it to (getLangType(it) ?: createLangType(it)) }
+        val countriesApi =
+            episodes.map { it.anime.country }.distinctBy { it.tag }.map { it to (getCountry(it) ?: createCountry(it)) }
+        val platformsApi =
+            episodes.map { it.platform }.distinctBy { it.name }.map { it to (getPlatform(it) ?: createPlatform(it)) }
+        val episodeTypesApi = episodes.map { it.episodeType }.distinctBy { it.name }
+            .map { it to (getEpisodeType(it) ?: createEpisodeType(it)) }
+        val langTypesApi =
+            episodes.map { it.langType }.distinctBy { it.name }.map { it to (getLangType(it) ?: createLangType(it)) }
 
         post("${URL}episodes/multiple", Gson().toJson(episodes.mapNotNull { episode ->
             val country = countriesApi.first { it.first == episode.anime.country }.second ?: return@mapNotNull null
-            val anime = getAnimeByHash(episode.anime.country, episode.anime) ?: createAnime(country, episode.releaseDate, episode.anime) ?: return@mapNotNull null
+            val anime = getAnimeByHash(episode.anime.country, episode.anime) ?: createAnime(
+                country,
+                episode.releaseDate,
+                episode.anime
+            ) ?: return@mapNotNull null
             val platform = platformsApi.first { it.first == episode.platform }.second ?: return@mapNotNull null
             val episodeType = episodeTypesApi.first { it.first == episode.episodeType }.second ?: return@mapNotNull null
             val langType = langTypesApi.first { it.first == episode.langType }.second ?: return@mapNotNull null

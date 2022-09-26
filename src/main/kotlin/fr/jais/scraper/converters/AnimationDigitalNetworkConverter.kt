@@ -16,7 +16,8 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
 
         // ----- NAME -----
         Logger.info("Get name...")
-        val name = (showJson.get("shortTitle")?.asString() ?: showJson.get("title")?.asString())?.replace(Regex(" - Saison \\d"), "")
+        val name = (showJson.get("shortTitle")?.asString() ?: showJson.get("title")
+            ?.asString())?.replace(Regex(" - Saison \\d"), "")
             ?: throw AnimeNameNotFoundException("No name found")
         Logger.config("Name: $name")
 

@@ -43,7 +43,7 @@ class AnimeNewsNetworkPlatform(scraper: Scraper) : IPlatform(
                     it.get("category")?.asJsonArray?.mapNotNull { c -> c.asString }?.joinToString(", ")
                 }
                 releaseDate?.toDate() == calendar.toDate() &&
-                    (category?.contains("Anime", true) == true || category?.contains("Manga", true) == true)
+                        (category?.contains("Anime", true) == true || category?.contains("Manga", true) == true)
             }
     }
 

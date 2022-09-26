@@ -1,5 +1,6 @@
 package fr.jais.scraper
 
+import com.microsoft.playwright.Playwright
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.entities.Manga
@@ -8,8 +9,17 @@ import fr.jais.scraper.platforms.*
 import fr.jais.scraper.utils.*
 import java.util.*
 
+val playwright: Playwright = Playwright.create()
+
 class Scraper {
-    val platforms = listOf(AnimationDigitalNetworkPlatform(this), AnimeNewsNetworkPlatform(this), CrunchyrollPlatform(this), MangaNewsPlatform(this), NetflixPlatform(this), WakanimPlatform(this))
+    val platforms = listOf(
+        AnimationDigitalNetworkPlatform(this),
+        AnimeNewsNetworkPlatform(this),
+        CrunchyrollPlatform(this),
+        MangaNewsPlatform(this),
+        NetflixPlatform(this),
+        WakanimPlatform(this)
+    )
     val countries = platforms.flatMap { it.countries }.distinct().mapNotNull { it.getConstructor().newInstance() }
 
     fun getCountries(platform: IPlatform): List<ICountry> =

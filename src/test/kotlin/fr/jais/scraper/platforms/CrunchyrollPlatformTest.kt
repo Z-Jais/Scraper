@@ -12,7 +12,7 @@ import kotlin.test.expect
 internal class CrunchyrollPlatformTest {
     private val scraper = Scraper()
     private val country = FranceCountry()
-    private val platform = CrunchyrollPlatform(scraper)
+    private val platform = CrunchyrollPlatform(scraper, Gson())
 
     private fun testEpisode(): JsonObject? {
         val gzip = Resource.get("crunchyroll_episode.txt")
