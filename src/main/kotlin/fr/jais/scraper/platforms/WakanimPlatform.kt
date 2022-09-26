@@ -123,6 +123,8 @@ class WakanimPlatform(scraper: Scraper) : IPlatform(
         }
 
         return countries.flatMap { country ->
+            Logger.info("Getting episodes for $name in ${country.name}...")
+
             try {
                 if (needCheck || cacheAgenda.none { it.iCountry == country }) {
                     Logger.info("Get agenda for ${country.name}...")

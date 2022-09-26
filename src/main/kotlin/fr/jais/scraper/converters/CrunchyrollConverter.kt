@@ -7,18 +7,18 @@ import fr.jais.scraper.entities.Anime
 import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.entities.News
 import fr.jais.scraper.exceptions.CountryNotSupportedException
+import fr.jais.scraper.exceptions.NewsException
 import fr.jais.scraper.exceptions.animes.AnimeNameNotFoundException
 import fr.jais.scraper.exceptions.animes.AnimeNotFoundException
-import fr.jais.scraper.exceptions.episodes.EpisodeIdNotFoundException
-import fr.jais.scraper.exceptions.episodes.EpisodeImageNotFoundException
-import fr.jais.scraper.exceptions.episodes.EpisodeReleaseDateNotFoundException
-import fr.jais.scraper.exceptions.episodes.EpisodeUrlNotFoundException
+import fr.jais.scraper.exceptions.animes.NotSimulcastAnimeException
+import fr.jais.scraper.exceptions.episodes.*
 import fr.jais.scraper.exceptions.news.NewsDescriptionNotFoundException
 import fr.jais.scraper.exceptions.news.NewsReleaseDateNotFoundException
 import fr.jais.scraper.exceptions.news.NewsTitleNotFoundException
 import fr.jais.scraper.exceptions.news.NewsUrlNotFoundException
 import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.utils.*
+import java.util.Calendar
 
 class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
     data class CrunchyrollAnime(
@@ -31,6 +31,14 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
 
     val cache = mutableListOf<CrunchyrollAnime>()
 
+    fun getCountryTag(checkedCountry: ICountry): String {
+        val country = when (checkedCountry) {
+            is FranceCountry -> "fr"
+            else -> throw CountryNotSupportedException("Country not supported")
+        }
+        return country
+    }
+
     fun convertAnime(checkedCountry: ICountry, jsonObject: JsonObject): Anime {
         Logger.config("Convert anime from $jsonObject")
 
@@ -38,6 +46,11 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         Logger.info("Get name...")
         val name = jsonObject.get("seriesTitle")?.asString() ?: throw AnimeNameNotFoundException("No name found")
         Logger.config("Name: $name")
+
+        if (platform.simulcasts[checkedCountry]?.contains(name.lowercase()) != true) {
+            Logger.info("Anime is not simulcasted")
+            throw NotSimulcastAnimeException("Anime is not simulcasted")
+        }
 
         var image: String?
         var description: String?
@@ -55,11 +68,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
             description = animeCached.description
             Logger.config("Description: $description")
         } else {
-            val country = when (checkedCountry) {
-                is FranceCountry -> "fr"
-                else -> throw CountryNotSupportedException("Country not supported")
-            }
-
+            val country = getCountryTag(checkedCountry)
             val episodeUrl = jsonObject.get("link")?.asString()
             val animeId = episodeUrl?.split("/")?.get(4) ?: throw AnimeNotFoundException("No anime id found in $episodeUrl")
 
@@ -115,19 +124,48 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         ) ?: false
     }
 
-    fun convertEpisode(checkedCountry: ICountry, jsonObject: JsonObject): Episode {
+    fun convertEpisode(checkedCountry: ICountry, calendar: Calendar, jsonObject: JsonObject): Episode {
         Logger.config("Convert episode from $jsonObject")
 
-        // ----- ANIME -----
-        Logger.info("Convert anime...")
-        val anime = convertAnime(checkedCountry, jsonObject)
-        Logger.config("Anime: $anime")
+        // ----- RESTRICTIONS -----
+        Logger.info("Get restrictions...")
+        val countryRestrictions = jsonObject.getAsJsonObject("restriction")?.get("")?.asString?.split(" ") ?: emptyList()
+        val restrictionTag = getCountryTag(checkedCountry)
+        Logger.config("Country restrictions: ${countryRestrictions.joinToString(", ")}")
+        Logger.config("Restriction tag: $restrictionTag")
+
+        if (countryRestrictions.isEmpty() || !countryRestrictions.contains(restrictionTag)) {
+            throw EpisodeNotAvailableException("Episode not available in $checkedCountry")
+        }
+
+        // ----- SUBTITLES -----
+        Logger.info("Get subtitles...")
+        val subtitles = jsonObject.get("subtitleLanguages")?.asString?.split(",") ?: emptyList()
+        val countrySubtitles = when (checkedCountry) {
+            is FranceCountry -> "fr - fr"
+            else -> throw CountryNotSupportedException("Country not supported: $checkedCountry")
+        }
+        Logger.config("Subtitles: ${subtitles.joinToString(", ")}")
+        Logger.config("Country subtitles: $countrySubtitles")
+
+        if (subtitles.isEmpty() || !subtitles.contains(countrySubtitles)) {
+            throw EpisodeNotAvailableException("Subtitles not available in $checkedCountry")
+        }
 
         // ----- RELEASE DATE -----
         Logger.info("Get release date...")
         val releaseDate = CalendarConverter.fromGMTLine(jsonObject.get("pubDate")?.asString())
             ?: throw EpisodeReleaseDateNotFoundException("No release date found")
         Logger.config("Release date: ${releaseDate.toISO8601()}")
+
+        if (releaseDate.toDate() != calendar.toDate()) {
+            throw EpisodeNotAvailableException("Episode already released")
+        }
+
+        // ----- ANIME -----
+        Logger.info("Convert anime...")
+        val anime = convertAnime(checkedCountry, jsonObject)
+        Logger.config("Anime: $anime")
 
         // ----- SEASON -----
         Logger.info("Get season...")
@@ -206,7 +244,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         )
     }
 
-    fun convertNews(checkedCountry: ICountry, jsonObject: JsonObject): News {
+    fun convertNews(checkedCountry: ICountry, calendar: Calendar, jsonObject: JsonObject): News {
         Logger.config("Convert news from $jsonObject")
 
         // ----- RELEASE DATE -----
@@ -214,6 +252,10 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         val releaseDate = CalendarConverter.fromGMTLine(jsonObject.get("pubDate")?.asString())
             ?: throw NewsReleaseDateNotFoundException("No release date found")
         Logger.config("Release date: ${releaseDate.toISO8601()}")
+
+        if (releaseDate.toDate() != calendar.toDate()) {
+            throw NewsException("News already released")
+        }
 
         // ----- TITLE -----
         Logger.info("Get title...")
