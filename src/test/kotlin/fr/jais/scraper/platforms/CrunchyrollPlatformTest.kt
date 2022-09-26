@@ -50,13 +50,8 @@ internal class CrunchyrollPlatformTest {
     }
 
     @Test
-    fun xmlToJsonWithFilter() {
-        val json = platform.xmlToJsonWithEpisodeFilter(country, testCalendar(), testXml())
-        expect(1) { json?.size }
-    }
-
-    @Test
     fun convertAnime() {
+        platform.simulcasts[country] = mutableListOf("Dropkick on My Devil!".lowercase())
         val anime = platform.converter.convertAnime(country, testEpisode() ?: return)
         expect("Dropkick on My Devil!") { anime.name }
         expect("Passionnée par les sciences occultes et vêtue façon lolita gothique, Yurine Hanazono a invoqué Jashin, une démone au corps de serpent venue tout droit des enfers. Depuis, elle doit cohabiter avec elle dans son appartement de Tokyo. Si Yurine venait à mourir, Jashin pourrait enfin retourner dans son monde. Aussi, cette dernière complote sans cesse pour se débarrasser de la jeune fille... Pendant ce temps débarque Pino, un ancien subordonné des anges Pekola et Poporon. Pekola est ravie de croire que Dieu a finalement envoyé quelqu'un pour la ramener chez elle...") { anime.description }
@@ -65,7 +60,8 @@ internal class CrunchyrollPlatformTest {
 
     @Test
     fun convertEpisode() {
-        val episode = platform.converter.convertEpisode(country, testEpisode() ?: return)
+        platform.simulcasts[country] = mutableListOf("Dropkick on My Devil!".lowercase())
+        val episode = platform.converter.convertEpisode(country, testCalendar(), testEpisode() ?: return)
         expect(1) { episode.season }
         expect(11) { episode.number }
         expect(EpisodeType.EPISODE) { episode.episodeType }
