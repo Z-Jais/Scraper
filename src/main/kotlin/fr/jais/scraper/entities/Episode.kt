@@ -26,12 +26,12 @@ data class Episode(
     }
 
     private fun suffix(): String {
-        return when (anime.country.code) {
+        return when (anime.country.tag) {
             "fr" -> {
                 if (langType == LangType.SUBTITLES) "VOSTFR" else "VF"
             }
 
-            else -> throw CountryNotSupportedException("Country ${anime.country.code} is not supported")
+            else -> throw CountryNotSupportedException("Country ${anime.country.tag} is not supported")
         }
     }
 

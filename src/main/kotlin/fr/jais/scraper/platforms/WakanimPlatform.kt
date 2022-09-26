@@ -22,6 +22,7 @@ class WakanimPlatform(scraper: Scraper) : IPlatform(
     scraper,
     "Wakanim",
     "https://wakanim.tv/",
+    "wakanim.png",
     listOf(FranceCountry::class.java)
 ) {
     data class WakanimCatalogue(
@@ -126,7 +127,7 @@ class WakanimPlatform(scraper: Scraper) : IPlatform(
             Logger.info("Getting episodes for $name in ${country.name}...")
 
             try {
-                if (needCheck || cacheAgenda.none { it.iCountry == country }) {
+                if (needCheck) {
                     Logger.info("Get agenda for ${country.name}...")
                     val agenda = getAgendaEpisode(country, calendar)
                     Logger.config("Agenda for ${country.name} found (${agenda.size} episodes)")

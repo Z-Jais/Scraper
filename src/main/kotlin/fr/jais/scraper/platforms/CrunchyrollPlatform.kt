@@ -21,6 +21,7 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
     scraper,
     "Crunchyroll",
     "https://www.crunchyroll.com/",
+    "crunchyroll.png",
     listOf(FranceCountry::class.java)
 ) {
     val converter = CrunchyrollConverter(this)
@@ -35,7 +36,7 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
         val countryTag = converter.getCountryTag(iCountry)
         // https://www.crunchyroll.com/fr/videos/anime/simulcasts/ajax_page?pg=0
         var page = 0
-        var loadMore = true
+        var loadMore: Boolean
         val list = mutableListOf<String>()
 
         do {

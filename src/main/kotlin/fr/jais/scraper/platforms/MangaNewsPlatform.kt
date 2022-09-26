@@ -15,6 +15,7 @@ class MangaNewsPlatform(scraper: Scraper) : IPlatform(
     scraper,
     "MangaNews",
     "https://www.manga-news.com/",
+    "manga_news.png",
     listOf(FranceCountry::class.java)
 ) {
     private fun getAgendaManga(checkedCountry: ICountry, calendar: Calendar): List<Manga>? {

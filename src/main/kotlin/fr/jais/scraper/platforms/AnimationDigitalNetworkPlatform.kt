@@ -19,6 +19,7 @@ class AnimationDigitalNetworkPlatform(scraper: Scraper) :
         scraper,
         "Animation Digital Network",
         "https://animationdigitalnetwork.fr/",
+        "animation_digital_network.png",
         listOf(FranceCountry::class.java)
     ) {
     val converter = AnimationDigitalNetworkConverter(this)

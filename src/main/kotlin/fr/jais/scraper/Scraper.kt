@@ -32,6 +32,7 @@ class Scraper {
             )
         Logger.config("Episodes: ${episodes.size}")
         Database.saveEpisodes(episodes)
+        API.saveEpisodes(episodes)
         return episodes
     }
 

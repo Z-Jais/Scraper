@@ -21,6 +21,7 @@ class AnimeNewsNetworkPlatform(scraper: Scraper) : IPlatform(
     scraper,
     "Anime News Network",
     "https://www.animenewsnetwork.com/",
+    "anime_news_network.png",
     listOf(FranceCountry::class.java)
 ) {
     val converter = AnimeNewsNetworkConverter(this)
