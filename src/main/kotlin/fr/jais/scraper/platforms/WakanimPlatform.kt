@@ -132,7 +132,14 @@ class WakanimPlatform(scraper: Scraper) : IPlatform(
                     cacheAgenda.addAll(agenda)
                 }
 
-                cacheAgenda.map { converter.convertEpisode(calendar, it) }
+                cacheAgenda.mapNotNull {
+                    try {
+                        converter.convertEpisode(calendar, it)
+                    } catch (e: Exception) {
+                        Logger.log(Level.SEVERE, "Error while converting episode ${it.tmpUrl}", e)
+                        null
+                    }
+                }
             } catch (e: Exception) {
                 Logger.log(Level.SEVERE, "Error while converting episode", e)
                 emptyList()

@@ -7,6 +7,8 @@ import fr.jais.scraper.entities.Anime
 import fr.jais.scraper.entities.Manga
 import fr.jais.scraper.utils.*
 import java.util.*
+import java.util.concurrent.Callable
+import java.util.concurrent.Executors
 import java.util.logging.Level
 
 class MangaNewsPlatform(scraper: Scraper) : IPlatform(
@@ -47,24 +49,31 @@ class MangaNewsPlatform(scraper: Scraper) : IPlatform(
                     image,
                     editor
                 )
-            }
+            } ?: throw Exception("No elements found")
 
             browser.close()
 
-            mangas?.forEach {
-                val content = Browser(Browser.BrowserType.CHROME, it.url).launch()
-                val baseName = content.selectXpath("//*[@id=\"breadcrumb\"]/span[4]/a").text().replace("\n", " ").trim()
-                val ref = it.anime.name.replace(baseName, "").trim()
-                it.ref = ref
-                val ean = content.select("[itemprop=\"isbn\"]").text().replace("\n", " ").trim().toLongOrNull()
-                it.ean = ean
-                val age = content.select("#agenumber").text().replace("\n", " ").replace("+", "").trim().toIntOrNull()
-                it.age = age
-                val price = content.select("#prixnumber").text().replace("\n", " ").replace("€", "").trim().toDoubleOrNull()
-                it.price = price
-            }
+            val newFixedThreadPool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
+            newFixedThreadPool.invokeAll(
+                mangas.map {
+                    Callable {
+                        val content = Browser(Browser.BrowserType.CHROME, it.url).launch()
+                        val baseName = content.selectXpath("//*[@id=\"breadcrumb\"]/span[4]/a").text().replace("\n", " ").trim()
+                        val ref = it.anime.name.replace(baseName, "").trim()
+                        it.ref = ref
+                        val ean = content.select("[itemprop=\"isbn\"]").text().replace("\n", " ").trim().toLongOrNull()
+                        it.ean = ean
+                        val age = content.select("#agenumber").text().replace("\n", " ").replace("+", "").trim().toIntOrNull()
+                        it.age = age
+                        val price = content.select("#prixnumber").text().replace("\n", " ").replace("€", "").trim().toDoubleOrNull()
+                        it.price = price
+                    }
+                }
+            )
 
-            mangas
+            newFixedThreadPool.shutdown()
+
+            mangas.sortedBy { it.anime.name.lowercase() }
         } catch (e: Exception) {
             Logger.log(Level.SEVERE, "Error while getting API content", e)
             null
