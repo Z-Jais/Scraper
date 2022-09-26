@@ -1,47 +1,59 @@
 package fr.jais.scraper.utils
 
+import com.microsoft.playwright.BrowserContext
 import com.microsoft.playwright.Page
 import com.microsoft.playwright.Playwright
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
-class Browser(val type: BrowserType = BrowserType.CHROME, val url: String) {
+class Browser(type: BrowserType = BrowserType.CHROME, val url: String) {
     enum class BrowserType {
         CHROME,
         FIREFOX,
     }
 
+    private var playwright: Playwright? = null
+    private var browser: com.microsoft.playwright.Browser? = null
+    private var context: BrowserContext? = null
+    var page: Page? = null
     var screenshot: ByteArray? = null
 
-    fun launch(): Document {
+    init {
         Logger.info("Creating playwright...")
-        val playwright = Playwright.create()
+        playwright = Playwright.create()
 
         Logger.config("Browser type: ${type.name}")
         Logger.info("Launching browser...")
-        val browser = when (type) {
-            BrowserType.CHROME -> playwright.chromium().launch()
-            BrowserType.FIREFOX -> playwright.firefox().launch()
+        browser = when (type) {
+            BrowserType.CHROME -> playwright?.chromium()?.launch()
+            BrowserType.FIREFOX -> playwright?.firefox()?.launch()
         }
 
         Logger.info("Creating context...")
-        val context = browser.newContext()
+        context = browser?.newContext()
         Logger.info("Creating page...")
-        val page = context.newPage()
+        page = context?.newPage()
         Logger.config("URL: $url")
         Logger.info("Navigating...")
-        page.navigate(url)
+        page?.navigate(url)
         Logger.info("Waiting for load...")
-        page.waitForLoadState()
-        val content = page.content()
-        screenshot = page.screenshot(Page.ScreenshotOptions().setFullPage(true))
+        page?.waitForLoadState()
+    }
+
+    fun launch(): Document {
+        val content = page?.content()
+        screenshot = page?.screenshot(Page.ScreenshotOptions().setFullPage(true))
         Logger.info("Closing browser...")
-        page.close()
-        context.close()
-        browser.close()
-        playwright.close()
+        close()
 
         Logger.info("Parsing content...")
-        return Jsoup.parse(content)
+        return Jsoup.parse(content ?: throw Exception("Content is null"))
+    }
+
+    fun close() {
+        page?.close()
+        context?.close()
+        browser?.close()
+        playwright?.close()
     }
 }
