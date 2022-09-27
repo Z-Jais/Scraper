@@ -135,7 +135,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
 
             val animeDetail = getAnimeDetail(checkedCountry, id)
             image = animeDetail.first ?: ""
-            description = animeDetail.second?.replace("\n", "")?.trim()
+            description = animeDetail.second
 
             cache.add(CrunchyrollAnime(checkedCountry, animeId, name, image, description))
         }
