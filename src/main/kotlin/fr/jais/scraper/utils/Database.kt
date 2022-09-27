@@ -1,6 +1,5 @@
 package fr.jais.scraper.utils
 
-import com.google.gson.Gson
 import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.entities.Manga
 import fr.jais.scraper.entities.News
@@ -15,11 +14,10 @@ class Database {
         val mangas: MutableList<Manga> = mutableListOf()
     )
 
-    private val gson = Gson()
     private val file = File("database.txt")
 
     fun load(): DB =
-        gson.fromJson(
+        Const.gson.fromJson(
             try {
                 Gzip.decode(file.readText())
             } catch (e: Exception) {
@@ -29,7 +27,7 @@ class Database {
         ) ?: DB()
 
     private fun save(db: DB) {
-        val json = gson.toJson(db)
+        val json = Const.gson.toJson(db)
         val jsonSizeInMiB = json.toByteArray().size.toDouble() / 1024.0
         val gzip = Gzip.encode(json)
         val gzipSizeInMiB = gzip.toByteArray().size.toDouble() / 1024.0

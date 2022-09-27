@@ -11,7 +11,7 @@ data class News(
     val url: String
 ) {
     val hash = "${platform.name.substring(0 until 4).uppercase()}-${
-        "$platform$releaseDate$country".toMD5().substring(0 until 12).uppercase()
+    "$platform$releaseDate$country".toMD5().substring(0 until 12).uppercase()
     }"
 
     override fun toString(): String {

@@ -1,6 +1,5 @@
 package fr.jais.scraper.converters
 
-import com.google.gson.Gson
 import com.google.gson.JsonObject
 import fr.jais.scraper.countries.FranceCountry
 import fr.jais.scraper.countries.ICountry
@@ -20,7 +19,6 @@ import fr.jais.scraper.exceptions.news.NewsUrlNotFoundException
 import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.utils.*
 import java.net.URI
-import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.util.*
@@ -46,57 +44,54 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
     }
 
     fun crunchyrollSession(): String {
-        val client = HttpClient.newHttpClient()
         val request = HttpRequest.newBuilder()
             .uri(URI.create("https://api.crunchyroll.com/start_session.0.json?access_token=LNDJgOit5yaRIWN&device_type=com.crunchyroll.windows.desktop&device_id=${UUID.randomUUID()}"))
             .build()
-        val response = client.send(request, HttpResponse.BodyHandlers.ofString())
+        val response = Const.httpClient.send(request, HttpResponse.BodyHandlers.ofString())
 
         if (response.statusCode() != 200) {
             throw Exception("Error while getting crunchyroll session")
         }
 
-        return Gson().fromJson(response.body(), JsonObject::class.java)
+        return Const.gson.fromJson(response.body(), JsonObject::class.java)
             .get("data").asJsonObject.get("session_id").asString
     }
 
     private fun getSeriesId(mediaId: String): String {
-        val client = HttpClient.newHttpClient()
         val request = HttpRequest.newBuilder()
             .uri(URI.create("https://api.crunchyroll.com/info.0.json?session_id=$sessionId&media_id=$mediaId"))
             .build()
-        val response = client.send(request, HttpResponse.BodyHandlers.ofString())
+        val response = Const.httpClient.send(request, HttpResponse.BodyHandlers.ofString())
 
         if (response.statusCode() != 200) {
             throw Exception("Error while getting crunchyroll session")
         }
 
-        return Gson().fromJson(response.body(), JsonObject::class.java)
+        return Const.gson.fromJson(response.body(), JsonObject::class.java)
             .get("data").asJsonObject.get("series_id").asString
     }
 
     fun getAnimeDetail(iCountry: ICountry, mediaId: String): Pair<String?, String?> {
         val seriesId = getSeriesId(mediaId)
 
-        val client = HttpClient.newHttpClient()
         val request = HttpRequest.newBuilder()
             .uri(
                 URI.create(
                     "https://api.crunchyroll.com/info.0.json?session_id=$sessionId&series_id=$seriesId&locale=${
-                        platform.getLang(
-                            iCountry
-                        )
+                    platform.getLang(
+                        iCountry
+                    )
                     }"
                 )
             )
             .build()
-        val response = client.send(request, HttpResponse.BodyHandlers.ofString())
+        val response = Const.httpClient.send(request, HttpResponse.BodyHandlers.ofString())
 
         if (response.statusCode() != 200) {
             throw Exception("Error while getting crunchyroll session")
         }
 
-        val data = Gson().fromJson(response.body(), JsonObject::class.java).get("data").asJsonObject
+        val data = Const.gson.fromJson(response.body(), JsonObject::class.java).get("data").asJsonObject
         return data["portrait_image"].asJsonObject["full_url"].asString to data["description"].asString
     }
 

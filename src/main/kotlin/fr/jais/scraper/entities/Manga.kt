@@ -15,7 +15,7 @@ data class Manga(
     var price: Double? = null
 ) {
     val hash = "${platform.name.substring(0 until 4).uppercase()}-${
-        "$platform${anime.name}$releaseDate$ref$ean".toMD5().substring(0 until 12).uppercase()
+    "$platform${anime.name}$releaseDate$ref$ean".toMD5().substring(0 until 12).uppercase()
     }"
 
     override fun toString(): String {

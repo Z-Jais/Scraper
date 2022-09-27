@@ -1,8 +1,5 @@
 package fr.jais.scraper.platforms
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.dataformat.xml.XmlMapper
-import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import fr.jais.scraper.Scraper
@@ -13,6 +10,7 @@ import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.entities.News
 import fr.jais.scraper.exceptions.CountryNotSupportedException
 import fr.jais.scraper.utils.Browser
+import fr.jais.scraper.utils.Const
 import fr.jais.scraper.utils.Logger
 import java.net.URL
 import java.util.*
@@ -26,11 +24,6 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
     listOf(FranceCountry::class.java)
 ) {
     val converter = CrunchyrollConverter(this)
-
-    private val gson = Gson()
-    private val objectMapper = ObjectMapper()
-    private val xmlMapper = XmlMapper()
-
     private var lastSimulcastCheck = 0L
     val simulcasts = mutableMapOf<ICountry, List<String>>()
 
@@ -62,7 +55,7 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
     }
 
     fun xmlToJson(content: String) =
-        gson.fromJson(objectMapper.writeValueAsString(xmlMapper.readTree(content)), JsonObject::class.java)
+        Const.gson.fromJson(Const.objectMapper.writeValueAsString(Const.xmlMapper.readTree(content)), JsonObject::class.java)
             ?.getAsJsonObject("channel")?.getAsJsonArray("item")
 
     fun getLang(checkedCountry: ICountry): String {
@@ -103,7 +96,14 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
         val countries = scraper.getCountries(this)
 
         if (System.currentTimeMillis() - lastSimulcastCheck > 3600000) {
-            countries.forEach { checkSimulcasts(it) }
+            countries.forEach {
+                try {
+                    checkSimulcasts(it)
+                } catch (e: Exception) {
+                    Logger.log(Level.SEVERE, "Error while checking simulcasts", e)
+                }
+            }
+
             lastSimulcastCheck = System.currentTimeMillis()
         }
 

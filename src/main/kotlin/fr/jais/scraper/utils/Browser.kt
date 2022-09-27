@@ -2,8 +2,6 @@ package fr.jais.scraper.utils
 
 import com.microsoft.playwright.BrowserContext
 import com.microsoft.playwright.Page
-import com.microsoft.playwright.Playwright
-import fr.jais.scraper.playwright
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
 
@@ -13,7 +11,6 @@ class Browser(type: BrowserType = BrowserType.CHROME, val url: String) {
         FIREFOX,
     }
 
-
     private var browser: com.microsoft.playwright.Browser? = null
     private var context: BrowserContext? = null
     var page: Page? = null
@@ -22,8 +19,8 @@ class Browser(type: BrowserType = BrowserType.CHROME, val url: String) {
         Logger.config("Browser type: ${type.name}")
         Logger.info("Launching browser...")
         browser = when (type) {
-            BrowserType.CHROME -> playwright?.chromium()?.launch()
-            BrowserType.FIREFOX -> playwright?.firefox()?.launch()
+            BrowserType.CHROME -> Const.chromium?.launch()
+            BrowserType.FIREFOX -> Const.firefox?.launch()
         }
 
         Logger.info("Creating context...")

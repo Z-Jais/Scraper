@@ -1,6 +1,5 @@
 package fr.jais.scraper.platforms
 
-import com.google.gson.Gson
 import com.google.gson.JsonArray
 import fr.jais.scraper.Scraper
 import fr.jais.scraper.converters.WakanimConverter
@@ -48,7 +47,7 @@ class WakanimPlatform(scraper: Scraper) : IPlatform(
     private var lastCheck = 0L
 
     private fun getCatalogue(): List<WakanimCatalogue> {
-        val content = Gson().fromJson(URL("https://account.wakanim.tv/api/catalogue").readText(), JsonArray::class.java)
+        val content = Const.gson.fromJson(URL("https://account.wakanim.tv/api/catalogue").readText(), JsonArray::class.java)
             ?: throw CatalogueNotFoundException("Wakanim catalogue not found")
         return content.filter { it?.isJsonObject == true }.mapNotNull { element ->
             val obj = element.asJsonObject

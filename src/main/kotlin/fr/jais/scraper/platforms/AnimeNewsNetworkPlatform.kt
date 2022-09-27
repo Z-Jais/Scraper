@@ -1,8 +1,5 @@
 package fr.jais.scraper.platforms
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.dataformat.xml.XmlMapper
-import com.google.gson.Gson
 import com.google.gson.JsonObject
 import fr.jais.scraper.Scraper
 import fr.jais.scraper.converters.AnimeNewsNetworkConverter
@@ -11,6 +8,7 @@ import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.News
 import fr.jais.scraper.exceptions.CountryNotSupportedException
 import fr.jais.scraper.utils.CalendarConverter
+import fr.jais.scraper.utils.Const
 import fr.jais.scraper.utils.Logger
 import fr.jais.scraper.utils.toDate
 import java.net.URL
@@ -27,7 +25,7 @@ class AnimeNewsNetworkPlatform(scraper: Scraper) : IPlatform(
     val converter = AnimeNewsNetworkConverter(this)
 
     fun xmlToJson(content: String) =
-        Gson().fromJson(ObjectMapper().writeValueAsString(XmlMapper().readTree(content)), JsonObject::class.java)
+        Const.gson.fromJson(Const.objectMapper.writeValueAsString(Const.xmlMapper.readTree(content)), JsonObject::class.java)
             ?.getAsJsonObject("channel")?.getAsJsonArray("item")?.mapNotNull { it.asJsonObject }
 
     private fun xmlToJsonWithFilter(
@@ -43,7 +41,7 @@ class AnimeNewsNetworkPlatform(scraper: Scraper) : IPlatform(
                     it.get("category")?.asJsonArray?.mapNotNull { c -> c.asString }?.joinToString(", ")
                 }
                 releaseDate?.toDate() == calendar.toDate() &&
-                        (category?.contains("Anime", true) == true || category?.contains("Manga", true) == true)
+                    (category?.contains("Anime", true) == true || category?.contains("Manga", true) == true)
             }
     }
 

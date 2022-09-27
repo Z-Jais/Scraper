@@ -1,6 +1,5 @@
 package fr.jais.scraper
 
-import com.microsoft.playwright.Playwright
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.entities.Manga
@@ -8,8 +7,6 @@ import fr.jais.scraper.entities.News
 import fr.jais.scraper.platforms.*
 import fr.jais.scraper.utils.*
 import java.util.*
-
-val playwright: Playwright = Playwright.create()
 
 class Scraper {
     val platforms = listOf(
@@ -72,7 +69,7 @@ class Scraper {
     }
 
     fun startThreadCheck() {
-        ThreadManager.start {
+        ThreadManager.start("Checker") {
             var lastCheck: String? = null
 
             while (true) {
@@ -99,6 +96,11 @@ class Scraper {
 }
 
 fun main() {
+    Logger.info("Initializing...")
+    Const.gson
+    Logger.info("Initialization done!")
+    Logger.info("Starting...")
     val scraper = Scraper()
+    Logger.info("Start main thread...")
     scraper.startThreadCheck()
 }
