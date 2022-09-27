@@ -124,38 +124,9 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
             description = animeCached.description
             Logger.config("Description: $description")
         } else {
-            val country = getCountryTag(checkedCountry)
             val episodeUrl = jsonObject.get("link")?.asString()
             val animeId =
                 episodeUrl?.split("/")?.get(4) ?: throw AnimeNotFoundException("No anime id found in $episodeUrl")
-
-//            // ----- ANIME PAGE -----
-//            Logger.info("Get anime page...")
-//            val url = "https://www.crunchyroll.com/$country/$animeId"
-//            Logger.config("Anime page: $url")
-//            val result = Browser(Browser.BrowserType.FIREFOX, url).launch()
-//
-//            // ----- IMAGE -----
-//            Logger.info("Get image...")
-//            image = result.selectXpath("//*[@id=\"sidebar_elements\"]/li[1]/img").attr("src").toHTTPS()
-//            Logger.config("Image: $image")
-//
-//            val divContent =
-//                result.selectXpath("/html/body/div[@id='template_scroller']/div/div[@id='template_body']/div[3]/div")
-//                    .text()
-//
-//            // Adult content
-//            if (divContent.startsWith("This content may be inappropriate for some people.")) {
-//                Logger.warning("Adult content detected, skipping...")
-//                image = ""
-//                description = null
-//            } else {
-//                // ----- DESCRIPTION -----
-//                Logger.info("Get description...")
-//                description = result.getElementsByClass("more").first()?.text()
-//                if (description.isNullOrBlank()) description = result.getElementsByClass("trunc-desc").text()
-//                Logger.config("Description: $description")
-//            }
 
             // ----- MEDIA ID -----
             Logger.info("Get media id...")
@@ -164,7 +135,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
 
             val animeDetail = getAnimeDetail(checkedCountry, id)
             image = animeDetail.first ?: ""
-            description = animeDetail.second
+            description = animeDetail.second?.replace("\\r\\n", "")?.trim()
 
             cache.add(CrunchyrollAnime(checkedCountry, animeId, name, image, description))
         }
