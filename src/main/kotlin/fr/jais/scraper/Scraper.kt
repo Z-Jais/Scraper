@@ -9,7 +9,14 @@ import fr.jais.scraper.utils.*
 import java.util.*
 
 class Scraper {
-    val platforms = listOf(AnimationDigitalNetworkPlatform(this), AnimeNewsNetworkPlatform(this), CrunchyrollPlatform(this), MangaNewsPlatform(this), NetflixPlatform(this), WakanimPlatform(this))
+    val platforms = listOf(
+        AnimationDigitalNetworkPlatform(this),
+        AnimeNewsNetworkPlatform(this),
+        CrunchyrollPlatform(this),
+        MangaNewsPlatform(this),
+        NetflixPlatform(this),
+        WakanimPlatform(this)
+    )
     val countries = platforms.flatMap { it.countries }.distinct().mapNotNull { it.getConstructor().newInstance() }
 
     fun getCountries(platform: IPlatform): List<ICountry> =
@@ -32,6 +39,7 @@ class Scraper {
             )
         Logger.config("Episodes: ${episodes.size}")
         Database.saveEpisodes(episodes)
+        API.saveEpisodes(episodes)
         return episodes
     }
 
@@ -61,7 +69,7 @@ class Scraper {
     }
 
     fun startThreadCheck() {
-        ThreadManager.start {
+        ThreadManager.start("Checker") {
             var lastCheck: String? = null
 
             while (true) {
@@ -88,6 +96,11 @@ class Scraper {
 }
 
 fun main() {
+    Logger.info("Initializing...")
+    Const.gson
+    Logger.info("Initialization done!")
+    Logger.info("Starting...")
     val scraper = Scraper()
+    Logger.info("Start main thread...")
     scraper.startThreadCheck()
 }

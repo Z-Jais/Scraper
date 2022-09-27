@@ -12,9 +12,10 @@ abstract class IPlatform(
     val scraper: Scraper,
     val name: String,
     val url: String,
+    val image: String,
     val countries: List<Class<out ICountry>>
 ) {
-    fun getPlatform() = Platform(name, url)
+    fun getPlatform() = Platform(name, url, image)
 
     open fun getEpisodes(calendar: Calendar): List<Episode> = emptyList()
     open fun getNews(calendar: Calendar): List<News> = emptyList()
@@ -25,6 +26,6 @@ abstract class IPlatform(
     }
 
     override fun toString(): String {
-        return "IPlatform(name='$name', url='$url', countries=$countries)"
+        return "IPlatform(name='$name', url='$url', image='$image', countries=$countries)"
     }
 }

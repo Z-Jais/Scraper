@@ -1,8 +1,5 @@
 package fr.jais.scraper.platforms
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.dataformat.xml.XmlMapper
-import com.google.gson.Gson
 import com.google.gson.JsonObject
 import fr.jais.scraper.Scraper
 import fr.jais.scraper.converters.AnimeNewsNetworkConverter
@@ -11,6 +8,7 @@ import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.News
 import fr.jais.scraper.exceptions.CountryNotSupportedException
 import fr.jais.scraper.utils.CalendarConverter
+import fr.jais.scraper.utils.Const
 import fr.jais.scraper.utils.Logger
 import fr.jais.scraper.utils.toDate
 import java.net.URL
@@ -21,12 +19,13 @@ class AnimeNewsNetworkPlatform(scraper: Scraper) : IPlatform(
     scraper,
     "Anime News Network",
     "https://www.animenewsnetwork.com/",
+    "anime_news_network.png",
     listOf(FranceCountry::class.java)
 ) {
     val converter = AnimeNewsNetworkConverter(this)
 
     fun xmlToJson(content: String) =
-        Gson().fromJson(ObjectMapper().writeValueAsString(XmlMapper().readTree(content)), JsonObject::class.java)
+        Const.gson.fromJson(Const.objectMapper.writeValueAsString(Const.xmlMapper.readTree(content)), JsonObject::class.java)
             ?.getAsJsonObject("channel")?.getAsJsonArray("item")?.mapNotNull { it.asJsonObject }
 
     private fun xmlToJsonWithFilter(

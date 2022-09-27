@@ -18,6 +18,7 @@ class NetflixPlatform(scraper: Scraper) : IPlatform(
     scraper,
     "Netflix",
     "https://www.netflix.com/",
+    "netflix.png",
     listOf(FranceCountry::class.java)
 ) {
     data class NetflixAnime(

@@ -1,6 +1,5 @@
 package fr.jais.scraper.platforms
 
-import com.google.gson.Gson
 import com.google.gson.JsonObject
 import fr.jais.scraper.Scraper
 import fr.jais.scraper.converters.AnimationDigitalNetworkConverter
@@ -8,6 +7,7 @@ import fr.jais.scraper.countries.FranceCountry
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.exceptions.CountryNotSupportedException
+import fr.jais.scraper.utils.Const
 import fr.jais.scraper.utils.Logger
 import fr.jais.scraper.utils.toDate
 import java.net.URL
@@ -19,6 +19,7 @@ class AnimationDigitalNetworkPlatform(scraper: Scraper) :
         scraper,
         "Animation Digital Network",
         "https://animationdigitalnetwork.fr/",
+        "animation_digital_network.png",
         listOf(FranceCountry::class.java)
     ) {
     val converter = AnimationDigitalNetworkConverter(this)
@@ -29,7 +30,7 @@ class AnimationDigitalNetworkPlatform(scraper: Scraper) :
         return try {
             val apiUrl = "https://gw.api.animationdigitalnetwork.fr/video/calendar?date=${calendar.toDate()}"
             val content = URL(apiUrl).readText()
-            Gson().fromJson(content, JsonObject::class.java)?.getAsJsonArray("videos")?.mapNotNull { it.asJsonObject }
+            Const.gson.fromJson(content, JsonObject::class.java)?.getAsJsonArray("videos")?.mapNotNull { it.asJsonObject }
         } catch (e: Exception) {
             Logger.log(Level.SEVERE, "Error while getting API content", e)
             null

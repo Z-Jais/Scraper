@@ -18,7 +18,10 @@ import fr.jais.scraper.exceptions.news.NewsTitleNotFoundException
 import fr.jais.scraper.exceptions.news.NewsUrlNotFoundException
 import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.utils.*
-import java.util.Calendar
+import java.net.URI
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
+import java.util.*
 
 class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
     data class CrunchyrollAnime(
@@ -30,6 +33,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
     )
 
     val cache = mutableListOf<CrunchyrollAnime>()
+    private val sessionId: String = crunchyrollSession()
 
     fun getCountryTag(checkedCountry: ICountry): String {
         val country = when (checkedCountry) {
@@ -37,6 +41,58 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
             else -> throw CountryNotSupportedException("Country not supported")
         }
         return country
+    }
+
+    fun crunchyrollSession(): String {
+        val request = HttpRequest.newBuilder()
+            .uri(URI.create("https://api.crunchyroll.com/start_session.0.json?access_token=LNDJgOit5yaRIWN&device_type=com.crunchyroll.windows.desktop&device_id=${UUID.randomUUID()}"))
+            .build()
+        val response = Const.httpClient.send(request, HttpResponse.BodyHandlers.ofString())
+
+        if (response.statusCode() != 200) {
+            throw Exception("Error while getting crunchyroll session ${response.statusCode()} : ${response.body()}")
+        }
+
+        return Const.gson.fromJson(response.body(), JsonObject::class.java)
+            .get("data").asJsonObject.get("session_id").asString
+    }
+
+    private fun getSeriesId(mediaId: String): String {
+        val request = HttpRequest.newBuilder()
+            .uri(URI.create("https://api.crunchyroll.com/info.0.json?session_id=$sessionId&media_id=$mediaId"))
+            .build()
+        val response = Const.httpClient.send(request, HttpResponse.BodyHandlers.ofString())
+
+        if (response.statusCode() != 200) {
+            throw Exception("Error while getting crunchyroll session")
+        }
+
+        return Const.gson.fromJson(response.body(), JsonObject::class.java)
+            .get("data").asJsonObject.get("series_id").asString
+    }
+
+    fun getAnimeDetail(iCountry: ICountry, mediaId: String): Pair<String?, String?> {
+        val seriesId = getSeriesId(mediaId)
+
+        val request = HttpRequest.newBuilder()
+            .uri(
+                URI.create(
+                    "https://api.crunchyroll.com/info.0.json?session_id=$sessionId&series_id=$seriesId&locale=${
+                    platform.getLang(
+                        iCountry
+                    )
+                    }"
+                )
+            )
+            .build()
+        val response = Const.httpClient.send(request, HttpResponse.BodyHandlers.ofString())
+
+        if (response.statusCode() != 200) {
+            throw Exception("Error while getting crunchyroll session")
+        }
+
+        val data = Const.gson.fromJson(response.body(), JsonObject::class.java).get("data").asJsonObject
+        return data["portrait_image"].asJsonObject["full_url"].asString to data["description"].asString
     }
 
     fun convertAnime(checkedCountry: ICountry, jsonObject: JsonObject): Anime {
@@ -68,37 +124,18 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
             description = animeCached.description
             Logger.config("Description: $description")
         } else {
-            val country = getCountryTag(checkedCountry)
             val episodeUrl = jsonObject.get("link")?.asString()
-            val animeId = episodeUrl?.split("/")?.get(4) ?: throw AnimeNotFoundException("No anime id found in $episodeUrl")
+            val animeId =
+                episodeUrl?.split("/")?.get(4) ?: throw AnimeNotFoundException("No anime id found in $episodeUrl")
 
-            // ----- ANIME PAGE -----
-            Logger.info("Get anime page...")
-            val url = "https://www.crunchyroll.com/$country/$animeId"
-            Logger.config("Anime page: $url")
-            val result = Browser(Browser.BrowserType.FIREFOX, url).launch()
+            // ----- MEDIA ID -----
+            Logger.info("Get media id...")
+            val id = jsonObject.get("mediaId")?.asString() ?: throw EpisodeIdNotFoundException("No media id found")
+            Logger.config("Media id: $id")
 
-            // ----- IMAGE -----
-            Logger.info("Get image...")
-            image = result.selectXpath("//*[@id=\"sidebar_elements\"]/li[1]/img").attr("src").toHTTPS()
-            Logger.config("Image: $image")
-
-            val divContent =
-                result.selectXpath("/html/body/div[@id='template_scroller']/div/div[@id='template_body']/div[3]/div")
-                    .text()
-
-            // Adult content
-            if (divContent.startsWith("This content may be inappropriate for some people.")) {
-                Logger.warning("Adult content detected, skipping...")
-                image = ""
-                description = null
-            } else {
-                // ----- DESCRIPTION -----
-                Logger.info("Get description...")
-                description = result.getElementsByClass("more").first()?.text()
-                if (description.isNullOrBlank()) description = result.getElementsByClass("trunc-desc").text()
-                Logger.config("Description: $description")
-            }
+            val animeDetail = getAnimeDetail(checkedCountry, id)
+            image = animeDetail.first ?: ""
+            description = animeDetail.second
 
             cache.add(CrunchyrollAnime(checkedCountry, animeId, name, image, description))
         }
@@ -129,7 +166,8 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
 
         // ----- RESTRICTIONS -----
         Logger.info("Get restrictions...")
-        val countryRestrictions = jsonObject.getAsJsonObject("restriction")?.get("")?.asString?.split(" ") ?: emptyList()
+        val countryRestrictions =
+            jsonObject.getAsJsonObject("restriction")?.get("")?.asString?.split(" ") ?: emptyList()
         val restrictionTag = getCountryTag(checkedCountry)
         Logger.config("Country restrictions: ${countryRestrictions.joinToString(", ")}")
         Logger.config("Restriction tag: $restrictionTag")

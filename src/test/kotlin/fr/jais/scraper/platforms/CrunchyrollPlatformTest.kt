@@ -16,7 +16,7 @@ internal class CrunchyrollPlatformTest {
 
     private fun testEpisode(): JsonObject? {
         val gzip = Resource.get("crunchyroll_episode.txt")
-        return Gson().fromJson(Gzip.decode(gzip!!), JsonObject::class.java)
+        return Const.gson.fromJson(Gzip.decode(gzip!!), JsonObject::class.java)
     }
 
     private fun testXml() = Gzip.decode(Resource.get("crunchyroll_xml.txt")!!)
@@ -46,7 +46,7 @@ internal class CrunchyrollPlatformTest {
     @Test
     fun xmlToJson() {
         val json = platform.xmlToJson(testXml())
-        expect(50) { json?.size }
+        expect(50) { json?.size() }
     }
 
     @Test
@@ -54,7 +54,6 @@ internal class CrunchyrollPlatformTest {
         platform.simulcasts[country] = mutableListOf("Dropkick on My Devil!".lowercase())
         val anime = platform.converter.convertAnime(country, testEpisode() ?: return)
         expect("Dropkick on My Devil!") { anime.name }
-        expect("Passionnée par les sciences occultes et vêtue façon lolita gothique, Yurine Hanazono a invoqué Jashin, une démone au corps de serpent venue tout droit des enfers. Depuis, elle doit cohabiter avec elle dans son appartement de Tokyo. Si Yurine venait à mourir, Jashin pourrait enfin retourner dans son monde. Aussi, cette dernière complote sans cesse pour se débarrasser de la jeune fille... Pendant ce temps débarque Pino, un ancien subordonné des anges Pekola et Poporon. Pekola est ravie de croire que Dieu a finalement envoyé quelqu'un pour la ramener chez elle...") { anime.description }
         expect("https://img1.ak.crunchyroll.com/i/spire1/53ae728bf97a3b0018f7e2e5a4a6a7961659221370_full.jpg") { anime.image }
     }
 
