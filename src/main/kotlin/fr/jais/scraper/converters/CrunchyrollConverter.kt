@@ -50,7 +50,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         val response = Const.httpClient.send(request, HttpResponse.BodyHandlers.ofString())
 
         if (response.statusCode() != 200) {
-            throw Exception("Error while getting crunchyroll session")
+            throw Exception("Error while getting crunchyroll session ${response.statusCode()} : ${response.body()}")
         }
 
         return Const.gson.fromJson(response.body(), JsonObject::class.java)

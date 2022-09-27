@@ -12,11 +12,11 @@ import kotlin.test.expect
 internal class CrunchyrollPlatformTest {
     private val scraper = Scraper()
     private val country = FranceCountry()
-    private val platform = CrunchyrollPlatform(scraper, Gson())
+    private val platform = CrunchyrollPlatform(scraper)
 
     private fun testEpisode(): JsonObject? {
         val gzip = Resource.get("crunchyroll_episode.txt")
-        return Gson().fromJson(Gzip.decode(gzip!!), JsonObject::class.java)
+        return Const.gson.fromJson(Gzip.decode(gzip!!), JsonObject::class.java)
     }
 
     private fun testXml() = Gzip.decode(Resource.get("crunchyroll_xml.txt")!!)
@@ -46,7 +46,7 @@ internal class CrunchyrollPlatformTest {
     @Test
     fun xmlToJson() {
         val json = platform.xmlToJson(testXml())
-        expect(50) { json?.size }
+        expect(50) { json?.size() }
     }
 
     @Test
