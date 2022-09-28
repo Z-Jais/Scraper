@@ -2,23 +2,22 @@ package fr.jais.scraper.utils
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import fr.jais.scraper.entities.Anime
-import fr.jais.scraper.entities.Country
-import fr.jais.scraper.entities.Episode
-import fr.jais.scraper.entities.Platform
+import fr.jais.scraper.entities.*
 import java.net.URI
+import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.util.logging.Level
 
-private const val URL = "https://beta-api.ziedelth.fr/"
+// private const val URL = "https://beta-api.ziedelth.fr/"
+private const val URL = "http://localhost:8080/"
 
 object API {
     private fun get(url: String): HttpResponse<String> {
         val request = HttpRequest.newBuilder()
             .uri(URI.create(url))
             .build()
-        return Const.httpClient.send(request, HttpResponse.BodyHandlers.ofString())
+        return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString())
     }
 
     private fun post(url: String, json: String): HttpResponse<String> {
@@ -27,7 +26,7 @@ object API {
             .header("Content-Type", "application/json")
             .POST(HttpRequest.BodyPublishers.ofString(json))
             .build()
-        return Const.httpClient.send(request, HttpResponse.BodyHandlers.ofString())
+        return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString())
     }
 
     private fun getCountry(country: Country): JsonObject? {
@@ -117,6 +116,25 @@ object API {
             .apply { addProperty("duration", episode.duration) }
     }
 
+    private fun toManga(
+        platform: JsonObject,
+        anime: JsonObject,
+        manga: Manga
+    ): JsonObject {
+        return JsonObject()
+            .apply { add("platform", JsonObject().apply { addProperty("uuid", platform["uuid"].asString) }) }
+            .apply { add("anime", JsonObject().apply { addProperty("uuid", anime["uuid"].asString) }) }
+            .apply { addProperty("hash", manga.hash) }
+            .apply { addProperty("releaseDate", "${manga.releaseDate.split("/").reversed().joinToString("-")}T00:00:00Z") }
+            .apply { addProperty("url", manga.url) }
+            .apply { addProperty("cover", manga.cover) }
+            .apply { addProperty("editor", manga.editor) }
+            .apply { addProperty("ref", manga.ref) }
+            .apply { addProperty("ean", manga.ean) }
+            .apply { addProperty("age", manga.age) }
+            .apply { addProperty("price", manga.price) }
+    }
+
     fun saveEpisodes(episodes: List<Episode>) {
         try {
             val countriesApi =
@@ -142,13 +160,42 @@ object API {
             }
 
             if (episodesApi.isEmpty()) {
-                Logger.warning("No episodes to save")
+                Logger.warning("No episodes to save in API")
                 return
             }
 
             post("${URL}episodes/multiple", Const.gson.toJson(episodesApi))
         } catch (e: Exception) {
             Logger.log(Level.SEVERE, "Error saving episodes", e)
+        }
+    }
+
+    fun saveMangas(mangas: List<Manga>) {
+        try {
+            val countriesApi =
+                mangas.map { it.anime.country }.distinctBy { it.tag }.map { it to (getCountry(it) ?: createCountry(it)) }
+            val platformsApi =
+                mangas.map { it.platform }.distinctBy { it.name }.map { it to (getPlatform(it) ?: createPlatform(it)) }
+
+            val mangasApi = mangas.mapNotNull { manga ->
+                val country = countriesApi.first { it.first == manga.anime.country }.second ?: return@mapNotNull null
+                val anime = getAnimeByHash(manga.anime.country, manga.anime) ?: createAnime(
+                    country,
+                    "${manga.releaseDate.split("/").reversed().joinToString("-")}T00:00:00Z",
+                    manga.anime
+                ) ?: return@mapNotNull null
+                val platform = platformsApi.first { it.first == manga.platform }.second ?: return@mapNotNull null
+                toManga(platform, anime, manga)
+            }
+
+            if (mangasApi.isEmpty()) {
+                Logger.warning("No mangas to save in API")
+                return
+            }
+
+            post("${URL}mangas/multiple", Const.gson.toJson(mangasApi))
+        } catch (e: Exception) {
+            Logger.log(Level.SEVERE, "Error saving mangas", e)
         }
     }
 }

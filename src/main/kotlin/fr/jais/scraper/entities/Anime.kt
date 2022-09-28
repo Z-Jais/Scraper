@@ -2,7 +2,7 @@ package fr.jais.scraper.entities
 
 data class Anime(
     val country: Country,
-    val name: String,
+    var name: String,
     val image: String,
     val description: String? = null,
     val genres: List<String> = emptyList()

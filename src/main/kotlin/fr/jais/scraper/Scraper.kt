@@ -65,6 +65,7 @@ class Scraper {
         val mangas = platforms.flatMap { it.getMangas(calendar) }
         Logger.config("Mangas: ${mangas.size}")
         Database.saveMangas(mangas)
+        API.saveMangas(mangas)
         return mangas
     }
 
