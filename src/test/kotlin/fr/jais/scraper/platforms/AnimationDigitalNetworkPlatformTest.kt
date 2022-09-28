@@ -1,6 +1,5 @@
 package fr.jais.scraper.platforms
 
-import com.google.gson.Gson
 import com.google.gson.JsonObject
 import fr.jais.scraper.Scraper
 import fr.jais.scraper.countries.FranceCountry

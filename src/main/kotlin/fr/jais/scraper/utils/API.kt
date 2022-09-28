@@ -1,6 +1,5 @@
 package fr.jais.scraper.utils
 
-import com.google.gson.Gson
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import fr.jais.scraper.entities.Anime
@@ -10,6 +9,7 @@ import fr.jais.scraper.entities.Platform
 import java.net.URI
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
+import java.util.logging.Level
 
 private const val URL = "https://beta-api.ziedelth.fr/"
 
@@ -118,31 +118,37 @@ object API {
     }
 
     fun saveEpisodes(episodes: List<Episode>) {
-        val countriesApi =
-            episodes.map { it.anime.country }.distinctBy { it.tag }.map { it to (getCountry(it) ?: createCountry(it)) }
-        val platformsApi =
-            episodes.map { it.platform }.distinctBy { it.name }.map { it to (getPlatform(it) ?: createPlatform(it)) }
-        val episodeTypesApi = episodes.map { it.episodeType }.distinctBy { it.name }
-            .map { it to (getEpisodeType(it) ?: createEpisodeType(it)) }
-        val langTypesApi =
-            episodes.map { it.langType }.distinctBy { it.name }.map { it to (getLangType(it) ?: createLangType(it)) }
+        try {
+            val countriesApi =
+                episodes.map { it.anime.country }.distinctBy { it.tag }.map { it to (getCountry(it) ?: createCountry(it)) }
+            val platformsApi =
+                episodes.map { it.platform }.distinctBy { it.name }.map { it to (getPlatform(it) ?: createPlatform(it)) }
+            val episodeTypesApi = episodes.map { it.episodeType }.distinctBy { it.name }
+                .map { it to (getEpisodeType(it) ?: createEpisodeType(it)) }
+            val langTypesApi =
+                episodes.map { it.langType }.distinctBy { it.name }.map { it to (getLangType(it) ?: createLangType(it)) }
 
-        post(
-            "${URL}episodes/multiple",
-            Gson().toJson(
-                episodes.mapNotNull { episode ->
-                    val country = countriesApi.first { it.first == episode.anime.country }.second ?: return@mapNotNull null
-                    val anime = getAnimeByHash(episode.anime.country, episode.anime) ?: createAnime(
-                        country,
-                        episode.releaseDate,
-                        episode.anime
-                    ) ?: return@mapNotNull null
-                    val platform = platformsApi.first { it.first == episode.platform }.second ?: return@mapNotNull null
-                    val episodeType = episodeTypesApi.first { it.first == episode.episodeType }.second ?: return@mapNotNull null
-                    val langType = langTypesApi.first { it.first == episode.langType }.second ?: return@mapNotNull null
-                    toEpisode(platform, anime, episodeType, langType, episode)
-                }
-            )
-        )
+            val episodesApi = episodes.mapNotNull { episode ->
+                val country = countriesApi.first { it.first == episode.anime.country }.second ?: return@mapNotNull null
+                val anime = getAnimeByHash(episode.anime.country, episode.anime) ?: createAnime(
+                    country,
+                    episode.releaseDate,
+                    episode.anime
+                ) ?: return@mapNotNull null
+                val platform = platformsApi.first { it.first == episode.platform }.second ?: return@mapNotNull null
+                val episodeType = episodeTypesApi.first { it.first == episode.episodeType }.second ?: return@mapNotNull null
+                val langType = langTypesApi.first { it.first == episode.langType }.second ?: return@mapNotNull null
+                toEpisode(platform, anime, episodeType, langType, episode)
+            }
+
+            if (episodesApi.isEmpty()) {
+                Logger.warning("No episodes to save")
+                return
+            }
+
+            post("${URL}episodes/multiple", Const.gson.toJson(episodesApi))
+        } catch (e: Exception) {
+            Logger.log(Level.SEVERE, "Error saving episodes", e)
+        }
     }
 }

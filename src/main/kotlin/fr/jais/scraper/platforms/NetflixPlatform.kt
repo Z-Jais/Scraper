@@ -6,10 +6,7 @@ import fr.jais.scraper.countries.FranceCountry
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.exceptions.CountryNotSupportedException
-import fr.jais.scraper.utils.Browser
-import fr.jais.scraper.utils.EpisodeType
-import fr.jais.scraper.utils.LangType
-import fr.jais.scraper.utils.Logger
+import fr.jais.scraper.utils.*
 import org.jsoup.nodes.Document
 import java.util.*
 import java.util.logging.Level
@@ -45,14 +42,22 @@ class NetflixPlatform(scraper: Scraper) : IPlatform(
         val langType: LangType = LangType.SUBTITLES
     )
 
-    val converter = NetflixConverter(this)
-    val contents = mutableListOf(
+    data class Cache(
+        val iCountry: ICountry,
+        val netflixId: Int,
+        var lastCheck: Long = 0,
+        var content: Document? = null
+    )
+
+    private val converter = NetflixConverter(this)
+    private val contents = mutableListOf(
         NetflixContent(
             81499847,
             "https://cdn.myanimelist.net/images/anime/1743/125204.jpg",
             Calendar.WEDNESDAY
         )
     )
+    private val cache = mutableListOf<Cache>()
 
     fun convertToNetflixEpisodes(content: Document): List<NetflixEpisode> {
         Logger.info("Converting to Netflix episodes")
@@ -117,15 +122,23 @@ class NetflixPlatform(scraper: Scraper) : IPlatform(
         }
     }
 
-    fun getAPIContent(checkedCountry: ICountry, netflixId: Int): List<NetflixEpisode>? {
+    private fun getAPIContent(checkedCountry: ICountry, netflixId: Int): List<NetflixEpisode>? {
         val lang = when (checkedCountry) {
             is FranceCountry -> "fr"
             else -> throw CountryNotSupportedException("Country not supported")
         }
 
         return try {
+            val cache = cache.firstOrNull { it.netflixId == netflixId && it.iCountry == checkedCountry } ?: Cache(checkedCountry, netflixId).also { cache.add(it) }
+
+            if (System.currentTimeMillis() - cache.lastCheck < 1 * 60 * 60 * 1000) {
+                Logger.info("Getting content from cache")
+                return convertToNetflixEpisodes(cache.content!!)
+            }
+
             val apiUrl = "https://www.netflix.com/$lang/title/$netflixId"
             val content = Browser(Browser.BrowserType.CHROME, apiUrl).launch()
+            cache.content = content
             convertToNetflixEpisodes(content)
         } catch (e: Exception) {
             Logger.log(Level.SEVERE, "Error while getting API content", e)
@@ -144,6 +157,13 @@ class NetflixPlatform(scraper: Scraper) : IPlatform(
 
             filter.flatMapIndexed { _, content ->
                 try {
+                    val releaseTime = CalendarConverter.fromUTCDate("${calendar.toDate()}T${content.releaseTime}Z")
+
+                    if (calendar.before(releaseTime)) {
+                        Logger.warning("Release time not reached yet for ${content.netflixId} (release time: ${content.releaseTime})")
+                        return@flatMapIndexed emptyList<Episode>()
+                    }
+
                     val episodes = getAPIContent(country, content.netflixId) ?: return@flatMapIndexed emptyList()
                     episodes.mapNotNull {
                         try {
