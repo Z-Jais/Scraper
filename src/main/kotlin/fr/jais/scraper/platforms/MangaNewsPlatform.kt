@@ -67,7 +67,11 @@ class MangaNewsPlatform(scraper: Scraper) : IPlatform(
                     content.selectXpath("//*[@id=\"breadcrumb\"]/span[4]/a").text().replace("\n", " ").trim()
                 val ref = it.anime.name.replace(baseName, "").trim()
                 it.ref = ref
-                it.anime.name = baseName
+
+                if (it.anime.name != baseName) {
+                    it.anime.name = baseName
+                }
+
                 val ean = content.select("[itemprop=\"isbn\"]").text().replace("\n", " ").trim().toLongOrNull()
                 it.ean = ean
                 val age =
