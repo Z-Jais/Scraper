@@ -35,13 +35,7 @@ class AnimeNewsNetworkPlatform(scraper: Scraper) : IPlatform(
         return xmlToJson(content)
             ?.filter {
                 val releaseDate = CalendarConverter.fromGMTLine(it.get("pubDate")?.asString)
-                val category = try {
-                    it.get("category")?.asString
-                } catch (e: Exception) {
-                    it.get("category")?.asJsonArray?.mapNotNull { c -> c.asString }?.joinToString(", ")
-                }
-                releaseDate?.toDate() == calendar.toDate() &&
-                    (category?.contains("Anime", true) == true || category?.contains("Manga", true) == true)
+                releaseDate?.toDate() == calendar.toDate()
             }
     }
 
