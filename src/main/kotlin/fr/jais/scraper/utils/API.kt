@@ -2,10 +2,7 @@ package fr.jais.scraper.utils
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import fr.jais.scraper.entities.Anime
-import fr.jais.scraper.entities.Country
-import fr.jais.scraper.entities.Episode
-import fr.jais.scraper.entities.Platform
+import fr.jais.scraper.entities.*
 import java.net.URI
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
@@ -117,6 +114,21 @@ object API {
             .apply { addProperty("duration", episode.duration) }
     }
 
+    private fun toNews(
+        platform: JsonObject,
+        country: JsonObject,
+        news: News
+    ): JsonObject {
+        return JsonObject()
+            .apply { add("country", JsonObject().apply { addProperty("uuid", country["uuid"].asString) }) }
+            .apply { add("platform", JsonObject().apply { addProperty("uuid", platform["uuid"].asString) }) }
+            .apply { addProperty("hash", news.hash) }
+            .apply { addProperty("releaseDate", news.releaseDate) }
+            .apply { addProperty("title", news.title) }
+            .apply { addProperty("description", news.description) }
+            .apply { addProperty("url", news.url) }
+    }
+
     fun saveEpisodes(episodes: List<Episode>) {
         try {
             val countriesApi =
@@ -147,6 +159,30 @@ object API {
             }
 
             post("${URL}episodes/multiple", Const.gson.toJson(episodesApi))
+        } catch (e: Exception) {
+            Logger.log(Level.SEVERE, "Error saving episodes", e)
+        }
+    }
+
+    fun saveNews(news: List<News>) {
+        try {
+            val platformsApi =
+                news.map { it.platform }.distinctBy { it.name }.map { it to (getPlatform(it) ?: createPlatform(it)) }
+            val countriesApi =
+                news.map { it.country }.distinctBy { it.tag }.map { it to (getCountry(it) ?: createCountry(it)) }
+
+            val newsApi = news.mapNotNull { nw ->
+                val platform = platformsApi.first { it.first == nw.platform }.second ?: return@mapNotNull null
+                val country = countriesApi.first { it.first == nw.country }.second ?: return@mapNotNull null
+                toNews(platform, country, nw)
+            }
+
+            if (newsApi.isEmpty()) {
+                Logger.warning("No news to save in API")
+                return
+            }
+
+            post("${URL}news/multiple", Const.gson.toJson(newsApi))
         } catch (e: Exception) {
             Logger.log(Level.SEVERE, "Error saving episodes", e)
         }

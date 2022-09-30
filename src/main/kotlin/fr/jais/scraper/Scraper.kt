@@ -55,6 +55,7 @@ class Scraper {
             )
         Logger.config("News: ${news.size}")
         Database.saveNews(news)
+        API.saveNews(news)
         return news
     }
 
@@ -82,10 +83,10 @@ class Scraper {
                     platforms.forEach { it.reset() }
 
                     // Start mangas detection
-                    getAllMangas(calendar).forEach { println(it) }
+//                    getAllMangas(calendar).forEach { println(it) }
                 }
 
-                getAllEpisodes(calendar).forEach { println(it) }
+//                getAllEpisodes(calendar).forEach { println(it) }
                 getAllNews(calendar).forEach { println(it) }
 
                 // Wait 5 minutes
