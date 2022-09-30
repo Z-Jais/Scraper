@@ -182,7 +182,7 @@ object API {
                 return
             }
 
-            post("${URL}episodes/multiple", Const.gson.toJson(newsApi))
+            post("${URL}news/multiple", Const.gson.toJson(newsApi))
         } catch (e: Exception) {
             Logger.log(Level.SEVERE, "Error saving episodes", e)
         }
