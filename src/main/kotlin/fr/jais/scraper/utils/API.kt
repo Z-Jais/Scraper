@@ -8,8 +8,7 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.util.logging.Level
 
-// private const val URL = "https://beta-api.ziedelth.fr/"
-private const val URL = "http://localhost:8080/"
+private const val URL = "https://beta-api.ziedelth.fr/"
 
 object API {
     private fun get(url: String): HttpResponse<String> {
