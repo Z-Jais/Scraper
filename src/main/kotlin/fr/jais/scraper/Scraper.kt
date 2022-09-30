@@ -66,6 +66,7 @@ class Scraper {
         val mangas = platforms.flatMap { it.getMangas(calendar) }
         Logger.config("Mangas: ${mangas.size}")
         Database.saveMangas(mangas)
+        API.saveMangas(mangas)
         return mangas
     }
 
@@ -83,10 +84,10 @@ class Scraper {
                     platforms.forEach { it.reset() }
 
                     // Start mangas detection
-//                    getAllMangas(calendar).forEach { println(it) }
+                    getAllMangas(calendar).forEach { println(it) }
                 }
 
-//                getAllEpisodes(calendar).forEach { println(it) }
+                getAllEpisodes(calendar).forEach { println(it) }
                 getAllNews(calendar).forEach { println(it) }
 
                 // Wait 5 minutes
