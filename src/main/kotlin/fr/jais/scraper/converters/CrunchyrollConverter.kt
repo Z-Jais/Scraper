@@ -8,6 +8,7 @@ import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.entities.News
 import fr.jais.scraper.exceptions.CountryNotSupportedException
 import fr.jais.scraper.exceptions.NewsException
+import fr.jais.scraper.exceptions.animes.AnimeImageNotFoundException
 import fr.jais.scraper.exceptions.animes.AnimeNameNotFoundException
 import fr.jais.scraper.exceptions.animes.AnimeNotFoundException
 import fr.jais.scraper.exceptions.animes.NotSimulcastAnimeException
@@ -32,6 +33,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         val description: String?
     )
 
+    private val useApi = false
     val cache = mutableListOf<CrunchyrollAnime>()
     private val sessionId: String = crunchyrollSession()
 
@@ -108,8 +110,8 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
             throw NotSimulcastAnimeException("Anime is not simulcasted")
         }
 
-        var image: String?
-        var description: String?
+        var image: String? = null
+        var description: String? = null
 
         if (cache.any { getInCache(it, checkedCountry, name) }) {
             val animeCached = cache.first { getInCache(it, checkedCountry, name) }
@@ -128,14 +130,17 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
             val animeId =
                 episodeUrl?.split("/")?.get(4) ?: throw AnimeNotFoundException("No anime id found in $episodeUrl")
 
-            // ----- MEDIA ID -----
-            Logger.info("Get media id...")
-            val id = jsonObject.get("mediaId")?.asString() ?: throw EpisodeIdNotFoundException("No media id found")
-            Logger.config("Media id: $id")
+            if (useApi) {
+                val pair = getFromApi(jsonObject, checkedCountry)
+                description = pair.first
+                image = pair.second
+            } else {
+                val pair = parseWebsite(checkedCountry, animeId)
+                description = pair.first
+                image = pair.second
+            }
 
-            val animeDetail = getAnimeDetail(checkedCountry, id)
-            image = animeDetail.first ?: ""
-            description = animeDetail.second
+            if (image == null) throw AnimeImageNotFoundException("No image found")
 
             cache.add(CrunchyrollAnime(checkedCountry, animeId, name, image, description))
         }
@@ -146,6 +151,60 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         Logger.config("Genres: ${genres.joinToString(", ")}")
 
         return Anime(checkedCountry.getCountry(), name, image, description, genres)
+    }
+
+    private fun parseWebsite(
+        checkedCountry: ICountry,
+        animeId: String,
+    ): Pair<String?, String?> {
+        val country = when (checkedCountry) {
+            is FranceCountry -> "fr"
+            else -> throw CountryNotSupportedException("Country not supported")
+        }
+
+        // ----- ANIME PAGE -----
+        Logger.info("Get anime page...")
+        val url = "https://www.crunchyroll.com/$country/$animeId"
+        Logger.config("Anime page: $url")
+        val result = Browser(Browser.BrowserType.FIREFOX, url).launch()
+
+        // ----- IMAGE -----
+        Logger.info("Get image...")
+        var image = result.selectXpath("//*[@id=\"sidebar_elements\"]/li[1]/img").attr("src").toHTTPS()
+        Logger.config("Image: $image")
+
+        var description: String? = null
+
+        val divContent =
+            result.selectXpath("/html/body/div[@id='template_scroller']/div/div[@id='template_body']/div[3]/div")
+                .text()
+
+        // Adult content
+        if (divContent.startsWith("This content may be inappropriate for some people.")) {
+            Logger.warning("Adult content detected, skipping...")
+            image = ""
+            description = null
+        } else {
+            // ----- DESCRIPTION -----
+            Logger.info("Get description...")
+            description = result.getElementsByClass("more").first()?.text()
+            if (description.isNullOrBlank()) description = result.getElementsByClass("trunc-desc").text()
+            Logger.config("Description: $description")
+        }
+        return Pair(description, image)
+    }
+
+    private fun getFromApi(
+        jsonObject: JsonObject,
+        checkedCountry: ICountry,
+    ): Pair<String?, String?> {
+        // ----- MEDIA ID -----
+        Logger.info("Get media id...")
+        val id = jsonObject.get("mediaId")?.asString() ?: throw EpisodeIdNotFoundException("No media id found")
+        Logger.config("Media id: $id")
+
+        val animeDetail = getAnimeDetail(checkedCountry, id)
+        return Pair(animeDetail.second, animeDetail.first ?: "")
     }
 
     private fun getInCache(

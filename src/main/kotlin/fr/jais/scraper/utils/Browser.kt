@@ -27,6 +27,8 @@ class Browser(type: BrowserType = BrowserType.CHROME, val url: String) {
         context = browser?.newContext()
         Logger.info("Creating page...")
         page = context?.newPage()
+        page?.setDefaultTimeout(60000.0)
+        page?.setDefaultNavigationTimeout(60000.0)
         Logger.config("URL: $url")
         Logger.info("Navigating...")
         page?.navigate(url)

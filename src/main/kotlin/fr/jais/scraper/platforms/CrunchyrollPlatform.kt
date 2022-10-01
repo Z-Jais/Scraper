@@ -47,6 +47,12 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
             val elements = content.getElementsByAttributeValue("itemprop", "name").map { it.text().lowercase() }
             list.addAll(elements)
             loadMore = elements.size % 40 == 0
+
+            if (page > 5) {
+                Logger.warning("Too many pages, stopping...")
+                break
+            }
+
             Logger.config("Load more: $loadMore")
         } while (loadMore)
 
