@@ -245,7 +245,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         Logger.config("Subtitles: ${subtitles.joinToString(", ")}")
         Logger.config("Country subtitles: $countrySubtitles")
 
-        if (subtitles.isEmpty() || !subtitles.contains(countrySubtitles)) {
+        if (!isDub(jsonObject) && (subtitles.isEmpty() || !subtitles.contains(countrySubtitles))) {
             throw EpisodeNotAvailableException("Subtitles not available in $checkedCountry")
         }
 
