@@ -46,7 +46,7 @@ class NetflixConverter(private val platform: NetflixPlatform) {
             "${netflixContent.netflixId}${netflixContent.season}${netflixEpisode.number}".toLong(),
             netflixEpisode.title,
             "${platform.url}title/${netflixContent.netflixId}",
-            netflixContent.image,
+            netflixEpisode.image,
             netflixEpisode.duration
         )
     }
