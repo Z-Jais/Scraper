@@ -159,16 +159,18 @@ object API {
             val langTypesApi =
                 episodes.map { it.langType }.distinctBy { it.name }.map { it to (getLangType(it) ?: createLangType(it)) }
 
+            val animesApi = episodes.distinctBy { it.anime.name.lowercase() }.map { episode ->
+                val anime = episode.anime
+                val country = countriesApi.first { it.first.tag == anime.country.tag }.second ?: return@map null
+                anime to (getAnimeByHash(anime.country, anime) ?: createAnime(country, episode.releaseDate, anime))
+            }
+
             val episodesApi = episodes.mapNotNull { episode ->
-                val country = countriesApi.first { it.first == episode.anime.country }.second ?: return@mapNotNull null
-                val anime = getAnimeByHash(episode.anime.country, episode.anime) ?: createAnime(
-                    country,
-                    episode.releaseDate,
-                    episode.anime
-                ) ?: return@mapNotNull null
+                val anime = animesApi.first { it?.first?.name?.lowercase() == episode.anime.name.lowercase() }?.second ?: return@mapNotNull null
                 val platform = platformsApi.first { it.first == episode.platform }.second ?: return@mapNotNull null
                 val episodeType = episodeTypesApi.first { it.first == episode.episodeType }.second ?: return@mapNotNull null
                 val langType = langTypesApi.first { it.first == episode.langType }.second ?: return@mapNotNull null
+
                 toEpisode(platform, anime, episodeType, langType, episode)
             }
 
@@ -214,13 +216,14 @@ object API {
             val platformsApi =
                 mangas.map { it.platform }.distinctBy { it.name }.map { it to (getPlatform(it) ?: createPlatform(it)) }
 
+            val animesApi = mangas.distinctBy { it.anime.name.lowercase() }.map { manga ->
+                val anime = manga.anime
+                val country = countriesApi.first { it.first.tag == anime.country.tag }.second ?: return@map null
+                anime to (getAnimeByHash(anime.country, anime) ?: createAnime(country, manga.releaseDate, anime))
+            }
+
             val mangasApi = mangas.mapNotNull { manga ->
-                val country = countriesApi.first { it.first == manga.anime.country }.second ?: return@mapNotNull null
-                val anime = getAnimeByHash(manga.anime.country, manga.anime) ?: createAnime(
-                    country,
-                    "${manga.releaseDate.split("/").reversed().joinToString("-")}T00:00:00Z",
-                    manga.anime
-                ) ?: return@mapNotNull null
+                val anime = animesApi.first { it?.first?.name?.lowercase() == manga.anime.name.lowercase() }?.second ?: return@mapNotNull null
                 val platform = platformsApi.first { it.first == manga.platform }.second ?: return@mapNotNull null
                 toManga(platform, anime, manga)
             }

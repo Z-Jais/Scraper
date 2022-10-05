@@ -101,7 +101,7 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
     override fun getEpisodes(calendar: Calendar): List<Episode> {
         val countries = scraper.getCountries(this)
 
-        if (System.currentTimeMillis() - lastSimulcastCheck > 10 * 60 * 1000) {
+        if (System.currentTimeMillis() - lastSimulcastCheck > 20 * 60 * 1000) {
             countries.forEach {
                 try {
                     checkSimulcasts(it)
