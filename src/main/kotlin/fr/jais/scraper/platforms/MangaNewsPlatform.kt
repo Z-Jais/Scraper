@@ -8,6 +8,7 @@ import fr.jais.scraper.entities.Manga
 import fr.jais.scraper.utils.*
 import java.util.*
 import java.util.logging.Level
+import kotlin.system.measureTimeMillis
 
 class MangaNewsPlatform(scraper: Scraper) : IPlatform(
     scraper,
@@ -61,25 +62,31 @@ class MangaNewsPlatform(scraper: Scraper) : IPlatform(
 
             browser.close()
 
-            mangas.forEach {
-                val content = Browser(Browser.BrowserType.CHROME, it.url).launch()
-                val baseName =
-                    content.selectXpath("//*[@id=\"breadcrumb\"]/span[4]/a").text().replace("\n", " ").trim()
-                val ref = it.anime.name.replace(baseName, "").trim()
-                it.ref = ref
+            mangas.forEachIndexed { index, manga ->
+                Logger.config("Manga ${index + 1}/${mangas.size} : ${manga.anime.name}")
 
-                if (it.anime.name != baseName) {
-                    it.anime.name = baseName
+                val time = measureTimeMillis {
+                    val content = Browser(Browser.BrowserType.CHROME, manga.url).launch()
+                    val baseName =
+                        content.selectXpath("//*[@id=\"breadcrumb\"]/span[4]/a").text().replace("\n", " ").trim()
+                    val ref = manga.anime.name.replace(baseName, "").trim()
+                    manga.ref = ref
+
+                    if (manga.anime.name != baseName) {
+                        manga.anime.name = baseName
+                    }
+
+                    val ean = content.select("[itemprop=\"isbn\"]").text().replace("\n", " ").trim().toLongOrNull()
+                    manga.ean = ean
+                    val age =
+                        content.select("#agenumber").text().replace("\n", " ").replace("+", "").trim().toIntOrNull()
+                    manga.age = age
+                    val price = content.select("#prixnumber").text().replace("\n", " ").replace("€", "").trim()
+                        .toDoubleOrNull()
+                    manga.price = price
                 }
 
-                val ean = content.select("[itemprop=\"isbn\"]").text().replace("\n", " ").trim().toLongOrNull()
-                it.ean = ean
-                val age =
-                    content.select("#agenumber").text().replace("\n", " ").replace("+", "").trim().toIntOrNull()
-                it.age = age
-                val price = content.select("#prixnumber").text().replace("\n", " ").replace("€", "").trim()
-                    .toDoubleOrNull()
-                it.price = price
+                Logger.config("Estimated remaining time : ${(mangas.size - index - 1) * time / 1000} seconds")
             }
 
             mangas.sortedBy { it.anime.name.lowercase() }

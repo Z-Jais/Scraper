@@ -219,7 +219,7 @@ object API {
             val animesApi = mangas.distinctBy { it.anime.name.lowercase() }.map { manga ->
                 val anime = manga.anime
                 val country = countriesApi.first { it.first.tag == anime.country.tag }.second ?: return@map null
-                anime to (getAnimeByHash(anime.country, anime) ?: createAnime(country, manga.releaseDate, anime))
+                anime to (getAnimeByHash(anime.country, anime) ?: createAnime(country, "${manga.releaseDate.split("/").reversed().joinToString("-")}T00:00:00Z", anime))
             }
 
             val mangasApi = mangas.mapNotNull { manga ->
