@@ -30,14 +30,15 @@ class AnimationDigitalNetworkPlatform(scraper: Scraper) :
         return try {
             val apiUrl = "https://gw.api.animationdigitalnetwork.fr/video/calendar?date=${calendar.toDate()}"
             val content = URL(apiUrl).readText()
-            Const.gson.fromJson(content, JsonObject::class.java)?.getAsJsonArray("videos")?.mapNotNull { it.asJsonObject }
+            Const.gson.fromJson(content, JsonObject::class.java)?.getAsJsonArray("videos")
+                ?.mapNotNull { it.asJsonObject }
         } catch (e: Exception) {
             Logger.log(Level.SEVERE, "Error while getting API content", e)
             null
         }
     }
 
-    override fun getEpisodes(calendar: Calendar): List<Episode> {
+    override fun getEpisodes(calendar: Calendar, cachedEpisodes: List<String>): List<Episode> {
         val countries = scraper.getCountries(this)
         return countries.flatMap { country ->
             Logger.info("Getting episodes for $name in ${country.name}...")

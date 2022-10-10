@@ -36,6 +36,13 @@ class Database {
     }
 
     companion object {
+        fun loadEpisodes(): List<Episode> {
+            Logger.info(LOADING_DATABASE)
+            val db = Database().load()
+            Logger.config("Episodes: ${db.episodes.size}")
+            return db.episodes
+        }
+
         fun saveEpisodes(episodes: List<Episode>) {
             if (episodes.isNotEmpty()) {
                 val database = Database()

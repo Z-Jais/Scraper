@@ -129,7 +129,10 @@ class NetflixPlatform(scraper: Scraper) : IPlatform(
         }
 
         return try {
-            val cache = cache.firstOrNull { it.netflixId == netflixId && it.iCountry == checkedCountry } ?: Cache(checkedCountry, netflixId).also { cache.add(it) }
+            val cache = cache.firstOrNull { it.netflixId == netflixId && it.iCountry == checkedCountry } ?: Cache(
+                checkedCountry,
+                netflixId
+            ).also { cache.add(it) }
 
             if (System.currentTimeMillis() - cache.lastCheck < 1 * 60 * 60 * 1000) {
                 Logger.info("Getting content from cache")
@@ -146,7 +149,7 @@ class NetflixPlatform(scraper: Scraper) : IPlatform(
         }
     }
 
-    override fun getEpisodes(calendar: Calendar): List<Episode> {
+    override fun getEpisodes(calendar: Calendar, cachedEpisodes: List<String>): List<Episode> {
         val countries = scraper.getCountries(this)
         return countries.flatMap { country ->
             Logger.info("Getting episodes for $name in ${country.name}...")

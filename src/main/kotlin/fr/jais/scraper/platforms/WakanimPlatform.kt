@@ -47,8 +47,9 @@ class WakanimPlatform(scraper: Scraper) : IPlatform(
     private var lastCheck = 0L
 
     private fun getCatalogue(): List<WakanimCatalogue> {
-        val content = Const.gson.fromJson(URL("https://account.wakanim.tv/api/catalogue").readText(), JsonArray::class.java)
-            ?: throw CatalogueNotFoundException("Wakanim catalogue not found")
+        val content =
+            Const.gson.fromJson(URL("https://account.wakanim.tv/api/catalogue").readText(), JsonArray::class.java)
+                ?: throw CatalogueNotFoundException("Wakanim catalogue not found")
         return content.filter { it?.isJsonObject == true }.mapNotNull { element ->
             val obj = element.asJsonObject
             WakanimCatalogue(
@@ -112,7 +113,7 @@ class WakanimPlatform(scraper: Scraper) : IPlatform(
         }
     }
 
-    override fun getEpisodes(calendar: Calendar): List<Episode> {
+    override fun getEpisodes(calendar: Calendar, cachedEpisodes: List<String>): List<Episode> {
         addCacheCatalogue()
         val countries = scraper.getCountries(this)
 

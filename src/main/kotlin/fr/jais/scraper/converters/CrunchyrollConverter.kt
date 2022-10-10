@@ -80,9 +80,9 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
             .uri(
                 URI.create(
                     "https://api.crunchyroll.com/info.0.json?session_id=$sessionId&series_id=$seriesId&locale=${
-                    platform.getLang(
-                        iCountry
-                    )
+                        platform.getLang(
+                            iCountry
+                        )
                     }"
                 )
             )
@@ -110,8 +110,8 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
             throw NotSimulcastAnimeException("Anime is not simulcasted")
         }
 
-        var image: String? = null
-        var description: String? = null
+        var image: String?
+        var description: String?
 
         if (cache.any { getInCache(it, checkedCountry, name) }) {
             val animeCached = cache.first { getInCache(it, checkedCountry, name) }
@@ -173,7 +173,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         var image = result.selectXpath("//*[@id=\"sidebar_elements\"]/li[1]/img").attr("src").toHTTPS()
         Logger.config("Image: $image")
 
-        var description: String? = null
+        var description: String?
 
         val divContent =
             result.selectXpath("/html/body/div[@id='template_scroller']/div/div[@id='template_body']/div[3]/div")
@@ -220,7 +220,12 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         ) ?: false
     }
 
-    fun convertEpisode(checkedCountry: ICountry, calendar: Calendar, jsonObject: JsonObject): Episode {
+    fun convertEpisode(
+        checkedCountry: ICountry,
+        calendar: Calendar,
+        jsonObject: JsonObject,
+        cachedEpisodes: List<String>
+    ): Episode {
         Logger.config("Convert episode from $jsonObject")
 
         // ----- RESTRICTIONS -----
@@ -249,13 +254,32 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
             throw EpisodeNotAvailableException("Subtitles not available in $checkedCountry")
         }
 
+        // ----- ID -----
+        Logger.info("Get id...")
+        val id = jsonObject.get("mediaId")?.asLong() ?: throw EpisodeIdNotFoundException("No id found")
+        Logger.config("Id: $id")
+
+        // ----- LANG TYPE -----
+        Logger.info("Get lang type...")
+        val langType = if (isDub(jsonObject)) LangType.VOICE else LangType.SUBTITLES
+        Logger.config("Lang type: $langType")
+
         // ----- RELEASE DATE -----
         Logger.info("Get release date...")
         val releaseDate = CalendarConverter.fromGMTLine(jsonObject.get("pubDate")?.asString())
             ?: throw EpisodeReleaseDateNotFoundException("No release date found")
         Logger.config("Release date: ${releaseDate.toISO8601()}")
 
-        if (releaseDate.toDate() != calendar.toDate()) {
+//        if (releaseDate.toDate() != calendar.toDate()) {
+        if (cachedEpisodes.contains(
+                Episode.calculateHash(
+                    platform.getPlatform(),
+                    id,
+                    checkedCountry.getCountry().tag,
+                    langType
+                )
+            )
+        ) {
             throw EpisodeNotAvailableException("Episode already released")
         }
 
@@ -284,16 +308,6 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         Logger.info("Get episode type...")
         val episodeType = if (number == -1) EpisodeType.SPECIAL else EpisodeType.EPISODE
         Logger.config("Episode type: $episodeType")
-
-        // ----- LANG TYPE -----
-        Logger.info("Get lang type...")
-        val langType = if (isDub(jsonObject)) LangType.VOICE else LangType.SUBTITLES
-        Logger.config("Lang type: $langType")
-
-        // ----- ID -----
-        Logger.info("Get id...")
-        val id = jsonObject.get("mediaId")?.asLong() ?: throw EpisodeIdNotFoundException("No id found")
-        Logger.config("Id: $id")
 
         // ----- TITLE -----
         Logger.info("Get title...")

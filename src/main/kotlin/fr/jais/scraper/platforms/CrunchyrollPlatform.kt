@@ -61,7 +61,10 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
     }
 
     fun xmlToJson(content: String) =
-        Const.gson.fromJson(Const.objectMapper.writeValueAsString(Const.xmlMapper.readTree(content)), JsonObject::class.java)
+        Const.gson.fromJson(
+            Const.objectMapper.writeValueAsString(Const.xmlMapper.readTree(content)),
+            JsonObject::class.java
+        )
             ?.getAsJsonObject("channel")?.getAsJsonArray("item")
 
     fun getLang(checkedCountry: ICountry): String {
@@ -98,7 +101,7 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
         }
     }
 
-    override fun getEpisodes(calendar: Calendar): List<Episode> {
+    override fun getEpisodes(calendar: Calendar, cachedEpisodes: List<String>): List<Episode> {
         val countries = scraper.getCountries(this)
 
         if (System.currentTimeMillis() - lastSimulcastCheck > 20 * 60 * 1000) {
@@ -117,7 +120,7 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
             Logger.info("Getting episodes for $name in ${country.name}...")
             getEpisodeAPIContent(country)?.mapNotNull {
                 try {
-                    converter.convertEpisode(country, calendar, it.asJsonObject)
+                    converter.convertEpisode(country, calendar, it.asJsonObject, cachedEpisodes)
                 } catch (e: Exception) {
                     Logger.log(Level.SEVERE, "Error while converting episode", e)
                     null

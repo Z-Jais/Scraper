@@ -25,7 +25,10 @@ class AnimeNewsNetworkPlatform(scraper: Scraper) : IPlatform(
     val converter = AnimeNewsNetworkConverter(this)
 
     fun xmlToJson(content: String) =
-        Const.gson.fromJson(Const.objectMapper.writeValueAsString(Const.xmlMapper.readTree(content)), JsonObject::class.java)
+        Const.gson.fromJson(
+            Const.objectMapper.writeValueAsString(Const.xmlMapper.readTree(content)),
+            JsonObject::class.java
+        )
             ?.getAsJsonObject("channel")?.getAsJsonArray("item")?.mapNotNull { it.asJsonObject }
 
     private fun xmlToJsonWithFilter(
