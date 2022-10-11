@@ -58,13 +58,13 @@ class AnimeNewsNetworkPlatform(scraper: Scraper) : IPlatform(
         }
     }
 
-    override fun getNews(calendar: Calendar): List<News> {
+    override fun getNews(calendar: Calendar, cachedNews: List<String>): List<News> {
         val countries = scraper.getCountries(this)
         return countries.flatMap { country ->
             Logger.info("Getting news for $name in ${country.name}...")
             getNewsAPIContent(country, calendar)?.mapNotNull {
                 try {
-                    converter.convertNews(country, it)
+                    converter.convertNews(country, it, cachedNews)
                 } catch (e: Exception) {
                     Logger.log(Level.SEVERE, "Error while converting news", e)
                     null

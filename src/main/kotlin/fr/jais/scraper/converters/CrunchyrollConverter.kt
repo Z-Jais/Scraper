@@ -222,7 +222,6 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
 
     fun convertEpisode(
         checkedCountry: ICountry,
-        calendar: Calendar,
         jsonObject: JsonObject,
         cachedEpisodes: List<String>
     ): Episode {
@@ -270,7 +269,6 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
             ?: throw EpisodeReleaseDateNotFoundException("No release date found")
         Logger.config("Release date: ${releaseDate.toISO8601()}")
 
-//        if (releaseDate.toDate() != calendar.toDate()) {
         if (cachedEpisodes.contains(
                 Episode.calculateHash(
                     platform.getPlatform(),
@@ -355,7 +353,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         )
     }
 
-    fun convertNews(checkedCountry: ICountry, calendar: Calendar, jsonObject: JsonObject): News {
+    fun convertNews(checkedCountry: ICountry, jsonObject: JsonObject, cachedNews: List<String>): News {
         Logger.config("Convert news from $jsonObject")
 
         // ----- RELEASE DATE -----
@@ -364,7 +362,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
             ?: throw NewsReleaseDateNotFoundException("No release date found")
         Logger.config("Release date: ${releaseDate.toISO8601()}")
 
-        if (releaseDate.toDate() != calendar.toDate()) {
+        if (cachedNews.contains(News.calculateHash(platform.getPlatform(), releaseDate.toISO8601(), checkedCountry.getCountry()))) {
             throw NewsException("News already released")
         }
 

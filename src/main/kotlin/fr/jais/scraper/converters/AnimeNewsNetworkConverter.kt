@@ -3,6 +3,7 @@ package fr.jais.scraper.converters
 import com.google.gson.JsonObject
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.News
+import fr.jais.scraper.exceptions.NewsException
 import fr.jais.scraper.exceptions.news.NewsDescriptionNotFoundException
 import fr.jais.scraper.exceptions.news.NewsReleaseDateNotFoundException
 import fr.jais.scraper.exceptions.news.NewsTitleNotFoundException
@@ -12,7 +13,7 @@ import fr.jais.scraper.utils.*
 import org.jsoup.Jsoup
 
 class AnimeNewsNetworkConverter(private val platform: AnimeNewsNetworkPlatform) {
-    fun convertNews(checkedCountry: ICountry, jsonObject: JsonObject): News {
+    fun convertNews(checkedCountry: ICountry, jsonObject: JsonObject, cachedNews: List<String>): News {
         Logger.config("Convert news from $jsonObject")
 
         // ----- RELEASE DATE -----
@@ -20,6 +21,10 @@ class AnimeNewsNetworkConverter(private val platform: AnimeNewsNetworkPlatform) 
         val releaseDate = CalendarConverter.fromGMTLine(jsonObject.get("pubDate")?.asString())
             ?: throw NewsReleaseDateNotFoundException("No release date found")
         Logger.config("Release date: ${releaseDate.toISO8601()}")
+
+        if (cachedNews.contains(News.calculateHash(platform.getPlatform(), releaseDate.toISO8601(), checkedCountry.getCountry()))) {
+            throw NewsException("News already released")
+        }
 
         // ----- TITLE -----
         Logger.info("Get title...")

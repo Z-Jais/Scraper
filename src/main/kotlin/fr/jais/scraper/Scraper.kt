@@ -49,9 +49,12 @@ class Scraper {
     private fun getAllNews(calendar: Calendar): List<News> {
         Logger.config("Calendar: ${calendar.toISO8601()}")
 
+        Logger.info("Getting cached news...")
+        val cachedNews = Database.loadNews().map { it.hash }
+
         Logger.info("Get all news...")
         val news = platforms
-            .flatMap { it.getNews(calendar) }
+            .flatMap { it.getNews(calendar, cachedNews) }
             .filter { calendar.after(CalendarConverter.fromUTCDate(it.releaseDate)) }
             .sortedWith(
                 compareBy { CalendarConverter.fromUTCDate(it.releaseDate) }

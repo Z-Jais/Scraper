@@ -120,7 +120,7 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
             Logger.info("Getting episodes for $name in ${country.name}...")
             getEpisodeAPIContent(country)?.mapNotNull {
                 try {
-                    converter.convertEpisode(country, calendar, it.asJsonObject, cachedEpisodes)
+                    converter.convertEpisode(country, it.asJsonObject, cachedEpisodes)
                 } catch (e: Exception) {
                     Logger.log(Level.SEVERE, "Error while converting episode", e)
                     null
@@ -129,13 +129,13 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
         }
     }
 
-    override fun getNews(calendar: Calendar): List<News> {
+    override fun getNews(calendar: Calendar, cachedNews: List<String>): List<News> {
         val countries = scraper.getCountries(this)
         return countries.flatMap { country ->
             Logger.info("Getting news for $name in ${country.name}...")
             getNewsAPIContent(country)?.mapNotNull {
                 try {
-                    converter.convertNews(country, calendar, it.asJsonObject)
+                    converter.convertNews(country, it.asJsonObject, cachedNews)
                 } catch (e: Exception) {
                     Logger.log(Level.SEVERE, "Error while converting news", e)
                     null

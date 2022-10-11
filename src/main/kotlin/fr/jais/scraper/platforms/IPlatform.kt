@@ -18,7 +18,7 @@ abstract class IPlatform(
     fun getPlatform() = Platform(name, url, image)
 
     open fun getEpisodes(calendar: Calendar, cachedEpisodes: List<String>): List<Episode> = emptyList()
-    open fun getNews(calendar: Calendar): List<News> = emptyList()
+    open fun getNews(calendar: Calendar, cachedNews: List<String>): List<News> = emptyList()
     open fun getMangas(calendar: Calendar): List<Manga> = emptyList()
 
     open fun reset() {

@@ -43,6 +43,13 @@ class Database {
             return db.episodes
         }
 
+        fun loadNews(): List<News> {
+            Logger.info(LOADING_DATABASE)
+            val db = Database().load()
+            Logger.config("News: ${db.news.size}")
+            return db.news
+        }
+
         fun saveEpisodes(episodes: List<Episode>) {
             if (episodes.isNotEmpty()) {
                 val database = Database()
