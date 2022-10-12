@@ -10,7 +10,8 @@ import fr.jais.scraper.platforms.AnimationDigitalNetworkPlatform
 import fr.jais.scraper.utils.*
 
 class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNetworkPlatform) {
-    fun convertAnime(checkedCountry: ICountry, jsonObject: JsonObject): Anime {
+    /// Convert anime from AnimationDigitalNetworkPlatform jsonObject to entity Anime
+    private fun convertAnime(checkedCountry: ICountry, jsonObject: JsonObject): Anime {
         val showJson = jsonObject.getAsJsonObject("show") ?: throw AnimeNotFoundException("No show found")
         Logger.config("Convert anime from $showJson")
 
@@ -54,6 +55,7 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         return Anime(checkedCountry.getCountry(), name, image, description, genres)
     }
 
+    /// Convert episode from AnimationDigitalNetworkPlatform jsonObject to entity Episode
     fun convertEpisode(checkedCountry: ICountry, jsonObject: JsonObject): Episode {
         Logger.config("Convert episode from $jsonObject")
 

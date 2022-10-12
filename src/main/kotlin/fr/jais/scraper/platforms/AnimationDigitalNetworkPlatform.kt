@@ -22,9 +22,9 @@ class AnimationDigitalNetworkPlatform(scraper: Scraper) :
         "animation_digital_network.png",
         listOf(FranceCountry::class.java)
     ) {
-    val converter = AnimationDigitalNetworkConverter(this)
+    private val converter = AnimationDigitalNetworkConverter(this)
 
-    fun getAPIContent(checkedCountry: ICountry, calendar: Calendar): List<JsonObject>? {
+    private fun getAPIContent(checkedCountry: ICountry, calendar: Calendar): List<JsonObject>? {
         if (checkedCountry !is FranceCountry) throw CountryNotSupportedException("Country not supported")
 
         return try {

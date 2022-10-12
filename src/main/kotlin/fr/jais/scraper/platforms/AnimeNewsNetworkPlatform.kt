@@ -22,9 +22,9 @@ class AnimeNewsNetworkPlatform(scraper: Scraper) : IPlatform(
     "anime_news_network.png",
     listOf(FranceCountry::class.java)
 ) {
-    val converter = AnimeNewsNetworkConverter(this)
+    private val converter = AnimeNewsNetworkConverter(this)
 
-    fun xmlToJson(content: String) =
+    private fun xmlToJson(content: String) =
         Const.gson.fromJson(
             Const.objectMapper.writeValueAsString(Const.xmlMapper.readTree(content)),
             JsonObject::class.java
