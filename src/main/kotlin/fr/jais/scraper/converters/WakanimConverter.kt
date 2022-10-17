@@ -16,7 +16,7 @@ private const val EPISODE_NOT_AVAILABLE_YET = "Episode not available yet"
 class WakanimConverter(private val platform: WakanimPlatform) {
     val cache = mutableMapOf<WakanimPlatform.WakanimAgendaEpisode, Episode>()
 
-    fun convertEpisode(calendar: Calendar, wakanimAgendaEpisode: WakanimPlatform.WakanimAgendaEpisode): Episode {
+    fun convertEpisode(calendar: Calendar, wakanimAgendaEpisode: WakanimPlatform.WakanimAgendaEpisode, cachedEpisodes: List<String>): Episode {
         if (cache.containsKey(wakanimAgendaEpisode)) {
             Logger.info("Get episode from cache")
             return cache[wakanimAgendaEpisode]!!
@@ -60,6 +60,18 @@ class WakanimConverter(private val platform: WakanimPlatform) {
         Logger.info("Get id...")
         val id = url.split("/")[7].toLongOrNull() ?: throw EpisodeIdNotFoundException("Episode id not found")
         Logger.config("Id: $id")
+
+        if (cachedEpisodes.contains(
+                Episode.calculateHash(
+                    platform.getPlatform(),
+                    id,
+                    wakanimAgendaEpisode.anime.country.tag,
+                    wakanimAgendaEpisode.langType
+                )
+            )
+        ) {
+            throw EpisodeNotAvailableException("Episode already released")
+        }
 
         // ----- IMAGE -----
         Logger.info("Get image...")
