@@ -59,7 +59,7 @@ class NetflixPlatform(scraper: Scraper) : IPlatform(
     )
     private val cache = mutableListOf<Cache>()
 
-    fun convertToNetflixEpisodes(content: Document): List<NetflixEpisode> {
+    private fun convertToNetflixEpisodes(content: Document): List<NetflixEpisode> {
         Logger.info("Converting to Netflix episodes")
 
         Logger.info("Getting anime name")
@@ -170,7 +170,7 @@ class NetflixPlatform(scraper: Scraper) : IPlatform(
                     val episodes = getAPIContent(country, content.netflixId) ?: return@flatMapIndexed emptyList()
                     episodes.mapNotNull {
                         try {
-                            converter.convertEpisode(country, calendar, content, it)
+                            converter.convertEpisode(country, calendar, content, it, cachedEpisodes)
                         } catch (e: Exception) {
                             Logger.log(Level.SEVERE, "Error while converting episode", e)
                             null

@@ -10,7 +10,8 @@ import fr.jais.scraper.platforms.AnimationDigitalNetworkPlatform
 import fr.jais.scraper.utils.*
 
 class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNetworkPlatform) {
-    fun convertAnime(checkedCountry: ICountry, jsonObject: JsonObject): Anime {
+    /// Convert anime from AnimationDigitalNetworkPlatform jsonObject to entity Anime
+    private fun convertAnime(checkedCountry: ICountry, jsonObject: JsonObject): Anime {
         val showJson = jsonObject.getAsJsonObject("show") ?: throw AnimeNotFoundException("No show found")
         Logger.config("Convert anime from $showJson")
 
@@ -54,7 +55,8 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         return Anime(checkedCountry.getCountry(), name, image, description, genres)
     }
 
-    fun convertEpisode(checkedCountry: ICountry, jsonObject: JsonObject): Episode {
+    /// Convert episode from AnimationDigitalNetworkPlatform jsonObject to entity Episode
+    fun convertEpisode(checkedCountry: ICountry, jsonObject: JsonObject, cachedEpisodes: List<String>): Episode {
         Logger.config("Convert episode from $jsonObject")
 
         // ----- ANIME -----
@@ -104,6 +106,18 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         Logger.info("Get id...")
         val id = jsonObject.get("id")?.asLong() ?: throw EpisodeIdNotFoundException("No id found")
         Logger.config("Id: $id")
+
+        if (cachedEpisodes.contains(
+                Episode.calculateHash(
+                    platform.getPlatform(),
+                    id,
+                    checkedCountry.getCountry().tag,
+                    langType
+                )
+            )
+        ) {
+            throw EpisodeNotAvailableException("Episode already released")
+        }
 
         // ----- TITLE -----
         Logger.info("Get title...")

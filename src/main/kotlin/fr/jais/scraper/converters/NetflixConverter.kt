@@ -3,6 +3,7 @@ package fr.jais.scraper.converters
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Anime
 import fr.jais.scraper.entities.Episode
+import fr.jais.scraper.exceptions.episodes.EpisodeNotAvailableException
 import fr.jais.scraper.platforms.NetflixPlatform
 import fr.jais.scraper.utils.CalendarConverter
 import fr.jais.scraper.utils.Logger
@@ -10,7 +11,7 @@ import fr.jais.scraper.utils.toDate
 import java.util.*
 
 class NetflixConverter(private val platform: NetflixPlatform) {
-    fun convertAnime(
+    private fun convertAnime(
         checkedCountry: ICountry,
         netflixContent: NetflixPlatform.NetflixContent,
         netflixAnime: NetflixPlatform.NetflixAnime
@@ -28,8 +29,16 @@ class NetflixConverter(private val platform: NetflixPlatform) {
         checkedCountry: ICountry,
         calendar: Calendar,
         netflixContent: NetflixPlatform.NetflixContent,
-        netflixEpisode: NetflixPlatform.NetflixEpisode
+        netflixEpisode: NetflixPlatform.NetflixEpisode,
+        cachedEpisodes: List<String>,
     ): Episode {
+        val id = "${netflixContent.netflixId}${netflixContent.season}${netflixEpisode.number}".toLong()
+        val calculatedHash = Episode.calculateHash(platform.getPlatform(), id, checkedCountry.getCountry().tag, netflixContent.langType)
+
+        if (cachedEpisodes.contains(calculatedHash)) {
+            throw EpisodeNotAvailableException("Episode already released")
+        }
+
         // ----- ANIME -----
         Logger.info("Convert anime...")
         val anime = convertAnime(checkedCountry, netflixContent, netflixEpisode.netflixAnime)
@@ -43,7 +52,7 @@ class NetflixConverter(private val platform: NetflixPlatform) {
             netflixEpisode.number,
             netflixContent.episodeType,
             netflixContent.langType,
-            "${netflixContent.netflixId}${netflixContent.season}${netflixEpisode.number}".toLong(),
+            id,
             netflixEpisode.title,
             "${platform.url}title/${netflixContent.netflixId}",
             netflixEpisode.image,

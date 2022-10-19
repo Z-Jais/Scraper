@@ -45,7 +45,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         return country
     }
 
-    fun crunchyrollSession(): String {
+    private fun crunchyrollSession(): String {
         val request = HttpRequest.newBuilder()
             .uri(URI.create("https://api.crunchyroll.com/start_session.0.json?access_token=LNDJgOit5yaRIWN&device_type=com.crunchyroll.windows.desktop&device_id=${UUID.randomUUID()}"))
             .build()
@@ -73,7 +73,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
             .get("data").asJsonObject.get("series_id").asString
     }
 
-    fun getAnimeDetail(iCountry: ICountry, mediaId: String): Pair<String?, String?> {
+    private fun getAnimeDetail(iCountry: ICountry, mediaId: String): Pair<String?, String?> {
         val seriesId = getSeriesId(mediaId)
 
         val request = HttpRequest.newBuilder()
@@ -97,7 +97,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         return data["portrait_image"].asJsonObject["full_url"].asString to data["description"].asString
     }
 
-    fun convertAnime(checkedCountry: ICountry, jsonObject: JsonObject): Anime {
+    private fun convertAnime(checkedCountry: ICountry, jsonObject: JsonObject): Anime {
         Logger.config("Convert anime from $jsonObject")
 
         // ----- NAME -----

@@ -38,7 +38,6 @@ class Browser(type: BrowserType = BrowserType.CHROME, val url: String) {
 
     fun launch(): Document {
         val content = page?.content()
-        Logger.info("Closing browser...")
         close()
 
         Logger.info("Parsing content...")
@@ -46,6 +45,7 @@ class Browser(type: BrowserType = BrowserType.CHROME, val url: String) {
     }
 
     fun close() {
+        Logger.info("Closing browser...")
         page?.close()
         context?.close()
         browser?.close()

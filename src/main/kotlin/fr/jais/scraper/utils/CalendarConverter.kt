@@ -8,7 +8,7 @@ object CalendarConverter {
     private val utcFormatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'")
     private val gmtLineFormatter = SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss z", Locale.ENGLISH)
     private val utcWithTimezoneFormatter = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ssZ")
-    val timeZone = TimeZone.getTimeZone("UTC")
+    private val timeZone: TimeZone = TimeZone.getTimeZone("UTC")
 
     fun toUTCDate(iso8601string: String?): String {
         this.utcFormatter.timeZone = timeZone
