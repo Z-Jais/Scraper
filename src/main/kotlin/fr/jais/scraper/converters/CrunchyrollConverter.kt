@@ -110,8 +110,8 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
             throw NotSimulcastAnimeException("Anime is not simulcasted")
         }
 
-        var image: String?
-        var description: String?
+        val image: String?
+        val description: String?
 
         if (cache.any { getInCache(it, checkedCountry, name) }) {
             val animeCached = cache.first { getInCache(it, checkedCountry, name) }
@@ -170,27 +170,14 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
 
         // ----- IMAGE -----
         Logger.info("Get image...")
-        var image = result.selectXpath("//*[@id=\"sidebar_elements\"]/li[1]/img").attr("src").toHTTPS()
+        val image = result.selectXpath("//*[@id=\"content\"]/div/div[2]/div/div[1]/div[2]/div/div/div[2]/div[2]/figure/picture/img").attr("src").toHTTPS()
         Logger.config("Image: $image")
 
-        var description: String?
+        // ----- DESCRIPTION -----
+        Logger.info("Get description...")
+        val description = result.selectXpath("//*[@id=\"content\"]/div/div[2]/div/div[2]/div[1]/div[1]/div[5]/div/div/div/p").text()
+        Logger.config("Description: $description")
 
-        val divContent =
-            result.selectXpath("/html/body/div[@id='template_scroller']/div/div[@id='template_body']/div[3]/div")
-                .text()
-
-        // Adult content
-        if (divContent.startsWith("This content may be inappropriate for some people.")) {
-            Logger.warning("Adult content detected, skipping...")
-            image = ""
-            description = null
-        } else {
-            // ----- DESCRIPTION -----
-            Logger.info("Get description...")
-            description = result.getElementsByClass("more").first()?.text()
-            if (description.isNullOrBlank()) description = result.getElementsByClass("trunc-desc").text()
-            Logger.config("Description: $description")
-        }
         return Pair(description, image)
     }
 
