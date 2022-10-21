@@ -6,6 +6,7 @@ import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Anime
 import fr.jais.scraper.entities.Manga
 import fr.jais.scraper.utils.*
+import org.jsoup.Jsoup
 import java.util.*
 import java.util.logging.Level
 import kotlin.system.measureTimeMillis
@@ -24,27 +25,18 @@ class MangaNewsPlatform(scraper: Scraper) : IPlatform(
                 "https://www.manga-news.com/index.php/planning?p_year=${calendar.getYear()}&p_month=${calendar.getMonth()}"
             )
             val page = browser.page ?: throw Exception("Cannot get page")
-            page.locator("//*[@id=\"main\"]/form[1]/button").click()
-            page.waitForLoadState()
-            val elements = page.querySelectorAll("tr")?.filter { it.getAttribute("id") != null }
+            page.locator("//*[@id=\"main\"]/form[1]/button").click().run { page.waitForLoadState() }
+            val document = Jsoup.parse(page.content())
             val checkDate = calendar.toFrenchDate().replace("-", "/")
 
-            val mangas = elements?.filter {
-                val dateOut = it.querySelector(".date_out")?.textContent()?.replace("\n", " ")?.trim()
-                    ?: throw Exception("No date found")
-                dateOut == checkDate
-            }?.mapNotNull {
-                val dateOut = it.querySelector(".date_out")?.textContent()?.replace("\n", " ")?.trim()
-                    ?: throw Exception("No date found")
-                val titleElement = it.querySelector(".title") ?: throw Exception("No title found")
-                val title = titleElement.textContent()?.replace("\n", " ")?.trim() ?: throw Exception("No title found")
-                val link = titleElement.querySelector("a")?.getAttribute("href")?.replace("\n", " ")?.trim()
-                    ?: throw Exception("No link found")
-                val editor = it.querySelectorAll("td")?.lastOrNull()?.textContent()?.replace("\n", " ")?.trim()
-                    ?: throw Exception("No editor found")
-                val image = it.querySelector("img")?.getAttribute("src")?.replace("\n", " ")?.trim() ?: throw Exception(
-                    "No image found"
-                )
+            val mangas = document.getElementsByAttribute("id").mapNotNull {
+                val dateOut = it.selectFirst(".date_out")?.text() ?: return@mapNotNull null
+                if (dateOut != checkDate) return@mapNotNull null
+                val titleElement = it.selectFirst(".title") ?: return@mapNotNull null
+                val title = titleElement.text()
+                val link = titleElement.selectFirst("a")?.attr("href") ?: return@mapNotNull null
+                val editor = it.select("td").lastOrNull()?.text() ?: return@mapNotNull null
+                val image = it.selectFirst("img")?.attr("src") ?: return@mapNotNull null
 
                 Manga(
                     getPlatform(),
@@ -58,17 +50,14 @@ class MangaNewsPlatform(scraper: Scraper) : IPlatform(
                     image,
                     editor
                 )
-            } ?: throw Exception("No elements found")
-
-            browser.close()
+            }
 
             mangas.forEachIndexed { index, manga ->
                 Logger.config("Manga ${index + 1}/${mangas.size} : ${manga.anime.name}")
 
                 val time = measureTimeMillis {
-                    val content = Browser(Browser.BrowserType.CHROME, manga.url).launch()
-                    val baseName =
-                        content.selectXpath("//*[@id=\"breadcrumb\"]/span[4]/a").text().replace("\n", " ").trim()
+                    val content = Jsoup.parse(page.navigate(manga.url).run { page.content() })
+                    val baseName = content.selectXpath("//*[@id=\"breadcrumb\"]/span[4]/a").text().trim()
                     val ref = manga.anime.name.replace(baseName, "").trim()
                     manga.ref = ref
 
@@ -76,18 +65,18 @@ class MangaNewsPlatform(scraper: Scraper) : IPlatform(
                         manga.anime.name = baseName
                     }
 
-                    val ean = content.select("[itemprop=\"isbn\"]").text().replace("\n", " ").trim().toLongOrNull()
+                    val ean = content.select("[itemprop=\"isbn\"]").text().trim().toLongOrNull()
                     manga.ean = ean
-                    val age =
-                        content.select("#agenumber").text().replace("\n", " ").replace("+", "").trim().toIntOrNull()
+                    val age = content.select("#agenumber").text().replace("+", "").trim().toIntOrNull()
                     manga.age = age
-                    val price = content.select("#prixnumber").text().replace("\n", " ").replace("€", "").trim()
-                        .toDoubleOrNull()
+                    val price = content.select("#prixnumber").text().replace("€", "").trim().toDoubleOrNull()
                     manga.price = price
                 }
 
                 Logger.config("Estimated remaining time : ${(mangas.size - index - 1) * time / 1000} seconds")
             }
+
+            browser.close()
 
             mangas.sortedBy { it.anime.name.lowercase() }
         } catch (e: Exception) {
