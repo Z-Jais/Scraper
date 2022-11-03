@@ -9,6 +9,7 @@ import fr.jais.scraper.entities.Anime
 import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.exceptions.CatalogueNotFoundException
 import fr.jais.scraper.exceptions.CountryNotSupportedException
+import fr.jais.scraper.exceptions.EpisodeException
 import fr.jais.scraper.exceptions.animes.AnimeImageNotFoundException
 import fr.jais.scraper.exceptions.animes.AnimeNameNotFoundException
 import fr.jais.scraper.exceptions.episodes.EpisodeNumberNotFoundException
@@ -139,7 +140,10 @@ class WakanimPlatform(scraper: Scraper) : IPlatform(
                     try {
                         converter.convertEpisode(calendar, it, cachedEpisodes)
                     } catch (e: Exception) {
-                        Logger.log(Level.SEVERE, "Error while converting episode ${it.tmpUrl}", e)
+                        if (e !is EpisodeException) {
+                            Logger.log(Level.SEVERE, "Error while converting episode ${it.tmpUrl}", e)
+                        }
+
                         null
                     }
                 }
