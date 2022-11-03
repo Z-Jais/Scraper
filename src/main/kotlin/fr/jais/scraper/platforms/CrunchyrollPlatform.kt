@@ -9,6 +9,8 @@ import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.entities.News
 import fr.jais.scraper.exceptions.CountryNotSupportedException
+import fr.jais.scraper.exceptions.EpisodeException
+import fr.jais.scraper.exceptions.NewsException
 import fr.jais.scraper.utils.Browser
 import fr.jais.scraper.utils.Const
 import fr.jais.scraper.utils.Logger
@@ -122,7 +124,10 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
                 try {
                     converter.convertEpisode(country, it.asJsonObject, cachedEpisodes)
                 } catch (e: Exception) {
-                    Logger.log(Level.SEVERE, "Error while converting episode", e)
+                    if (e !is EpisodeException) {
+                        Logger.log(Level.SEVERE, "Error while converting episode", e)
+                    }
+
                     null
                 }
             } ?: emptyList()
@@ -137,7 +142,10 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
                 try {
                     converter.convertNews(country, it.asJsonObject, cachedNews)
                 } catch (e: Exception) {
-                    Logger.log(Level.SEVERE, "Error while converting news", e)
+                    if (e !is NewsException) {
+                        Logger.log(Level.SEVERE, "Error while converting news", e)
+                    }
+
                     null
                 }
             } ?: emptyList()

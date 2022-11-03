@@ -7,6 +7,7 @@ import fr.jais.scraper.countries.FranceCountry
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.exceptions.CountryNotSupportedException
+import fr.jais.scraper.exceptions.EpisodeException
 import fr.jais.scraper.utils.Const
 import fr.jais.scraper.utils.Logger
 import fr.jais.scraper.utils.toDate
@@ -46,7 +47,10 @@ class AnimationDigitalNetworkPlatform(scraper: Scraper) :
                 try {
                     converter.convertEpisode(country, it, cachedEpisodes)
                 } catch (e: Exception) {
-                    Logger.log(Level.SEVERE, "Error while converting episode", e)
+                    if (e !is EpisodeException) {
+                        Logger.log(Level.SEVERE, "Error while converting episode", e)
+                    }
+
                     null
                 }
             } ?: emptyList()

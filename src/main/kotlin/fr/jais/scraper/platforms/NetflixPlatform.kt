@@ -6,6 +6,7 @@ import fr.jais.scraper.countries.FranceCountry
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.exceptions.CountryNotSupportedException
+import fr.jais.scraper.exceptions.EpisodeException
 import fr.jais.scraper.utils.*
 import org.jsoup.nodes.Document
 import java.util.*
@@ -172,7 +173,10 @@ class NetflixPlatform(scraper: Scraper) : IPlatform(
                         try {
                             converter.convertEpisode(country, calendar, content, it, cachedEpisodes)
                         } catch (e: Exception) {
-                            Logger.log(Level.SEVERE, "Error while converting episode", e)
+                            if (e !is EpisodeException) {
+                                Logger.log(Level.SEVERE, "Error while converting episode", e)
+                            }
+
                             null
                         }
                     }

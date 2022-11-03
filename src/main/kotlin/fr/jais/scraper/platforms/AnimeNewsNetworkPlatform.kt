@@ -7,6 +7,7 @@ import fr.jais.scraper.countries.FranceCountry
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.News
 import fr.jais.scraper.exceptions.CountryNotSupportedException
+import fr.jais.scraper.exceptions.NewsException
 import fr.jais.scraper.utils.CalendarConverter
 import fr.jais.scraper.utils.Const
 import fr.jais.scraper.utils.Logger
@@ -66,7 +67,10 @@ class AnimeNewsNetworkPlatform(scraper: Scraper) : IPlatform(
                 try {
                     converter.convertNews(country, it, cachedNews)
                 } catch (e: Exception) {
-                    Logger.log(Level.SEVERE, "Error while converting news", e)
+                    if (e !is NewsException) {
+                        Logger.log(Level.SEVERE, "Error while converting news", e)
+                    }
+
                     null
                 }
             } ?: emptyList()
