@@ -34,7 +34,7 @@ class AnimeNewsNetworkConverter(private val platform: AnimeNewsNetworkPlatform) 
         // ----- DESCRIPTION -----
         Logger.info("Get description...")
         val description = Jsoup.parse(
-            jsonObject.get("title")?.asString() ?: throw NewsDescriptionNotFoundException("No description found")
+            jsonObject.get("description")?.asString() ?: throw NewsDescriptionNotFoundException("No description found")
         ).text()
         Logger.config("description: $description")
 

@@ -361,7 +361,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         // ----- DESCRIPTION -----
         Logger.info("Get description...")
         val description =
-            jsonObject.get("title")?.asString() ?: throw NewsDescriptionNotFoundException("No description found")
+            jsonObject.get("description")?.asString() ?: throw NewsDescriptionNotFoundException("No description found")
         Logger.config("description: $description")
 
         // ----- URL -----
