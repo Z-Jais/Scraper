@@ -29,7 +29,7 @@ class WakanimPlatform(scraper: Scraper) : IPlatform(
         val name: String,
         val image: String,
         val description: String?,
-        val genres: List<String>
+        val genres: List<Genre>
     )
 
     data class WakanimAgendaEpisode(
@@ -58,7 +58,7 @@ class WakanimPlatform(scraper: Scraper) : IPlatform(
                 obj.get("imageUrl")?.asString()?.toHTTPS()
                     ?: throw AnimeImageNotFoundException("Wakanim anime image not found"),
                 obj.get("smallSummary")?.asString(),
-                obj.get("genres")?.asJsonArray?.mapNotNull { it.asJsonObject()?.get("name")?.asString() } ?: emptyList()
+                Genre.fromArray(obj.get("genres")?.asJsonArray?.mapNotNull { it.asJsonObject()?.get("name")?.asString() } ?: emptyList())
             )
         }
     }

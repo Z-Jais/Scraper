@@ -149,8 +149,9 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         Logger.info("Get genres...")
         val genres = jsonObject.get("keywords")?.asString()?.split(", ") ?: emptyList()
         Logger.config("Genres: ${genres.joinToString(", ")}")
+        val objectGenres = Genre.fromArray(genres)
 
-        return Anime(checkedCountry.getCountry(), name, image, description, genres)
+        return Anime(checkedCountry.getCountry(), name, image, description, objectGenres)
     }
 
     private fun parseWebsite(

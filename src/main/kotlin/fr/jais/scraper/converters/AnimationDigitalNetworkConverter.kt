@@ -40,10 +40,11 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
 
         // ----- GENRES -----
         Logger.info("Get genres...")
-        val genres = showJson.getAsJsonArray("genres")?.mapNotNull { it.asString() } ?: emptyList()
+        val genres = showJson.getAsJsonArray("genres")?.mapNotNull { it.asString() }?.flatMap { it.split(" / ") } ?: emptyList()
         Logger.config("Genres: ${genres.joinToString(", ")}")
 
         if (!genres.any { it == "Animation japonaise" }) throw NotJapaneseAnimeException("Anime is not a Japanese anime")
+        val objectGenres = Genre.fromArray(genres)
 
         // ----- SIMULCAST -----
         Logger.info("Checking if anime is simulcasted...")
@@ -52,7 +53,7 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
 
         if (!simulcasted) throw NotSimulcastAnimeException("Anime is not simulcasted")
 
-        return Anime(checkedCountry.getCountry(), name, image, description, genres)
+        return Anime(checkedCountry.getCountry(), name, image, description, objectGenres)
     }
 
     /// Convert episode from AnimationDigitalNetworkPlatform jsonObject to entity Episode

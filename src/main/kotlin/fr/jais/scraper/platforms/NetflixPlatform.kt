@@ -22,7 +22,7 @@ class NetflixPlatform(scraper: Scraper) : IPlatform(
     data class NetflixAnime(
         val name: String,
         val description: String,
-        val genres: List<String>
+        val genres: List<Genre>
     )
 
     data class NetflixEpisode(
@@ -75,8 +75,9 @@ class NetflixPlatform(scraper: Scraper) : IPlatform(
         val animeGenres =
             content.selectXpath("/html/body/div[1]/div/div[2]/section[1]/div[1]/div[1]/div[2]/div/div[1]/a").text()
         Logger.config("Anime genres: $animeGenres")
+        val objectGenres = Genre.fromArray(animeGenres.split(" "))
 
-        val netflixAnime = NetflixAnime(animeName, animeDescription, animeGenres.split(" "))
+        val netflixAnime = NetflixAnime(animeName, animeDescription, objectGenres)
 
         Logger.info("Getting episodes")
         val episodes = content.selectFirst("ol.episodes-container")?.select("li.episode") ?: emptyList()
