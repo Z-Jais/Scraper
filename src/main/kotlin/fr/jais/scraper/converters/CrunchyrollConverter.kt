@@ -19,6 +19,7 @@ import fr.jais.scraper.exceptions.news.NewsTitleNotFoundException
 import fr.jais.scraper.exceptions.news.NewsUrlNotFoundException
 import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.utils.*
+import org.jsoup.Jsoup
 import java.net.URI
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
@@ -360,9 +361,8 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
 
         // ----- DESCRIPTION -----
         Logger.info("Get description...")
-        val description =
-            jsonObject.get("description")?.asString() ?: throw NewsDescriptionNotFoundException("No description found")
-        Logger.config("description: $description")
+        val description = Jsoup.parse(jsonObject.get("description")?.asString() ?: throw NewsDescriptionNotFoundException("No description found")).text()
+        Logger.config("Description: $description")
 
         // ----- URL -----
         Logger.info("Get url...")
