@@ -106,7 +106,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         val name = jsonObject.get("seriesTitle")?.asString() ?: throw AnimeNameNotFoundException("No name found")
         Logger.config("Name: $name")
 
-        if (platform.simulcasts[checkedCountry]?.contains(name.lowercase()) != true) {
+        if (!isFilm(jsonObject) && platform.simulcasts[checkedCountry]?.contains(name.lowercase()) != true) {
             Logger.info("Anime is not simulcasted")
             throw NotSimulcastAnimeException("Anime is not simulcasted")
         }
@@ -208,6 +208,11 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         ) ?: false
     }
 
+    private fun isFilm(jsonObject: JsonObject): Boolean {
+        val title = jsonObject.get("title")!!.asString()?.lowercase() ?: return false
+        return title.contains("film") || title.contains("movie")
+    }
+
     fun convertEpisode(
         checkedCountry: ICountry,
         jsonObject: JsonObject,
@@ -292,7 +297,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
 
         // ----- EPISODE TYPE -----
         Logger.info("Get episode type...")
-        val episodeType = if (number == -1) EpisodeType.SPECIAL else EpisodeType.EPISODE
+        val episodeType = if (isFilm(jsonObject)) EpisodeType.FILM else if (number == -1) EpisodeType.SPECIAL else EpisodeType.EPISODE
         Logger.config("Episode type: $episodeType")
 
         // ----- TITLE -----
