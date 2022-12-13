@@ -13,7 +13,7 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
     /// Convert anime from AnimationDigitalNetworkPlatform jsonObject to entity Anime
     private fun convertAnime(checkedCountry: ICountry, jsonObject: JsonObject): Anime {
         val showJson = jsonObject.getAsJsonObject("show") ?: throw AnimeNotFoundException("No show found")
-        Logger.config("Convert anime from $showJson")
+//        Logger.config("Convert anime from $showJson")
 
         // ----- NAME -----
         Logger.info("Get name...")
@@ -57,7 +57,7 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
 
     /// Convert episode from AnimationDigitalNetworkPlatform jsonObject to entity Episode
     fun convertEpisode(checkedCountry: ICountry, jsonObject: JsonObject, cachedEpisodes: List<String>): Episode {
-        Logger.config("Convert episode from $jsonObject")
+//        Logger.config("Convert episode from $jsonObject")
 
         // ----- ANIME -----
         Logger.info("Convert anime...")

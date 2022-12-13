@@ -14,7 +14,7 @@ import org.jsoup.Jsoup
 
 class AnimeNewsNetworkConverter(private val platform: AnimeNewsNetworkPlatform) {
     fun convertNews(checkedCountry: ICountry, jsonObject: JsonObject, cachedNews: List<String>): News {
-        Logger.config("Convert news from $jsonObject")
+//        Logger.config("Convert news from $jsonObject")
 
         // ----- RELEASE DATE -----
         Logger.info("Get release date...")
