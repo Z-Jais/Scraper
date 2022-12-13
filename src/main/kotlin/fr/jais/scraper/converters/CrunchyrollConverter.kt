@@ -99,7 +99,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
     }
 
     private fun convertAnime(checkedCountry: ICountry, jsonObject: JsonObject): Anime {
-        Logger.config("Convert anime from $jsonObject")
+//        Logger.config("Convert anime from $jsonObject")
 
         // ----- NAME -----
         Logger.info("Get name...")
@@ -218,7 +218,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         jsonObject: JsonObject,
         cachedEpisodes: List<String>
     ): Episode {
-        Logger.config("Convert episode from $jsonObject")
+//        Logger.config("Convert episode from $jsonObject")
 
         // ----- RESTRICTIONS -----
         Logger.info("Get restrictions...")
@@ -347,7 +347,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
     }
 
     fun convertNews(checkedCountry: ICountry, jsonObject: JsonObject, cachedNews: List<String>): News {
-        Logger.config("Convert news from $jsonObject")
+//        Logger.config("Convert news from $jsonObject")
 
         // ----- RELEASE DATE -----
         Logger.info("Get release date...")
