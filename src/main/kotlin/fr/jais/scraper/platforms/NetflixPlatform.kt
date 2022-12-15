@@ -61,12 +61,6 @@ class NetflixPlatform(scraper: Scraper) : IPlatform(
             81177634,
             "https://cdn.myanimelist.net/images/anime/1435/131396.jpg",
             Calendar.THURSDAY
-        ),
-        NetflixContent(
-            81630362,
-            "https://www.nautiljon.com/images/anime/00/38/mini/violet_evergarden_recollections_11583.webp?11671060294",
-            Calendar.THURSDAY,
-            episodeType = EpisodeType.FILM
         )
     )
     private val cache = mutableListOf<Cache>()
