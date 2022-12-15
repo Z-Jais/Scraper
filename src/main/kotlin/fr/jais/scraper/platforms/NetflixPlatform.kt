@@ -61,6 +61,12 @@ class NetflixPlatform(scraper: Scraper) : IPlatform(
             81177634,
             "https://cdn.myanimelist.net/images/anime/1435/131396.jpg",
             Calendar.THURSDAY
+        ),
+        NetflixContent(
+            81630362,
+            "https://www.nautiljon.com/images/anime/00/38/mini/violet_evergarden_recollections_11583.webp?11671060294",
+            Calendar.THURSDAY,
+            episodeType = EpisodeType.FILM
         )
     )
     private val cache = mutableListOf<Cache>()
@@ -157,6 +163,7 @@ class NetflixPlatform(scraper: Scraper) : IPlatform(
 
     override fun getEpisodes(calendar: Calendar, cachedEpisodes: List<String>): List<Episode> {
         val countries = scraper.getCountries(this)
+
         return countries.flatMap { country ->
             Logger.info("Getting episodes for $name in ${country.name}...")
             val filter = contents.filter { calendar.get(Calendar.DAY_OF_WEEK) == it.releaseDay }
@@ -174,6 +181,7 @@ class NetflixPlatform(scraper: Scraper) : IPlatform(
                     }
 
                     val episodes = getAPIContent(country, content.netflixId) ?: return@flatMapIndexed emptyList()
+
                     episodes.mapNotNull {
                         try {
                             converter.convertEpisode(country, calendar, content, it, cachedEpisodes)
