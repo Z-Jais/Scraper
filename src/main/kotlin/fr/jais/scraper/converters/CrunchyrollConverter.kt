@@ -5,21 +5,14 @@ import fr.jais.scraper.countries.FranceCountry
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Anime
 import fr.jais.scraper.entities.Episode
-import fr.jais.scraper.entities.News
 import fr.jais.scraper.exceptions.CountryNotSupportedException
-import fr.jais.scraper.exceptions.NewsException
 import fr.jais.scraper.exceptions.animes.AnimeImageNotFoundException
 import fr.jais.scraper.exceptions.animes.AnimeNameNotFoundException
 import fr.jais.scraper.exceptions.animes.AnimeNotFoundException
 import fr.jais.scraper.exceptions.animes.NotSimulcastAnimeException
 import fr.jais.scraper.exceptions.episodes.*
-import fr.jais.scraper.exceptions.news.NewsDescriptionNotFoundException
-import fr.jais.scraper.exceptions.news.NewsReleaseDateNotFoundException
-import fr.jais.scraper.exceptions.news.NewsTitleNotFoundException
-import fr.jais.scraper.exceptions.news.NewsUrlNotFoundException
 import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.utils.*
-import org.jsoup.Jsoup
 import java.net.URI
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
@@ -171,12 +164,15 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
 
         // ----- IMAGE -----
         Logger.info("Get image...")
-        val image = result.selectXpath("//*[@id=\"content\"]/div/div[2]/div/div[1]/div[2]/div/div/div[2]/div[2]/figure/picture/img").attr("src").toHTTPS()
+        val image =
+            result.selectXpath("//*[@id=\"content\"]/div/div[2]/div/div[1]/div[2]/div/div/div[2]/div[2]/figure/picture/img")
+                .attr("src").toHTTPS()
         Logger.config("Image: $image")
 
         // ----- DESCRIPTION -----
         Logger.info("Get description...")
-        val description = result.selectXpath("//*[@id=\"content\"]/div/div[2]/div/div[2]/div[1]/div[1]/div[5]/div/div/div/p").text()
+        val description =
+            result.selectXpath("//*[@id=\"content\"]/div/div[2]/div/div[2]/div[1]/div[1]/div[5]/div/div/div/p").text()
         Logger.config("Description: $description")
 
         return Pair(description, image)
@@ -297,7 +293,8 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
 
         // ----- EPISODE TYPE -----
         Logger.info("Get episode type...")
-        val episodeType = if (isFilm(jsonObject)) EpisodeType.FILM else if (number == -1) EpisodeType.SPECIAL else EpisodeType.EPISODE
+        val episodeType =
+            if (isFilm(jsonObject)) EpisodeType.FILM else if (number == -1) EpisodeType.SPECIAL else EpisodeType.EPISODE
         Logger.config("Episode type: $episodeType")
 
         // ----- TITLE -----
@@ -343,44 +340,6 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
             url,
             image,
             duration
-        )
-    }
-
-    fun convertNews(checkedCountry: ICountry, jsonObject: JsonObject, cachedNews: List<String>): News {
-//        Logger.config("Convert news from $jsonObject")
-
-        // ----- RELEASE DATE -----
-        Logger.info("Get release date...")
-        val releaseDate = CalendarConverter.fromGMTLine(jsonObject.get("pubDate")?.asString())
-            ?: throw NewsReleaseDateNotFoundException("No release date found")
-        Logger.config("Release date: ${releaseDate.toISO8601()}")
-
-        if (cachedNews.contains(News.calculateHash(platform.getPlatform(), releaseDate.toISO8601(), checkedCountry.getCountry()))) {
-            throw NewsException("News already released")
-        }
-
-        // ----- TITLE -----
-        Logger.info("Get title...")
-        val title = jsonObject.get("title")?.asString() ?: throw NewsTitleNotFoundException("No title found")
-        Logger.config("Title: $title")
-
-        // ----- DESCRIPTION -----
-        Logger.info("Get description...")
-        val description = Jsoup.parse(jsonObject.get("description")?.asString() ?: throw NewsDescriptionNotFoundException("No description found")).text()
-        Logger.config("Description: $description")
-
-        // ----- URL -----
-        Logger.info("Get url...")
-        val url = jsonObject.get("guid")?.asString()?.toHTTPS() ?: throw NewsUrlNotFoundException("No url found")
-        Logger.config("Url: $url")
-
-        return News(
-            platform.getPlatform(),
-            checkedCountry.getCountry(),
-            releaseDate.toISO8601(),
-            title,
-            description,
-            url
         )
     }
 }

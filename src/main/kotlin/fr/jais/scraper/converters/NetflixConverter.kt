@@ -33,7 +33,8 @@ class NetflixConverter(private val platform: NetflixPlatform) {
         cachedEpisodes: List<String>,
     ): Episode {
         val id = "${netflixContent.netflixId}${netflixContent.season}${netflixEpisode.number}".toLong()
-        val calculatedHash = Episode.calculateHash(platform.getPlatform(), id, checkedCountry.getCountry().tag, netflixContent.langType)
+        val calculatedHash =
+            Episode.calculateHash(platform.getPlatform(), id, checkedCountry.getCountry().tag, netflixContent.langType)
 
         if (cachedEpisodes.contains(calculatedHash)) {
             throw EpisodeNotAvailableException("Episode already released")

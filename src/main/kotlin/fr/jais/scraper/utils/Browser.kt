@@ -19,8 +19,8 @@ class Browser(type: BrowserType = BrowserType.CHROME, val url: String) {
         Logger.config("Browser type: ${type.name}")
         Logger.info("Launching browser...")
         browser = when (type) {
-            BrowserType.CHROME -> Const.chromium?.launch()
-            BrowserType.FIREFOX -> Const.firefox?.launch()
+            BrowserType.CHROME -> Const.chromium.launch()
+            BrowserType.FIREFOX -> Const.firefox.launch()
         }
 
         Logger.info("Creating context...")

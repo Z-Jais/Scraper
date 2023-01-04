@@ -16,7 +16,11 @@ private const val EPISODE_NOT_AVAILABLE_YET = "Episode not available yet"
 class WakanimConverter(private val platform: WakanimPlatform) {
     val cache = mutableMapOf<WakanimPlatform.WakanimAgendaEpisode, Episode>()
 
-    fun convertEpisode(calendar: Calendar, wakanimAgendaEpisode: WakanimPlatform.WakanimAgendaEpisode, cachedEpisodes: List<String>): Episode {
+    fun convertEpisode(
+        calendar: Calendar,
+        wakanimAgendaEpisode: WakanimPlatform.WakanimAgendaEpisode,
+        cachedEpisodes: List<String>
+    ): Episode {
         if (cache.containsKey(wakanimAgendaEpisode)) {
             Logger.info("Get episode from cache")
             return cache[wakanimAgendaEpisode]!!
