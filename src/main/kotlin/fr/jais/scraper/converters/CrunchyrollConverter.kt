@@ -134,7 +134,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
                 image = pair.second
             }
 
-            if (image == null) throw AnimeImageNotFoundException("No image found")
+            if (image.isNullOrBlank()) throw AnimeImageNotFoundException("No image found")
 
             cache.add(CrunchyrollAnime(checkedCountry, animeId, name, image, description))
         }
