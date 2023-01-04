@@ -13,7 +13,7 @@ class Scraper {
         AnimationDigitalNetworkPlatform(this),
         AnimeNewsNetworkPlatform(this),
         CrunchyrollPlatform(this),
-        MangaNewsPlatform(this),
+//        MangaNewsPlatform(this),
         NetflixPlatform(this),
 //        WakanimPlatform(this)
     )
