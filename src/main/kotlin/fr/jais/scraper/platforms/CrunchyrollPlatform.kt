@@ -58,6 +58,7 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
 
         simulcasts[iCountry] = list.distinct()
         Logger.info("Found ${simulcasts[iCountry]?.size} simulcasts for ${iCountry.name}!")
+        Logger.config("Simulcasts: ${simulcasts[iCountry]?.joinToString(", ")}")
     }
 
     private fun xmlToJson(content: String) =
