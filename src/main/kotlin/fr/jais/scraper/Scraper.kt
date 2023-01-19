@@ -2,18 +2,17 @@ package fr.jais.scraper
 
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Episode
-import fr.jais.scraper.entities.Manga
-import fr.jais.scraper.entities.News
-import fr.jais.scraper.platforms.*
+import fr.jais.scraper.platforms.AnimationDigitalNetworkPlatform
+import fr.jais.scraper.platforms.CrunchyrollPlatform
+import fr.jais.scraper.platforms.IPlatform
+import fr.jais.scraper.platforms.NetflixPlatform
 import fr.jais.scraper.utils.*
 import java.util.*
 
 class Scraper {
     val platforms = listOf(
         AnimationDigitalNetworkPlatform(this),
-        AnimeNewsNetworkPlatform(this),
         CrunchyrollPlatform(this),
-        MangaNewsPlatform(this),
         NetflixPlatform(this),
 //        WakanimPlatform(this)
     )
@@ -46,36 +45,6 @@ class Scraper {
         return episodes
     }
 
-    private fun getAllNews(calendar: Calendar): List<News> {
-        Logger.config("Calendar: ${calendar.toISO8601()}")
-
-        Logger.info("Getting cached news...")
-        val cachedNews = Database.loadNews().map { it.hash }
-
-        Logger.info("Get all news...")
-        val news = platforms
-            .flatMap { it.getNews(calendar, cachedNews) }
-            .filter { calendar.after(CalendarConverter.fromUTCDate(it.releaseDate)) }
-            .sortedWith(
-                compareBy { CalendarConverter.fromUTCDate(it.releaseDate) }
-            )
-        Logger.config("News: ${news.size}")
-        Database.saveNews(news)
-        API.saveNews(news)
-        return news
-    }
-
-    private fun getAllMangas(calendar: Calendar): List<Manga> {
-        Logger.config("Calendar: ${calendar.toISO8601()}")
-
-        Logger.info("Get all mangas...")
-        val mangas = platforms.flatMap { it.getMangas(calendar) }
-        Logger.config("Mangas: ${mangas.size}")
-        Database.saveMangas(mangas)
-        API.saveMangas(mangas)
-        return mangas
-    }
-
     fun startThreadCheck() {
         ThreadManager.start("Checker") {
             var lastCheck: String? = null
@@ -88,13 +57,9 @@ class Scraper {
                     Logger.info("Reset all platforms...")
                     lastCheck = today
                     platforms.forEach { it.reset() }
-
-                    // Start mangas detection
-                    getAllMangas(calendar).forEach { println(it) }
                 }
 
                 getAllEpisodes(calendar).forEach { println(it) }
-                getAllNews(calendar).forEach { println(it) }
 
                 // Wait 5 minutes
                 Thread.sleep(5 * 60 * 1000)

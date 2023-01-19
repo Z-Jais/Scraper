@@ -2,13 +2,17 @@ package fr.jais.scraper.utils
 
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
-import fr.jais.scraper.entities.*
+import fr.jais.scraper.entities.Anime
+import fr.jais.scraper.entities.Country
+import fr.jais.scraper.entities.Episode
+import fr.jais.scraper.entities.Platform
 import java.net.URI
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.util.logging.Level
 
 private const val URL = "https://beta-api.ziedelth.fr/"
+//private const val URL = "http://localhost:8080/"
 
 object API {
     private fun get(url: String): HttpResponse<String> {
@@ -114,45 +118,6 @@ object API {
             .apply { addProperty("duration", episode.duration) }
     }
 
-    private fun toNews(
-        platform: JsonObject,
-        country: JsonObject,
-        news: News
-    ): JsonObject {
-        return JsonObject()
-            .apply { add("country", JsonObject().apply { addProperty("uuid", country["uuid"].asString) }) }
-            .apply { add("platform", JsonObject().apply { addProperty("uuid", platform["uuid"].asString) }) }
-            .apply { addProperty("hash", news.hash) }
-            .apply { addProperty("releaseDate", news.releaseDate) }
-            .apply { addProperty("title", news.title) }
-            .apply { addProperty("description", news.description) }
-            .apply { addProperty("url", news.url) }
-    }
-
-    private fun toManga(
-        platform: JsonObject,
-        anime: JsonObject,
-        manga: Manga
-    ): JsonObject {
-        return JsonObject()
-            .apply { add("platform", JsonObject().apply { addProperty("uuid", platform["uuid"].asString) }) }
-            .apply { add("anime", JsonObject().apply { addProperty("uuid", anime["uuid"].asString) }) }
-            .apply { addProperty("hash", manga.hash) }
-            .apply {
-                addProperty(
-                    "releaseDate",
-                    "${manga.releaseDate.split("/").reversed().joinToString("-")}T00:00:00Z"
-                )
-            }
-            .apply { addProperty("url", manga.url) }
-            .apply { addProperty("cover", manga.cover) }
-            .apply { addProperty("editor", manga.editor) }
-            .apply { addProperty("ref", manga.ref) }
-            .apply { addProperty("ean", manga.ean) }
-            .apply { addProperty("age", manga.age) }
-            .apply { addProperty("price", manga.price) }
-    }
-
     fun saveEpisodes(episodes: List<Episode>) {
         try {
             val countriesApi =
@@ -192,66 +157,6 @@ object API {
             post("${URL}episodes/multiple", Const.gson.toJson(episodesApi))
         } catch (e: Exception) {
             Logger.log(Level.SEVERE, "Error saving episodes", e)
-        }
-    }
-
-    fun saveNews(news: List<News>) {
-        try {
-            val platformsApi =
-                news.map { it.platform }.distinctBy { it.name }.map { it to (getPlatform(it) ?: createPlatform(it)) }
-            val countriesApi =
-                news.map { it.country }.distinctBy { it.tag }.map { it to (getCountry(it) ?: createCountry(it)) }
-
-            val newsApi = news.mapNotNull { nw ->
-                val platform = platformsApi.first { it.first == nw.platform }.second ?: return@mapNotNull null
-                val country = countriesApi.first { it.first == nw.country }.second ?: return@mapNotNull null
-                toNews(platform, country, nw)
-            }
-
-            if (newsApi.isEmpty()) {
-                Logger.warning("No news to save in API")
-                return
-            }
-
-            post("${URL}news/multiple", Const.gson.toJson(newsApi))
-        } catch (e: Exception) {
-            Logger.log(Level.SEVERE, "Error saving episodes", e)
-        }
-    }
-
-    fun saveMangas(mangas: List<Manga>) {
-        try {
-            val countriesApi =
-                mangas.map { it.anime.country }.distinctBy { it.tag }
-                    .map { it to (getCountry(it) ?: createCountry(it)) }
-            val platformsApi =
-                mangas.map { it.platform }.distinctBy { it.name }.map { it to (getPlatform(it) ?: createPlatform(it)) }
-
-            val animesApi = mangas.distinctBy { it.anime.name.lowercase() }.map { manga ->
-                val anime = manga.anime
-                val country = countriesApi.first { it.first.tag == anime.country.tag }.second ?: return@map null
-                anime to (getAnimeByHash(anime.country, anime) ?: createAnime(
-                    country,
-                    "${manga.releaseDate.split("/").reversed().joinToString("-")}T00:00:00Z",
-                    anime
-                ))
-            }
-
-            val mangasApi = mangas.mapNotNull { manga ->
-                val anime = animesApi.first { it?.first?.name?.lowercase() == manga.anime.name.lowercase() }?.second
-                    ?: return@mapNotNull null
-                val platform = platformsApi.first { it.first == manga.platform }.second ?: return@mapNotNull null
-                toManga(platform, anime, manga)
-            }
-
-            if (mangasApi.isEmpty()) {
-                Logger.warning("No mangas to save in API")
-                return
-            }
-
-            post("${URL}mangas/multiple", Const.gson.toJson(mangasApi))
-        } catch (e: Exception) {
-            Logger.log(Level.SEVERE, "Error saving mangas", e)
         }
     }
 }

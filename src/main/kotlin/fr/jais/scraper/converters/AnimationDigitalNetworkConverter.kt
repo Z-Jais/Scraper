@@ -8,6 +8,7 @@ import fr.jais.scraper.exceptions.animes.*
 import fr.jais.scraper.exceptions.episodes.*
 import fr.jais.scraper.platforms.AnimationDigitalNetworkPlatform
 import fr.jais.scraper.utils.*
+import java.util.Calendar
 
 class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNetworkPlatform) {
     /// Convert anime from AnimationDigitalNetworkPlatform jsonObject to entity Anime
@@ -20,7 +21,7 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         val name = (
                 showJson.get("shortTitle")?.asString() ?: showJson.get("title")
                     ?.asString()
-                )?.replace(Regex(" - Saison \\d"), "")
+                )?.replace(Regex("Saison \\d"), "")?.trim()
             ?: throw AnimeNameNotFoundException("No name found")
         Logger.config("Name: $name")
 
@@ -50,7 +51,26 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         val simulcasted = showJson.get("simulcast")?.asBoolean ?: false
         Logger.config("Simulcasted: $simulcasted")
 
-        if (!simulcasted) throw NotSimulcastAnimeException("Anime is not simulcasted")
+        val calendar = Calendar.getInstance()
+        val currentDayString = "${calendar.get(Calendar.DAY_OF_WEEK)} ${
+            when (calendar.get(Calendar.MONTH)) {
+                0 -> "Janvier"
+                1 -> "Février"
+                2 -> "Mars"
+                3 -> "Avril"
+                4 -> "Mai"
+                5 -> "Juin"
+                6 -> "Juillet"
+                7 -> "Août"
+                8 -> "Septembre"
+                9 -> "Octobre"
+                10 -> "Novembre"
+                11 -> "Décembre"
+                else -> throw Exception("Invalid month")
+            }
+        } ${calendar.get(Calendar.YEAR)}".lowercase()
+
+        if (!simulcasted && description?.lowercase()?.startsWith("(Premier épisode le $currentDayString)".lowercase()) == false) throw NotSimulcastAnimeException("Anime is not simulcasted")
 
         return Anime(checkedCountry.getCountry(), name, image, description, genres)
     }

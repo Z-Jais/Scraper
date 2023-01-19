@@ -3,8 +3,6 @@ package fr.jais.scraper.platforms
 import fr.jais.scraper.Scraper
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Episode
-import fr.jais.scraper.entities.Manga
-import fr.jais.scraper.entities.News
 import fr.jais.scraper.entities.Platform
 import java.util.*
 
@@ -18,8 +16,6 @@ abstract class IPlatform(
     fun getPlatform() = Platform(name, url, image)
 
     open fun getEpisodes(calendar: Calendar, cachedEpisodes: List<String>): List<Episode> = emptyList()
-    open fun getNews(calendar: Calendar, cachedNews: List<String>): List<News> = emptyList()
-    open fun getMangas(calendar: Calendar): List<Manga> = emptyList()
 
     open fun reset() {
         // Can be implemented

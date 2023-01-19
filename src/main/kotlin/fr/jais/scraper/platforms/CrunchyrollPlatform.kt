@@ -7,10 +7,8 @@ import fr.jais.scraper.converters.CrunchyrollConverter
 import fr.jais.scraper.countries.FranceCountry
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Episode
-import fr.jais.scraper.entities.News
 import fr.jais.scraper.exceptions.CountryNotSupportedException
 import fr.jais.scraper.exceptions.EpisodeException
-import fr.jais.scraper.exceptions.NewsException
 import fr.jais.scraper.utils.Browser
 import fr.jais.scraper.utils.Const
 import fr.jais.scraper.utils.Logger
@@ -60,6 +58,7 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
 
         simulcasts[iCountry] = list.distinct()
         Logger.info("Found ${simulcasts[iCountry]?.size} simulcasts for ${iCountry.name}!")
+        Logger.config("Simulcasts: ${simulcasts[iCountry]?.joinToString(", ")}")
     }
 
     private fun xmlToJson(content: String) =
@@ -82,19 +81,6 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
 
         return try {
             val apiUrl = "https://www.crunchyroll.com/rss/anime?lang=$lang"
-            val content = URL(apiUrl).readText()
-            xmlToJson(content)
-        } catch (e: Exception) {
-            Logger.log(Level.SEVERE, "Error while getting API content", e)
-            null
-        }
-    }
-
-    private fun getNewsAPIContent(checkedCountry: ICountry): JsonArray? {
-        val lang = getLang(checkedCountry)
-
-        return try {
-            val apiUrl = "https://www.crunchyroll.com/newsrss?lang=$lang"
             val content = URL(apiUrl).readText()
             xmlToJson(content)
         } catch (e: Exception) {
@@ -126,24 +112,6 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
                 } catch (e: Exception) {
                     if (e !is EpisodeException) {
                         Logger.log(Level.SEVERE, "Error while converting episode", e)
-                    }
-
-                    null
-                }
-            } ?: emptyList()
-        }
-    }
-
-    override fun getNews(calendar: Calendar, cachedNews: List<String>): List<News> {
-        val countries = scraper.getCountries(this)
-        return countries.flatMap { country ->
-            Logger.info("Getting news for $name in ${country.name}...")
-            getNewsAPIContent(country)?.mapNotNull {
-                try {
-                    converter.convertNews(country, it.asJsonObject, cachedNews)
-                } catch (e: Exception) {
-                    if (e !is NewsException) {
-                        Logger.log(Level.SEVERE, "Error while converting news", e)
                     }
 
                     null
