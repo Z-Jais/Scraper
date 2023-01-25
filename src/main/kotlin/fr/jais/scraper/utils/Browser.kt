@@ -23,7 +23,7 @@ class Browser(type: BrowserType = BrowserType.CHROME, val url: String) {
         Logger.info("Launching browser...")
         browser = when (type) {
             BrowserType.CHROME -> Const.chromium.launch()
-            BrowserType.FIREFOX -> Const.firefox.launch(com.microsoft.playwright.BrowserType.LaunchOptions().setHeadless(false))
+            BrowserType.FIREFOX -> Const.firefox.launch()
         }
 
         Logger.info("Creating context...")
