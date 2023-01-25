@@ -25,38 +25,19 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
 ) {
     private val converter = CrunchyrollConverter(this)
     private var lastSimulcastCheck = 0L
-    val simulcasts = mutableMapOf<ICountry, List<String>>()
+    val simulcasts = mutableMapOf<ICountry, Set<String>>()
 
     private fun checkSimulcasts(iCountry: ICountry) {
         Logger.info("Checking simulcasts for ${iCountry.name}...")
         // Clear simulcast for this country if exists
         simulcasts.remove(iCountry)
         val countryTag = converter.getCountryTag(iCountry)
-        // https://www.crunchyroll.com/fr/videos/anime/simulcasts/ajax_page?pg=0
-        var page = 0
-        var loadMore: Boolean
-        val list = mutableListOf<String>()
-
-        do {
-            Logger.info("Loading page $page...")
-            val content = Browser(
-                Browser.BrowserType.FIREFOX,
-                "https://www.crunchyroll.com/$countryTag/videos/anime/simulcasts/ajax_page?pg=${page++}"
-            ).launch()
-            // Get all elements with attribute itemprop="name"
-            val elements = content.getElementsByAttributeValue("itemprop", "name").map { it.text().lowercase() }
-            list.addAll(elements)
-            loadMore = elements.size % 40 == 0
-
-            if (page > 5) {
-                Logger.warning("Too many pages, stopping...")
-                break
-            }
-
-            Logger.config("Load more: $loadMore")
-        } while (loadMore)
-
-        simulcasts[iCountry] = list.distinct()
+        Logger.info("Loading simulcasts for ${iCountry.name}...")
+        val content = Browser(
+            Browser.BrowserType.FIREFOX,
+            "https://www.crunchyroll.com/$countryTag/simulcasts"
+        ).launchAndWaitForSelector("#content > div > div.app-body-wrapper > div > div > div.erc-browse-collection > div > div:nth-child(1) > div > div > h4 > a")
+        simulcasts[iCountry] = content.select(".erc-browse-cards-collection > .browse-card > div > div > h4 > a").map { it.text().lowercase() }.toSet()
         Logger.info("Found ${simulcasts[iCountry]?.size} simulcasts for ${iCountry.name}!")
         Logger.config("Simulcasts: ${simulcasts[iCountry]?.joinToString(", ")}")
     }

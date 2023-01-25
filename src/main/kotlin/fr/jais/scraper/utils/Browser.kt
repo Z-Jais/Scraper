@@ -1,9 +1,12 @@
 package fr.jais.scraper.utils
 
 import com.microsoft.playwright.BrowserContext
+import com.microsoft.playwright.BrowserType
 import com.microsoft.playwright.Page
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
+import java.io.File
+import java.nio.file.Files
 
 class Browser(type: BrowserType = BrowserType.CHROME, val url: String) {
     enum class BrowserType {
@@ -13,14 +16,14 @@ class Browser(type: BrowserType = BrowserType.CHROME, val url: String) {
 
     private var browser: com.microsoft.playwright.Browser? = null
     private var context: BrowserContext? = null
-    var page: Page? = null
+    private var page: Page? = null
 
     init {
         Logger.config("Browser type: ${type.name}")
         Logger.info("Launching browser...")
         browser = when (type) {
             BrowserType.CHROME -> Const.chromium.launch()
-            BrowserType.FIREFOX -> Const.firefox.launch()
+            BrowserType.FIREFOX -> Const.firefox.launch(com.microsoft.playwright.BrowserType.LaunchOptions().setHeadless(false))
         }
 
         Logger.info("Creating context...")
@@ -44,7 +47,16 @@ class Browser(type: BrowserType = BrowserType.CHROME, val url: String) {
         return Jsoup.parse(content ?: throw Exception("Content is null"))
     }
 
-    fun close() {
+    fun launchAndWaitForSelector(selector: String): Document {
+        page?.waitForSelector(selector)
+        val content = page?.content()
+        close()
+
+        Logger.info("Parsing content...")
+        return Jsoup.parse(content ?: throw Exception("Content is null"))
+    }
+
+    private fun close() {
         Logger.info("Closing browser...")
         page?.close()
         context?.close()
