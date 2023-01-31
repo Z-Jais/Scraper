@@ -51,26 +51,9 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         val simulcasted = showJson.get("simulcast")?.asBoolean ?: false
         Logger.config("Simulcasted: $simulcasted")
 
-        val calendar = Calendar.getInstance()
-        val currentDayString = "${calendar.get(Calendar.DAY_OF_WEEK)} ${
-            when (calendar.get(Calendar.MONTH)) {
-                0 -> "Janvier"
-                1 -> "Février"
-                2 -> "Mars"
-                3 -> "Avril"
-                4 -> "Mai"
-                5 -> "Juin"
-                6 -> "Juillet"
-                7 -> "Août"
-                8 -> "Septembre"
-                9 -> "Octobre"
-                10 -> "Novembre"
-                11 -> "Décembre"
-                else -> throw Exception("Invalid month")
-            }
-        } ${calendar.get(Calendar.YEAR)}".lowercase()
-
-        if (!simulcasted && description?.lowercase()?.startsWith("(Premier épisode le $currentDayString)".lowercase()) == false) throw NotSimulcastAnimeException("Anime is not simulcasted")
+        val descriptionLowercase = description?.lowercase()
+        val isAlternativeSimulcast = descriptionLowercase?.startsWith("(Premier épisode ".lowercase()) == true || descriptionLowercase?.startsWith("(Diffusion des ".lowercase()) == true
+        if (!simulcasted && !isAlternativeSimulcast) throw NotSimulcastAnimeException("Anime is not simulcasted")
 
         return Anime(checkedCountry.getCountry(), name, image, description, genres)
     }
