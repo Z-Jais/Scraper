@@ -54,7 +54,7 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         val isAlternativeSimulcast =
             descriptionLowercase?.startsWith("(Premier épisode ".lowercase()) == true ||
                     descriptionLowercase?.startsWith("(Diffusion des ".lowercase()) == true ||
-                    name.lowercase().startsWith("Kubo Won't Let Me Be Invisible".lowercase())
+                    name.lowercase().startsWith("Kubo Won’t Let Me Be Invisible".lowercase())
         if (!simulcasted && !isAlternativeSimulcast) throw NotSimulcastAnimeException("Anime is not simulcasted")
 
         return Anime(checkedCountry.getCountry(), name, image, description, genres)
