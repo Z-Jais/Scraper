@@ -8,7 +8,6 @@ import fr.jais.scraper.exceptions.animes.*
 import fr.jais.scraper.exceptions.episodes.*
 import fr.jais.scraper.platforms.AnimationDigitalNetworkPlatform
 import fr.jais.scraper.utils.*
-import java.util.Calendar
 
 class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNetworkPlatform) {
     /// Convert anime from AnimationDigitalNetworkPlatform jsonObject to entity Anime
@@ -52,7 +51,10 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         Logger.config("Simulcasted: $simulcasted")
 
         val descriptionLowercase = description?.lowercase()
-        val isAlternativeSimulcast = descriptionLowercase?.startsWith("(Premier épisode ".lowercase()) == true || descriptionLowercase?.startsWith("(Diffusion des ".lowercase()) == true
+        val isAlternativeSimulcast =
+            descriptionLowercase?.startsWith("(Premier épisode ".lowercase()) == true ||
+                    descriptionLowercase?.startsWith("(Diffusion des ".lowercase()) == true ||
+                    name.lowercase().startsWith("Kubo Won't Let Me Be Invisible".lowercase())
         if (!simulcasted && !isAlternativeSimulcast) throw NotSimulcastAnimeException("Anime is not simulcasted")
 
         return Anime(checkedCountry.getCountry(), name, image, description, genres)
