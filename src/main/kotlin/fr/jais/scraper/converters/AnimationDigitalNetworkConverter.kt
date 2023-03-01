@@ -43,7 +43,7 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         val genres = showJson.getAsJsonArray("genres")?.mapNotNull { it.asString() } ?: emptyList()
         Logger.config("Genres: ${genres.joinToString(", ")}")
 
-        if (!genres.any { it == "Animation japonaise" }) throw NotJapaneseAnimeException("Anime is not a Japanese anime")
+        if (!genres.any { it.startsWith("Animation ", true) }) throw NotJapaneseAnimeException("Show is not an anime")
 
         // ----- SIMULCAST -----
         Logger.info("Checking if anime is simulcasted...")
@@ -54,6 +54,7 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         val isAlternativeSimulcast =
             descriptionLowercase?.startsWith("(Premier épisode ".lowercase()) == true ||
                     descriptionLowercase?.startsWith("(Diffusion des ".lowercase()) == true ||
+                    descriptionLowercase?.startsWith("(Diffusion du ".lowercase()) == true ||
                     name.lowercase().startsWith("Kubo Won’t Let Me Be Invisible".lowercase())
         if (!simulcasted && !isAlternativeSimulcast) throw NotSimulcastAnimeException("Anime is not simulcasted")
 
