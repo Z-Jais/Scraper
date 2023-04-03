@@ -17,11 +17,14 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
 
         // ----- NAME -----
         Logger.info("Get name...")
-        val name = (
+        var name = (
                 showJson.get("shortTitle")?.asString() ?: showJson.get("title")
                     ?.asString()
                 )?.replace(Regex("Saison \\d"), "")?.trim()
             ?: throw AnimeNameNotFoundException("No name found")
+        // Remove " -" at the end of the name
+        if (name.endsWith(" -")) name = name.substring(0, name.length - 2)
+        name = name.trim()
         Logger.config("Name: $name")
 
         // ----- IMAGE -----
