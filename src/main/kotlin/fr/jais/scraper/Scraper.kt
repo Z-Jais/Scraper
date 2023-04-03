@@ -5,7 +5,6 @@ import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.platforms.AnimationDigitalNetworkPlatform
 import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.platforms.IPlatform
-import fr.jais.scraper.platforms.NetflixPlatform
 import fr.jais.scraper.utils.*
 import java.util.*
 

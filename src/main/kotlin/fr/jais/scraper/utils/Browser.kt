@@ -1,12 +1,9 @@
 package fr.jais.scraper.utils
 
 import com.microsoft.playwright.BrowserContext
-import com.microsoft.playwright.BrowserType
 import com.microsoft.playwright.Page
 import org.jsoup.Jsoup
 import org.jsoup.nodes.Document
-import java.io.File
-import java.nio.file.Files
 
 class Browser(type: BrowserType = BrowserType.CHROME, val url: String) {
     enum class BrowserType {
@@ -17,13 +14,14 @@ class Browser(type: BrowserType = BrowserType.CHROME, val url: String) {
     private var browser: com.microsoft.playwright.Browser? = null
     private var context: BrowserContext? = null
     private var page: Page? = null
+    private val launchOptions = com.microsoft.playwright.BrowserType.LaunchOptions().setHeadless(true)
 
     init {
         Logger.config("Browser type: ${type.name}")
         Logger.info("Launching browser...")
         browser = when (type) {
-            BrowserType.CHROME -> Const.chromium.launch()
-            BrowserType.FIREFOX -> Const.firefox.launch()
+            BrowserType.CHROME -> Const.chromium.launch(launchOptions)
+            BrowserType.FIREFOX -> Const.firefox.launch(launchOptions)
         }
 
         Logger.info("Creating context...")
