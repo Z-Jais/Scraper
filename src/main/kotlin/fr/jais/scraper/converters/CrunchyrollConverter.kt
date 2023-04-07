@@ -1,5 +1,6 @@
 package fr.jais.scraper.converters
 
+import com.google.gson.Gson
 import com.google.gson.JsonObject
 import fr.jais.scraper.countries.FranceCountry
 import fr.jais.scraper.countries.ICountry
@@ -13,6 +14,7 @@ import fr.jais.scraper.exceptions.animes.NotSimulcastAnimeException
 import fr.jais.scraper.exceptions.episodes.*
 import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.utils.*
+import java.io.File
 import java.net.URI
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
@@ -30,6 +32,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
     private val useApi = false
     val cache = mutableListOf<CrunchyrollAnime>()
     private val sessionId: String = crunchyrollSession()
+    private val file = File("crunchyroll.json")
 
     fun getCountryTag(checkedCountry: ICountry): String {
         val country = when (checkedCountry) {
@@ -93,13 +96,19 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
 
     private fun convertAnime(checkedCountry: ICountry, jsonObject: JsonObject): Anime {
 //        Logger.config("Convert anime from $jsonObject")
+        if (!file.exists()) {
+            file.createNewFile()
+            file.writeText("[]")
+        }
+
+        val whitelistAnimes = Gson().fromJson(file.readText(), Array<String>::class.java).toList()
 
         // ----- NAME -----
         Logger.info("Get name...")
         val name = jsonObject.get("seriesTitle")?.asString() ?: throw AnimeNameNotFoundException("No name found")
         Logger.config("Name: $name")
 
-        if (!isFilm(jsonObject) && platform.simulcasts[checkedCountry]?.contains(name.lowercase()) != true) {
+        if (whitelistAnimes.contains(name) || (!isFilm(jsonObject) && platform.simulcasts[checkedCountry]?.contains(name.lowercase()) != true)) {
             Logger.info("Anime is not simulcasted")
             throw NotSimulcastAnimeException("Anime is not simulcasted")
         }
