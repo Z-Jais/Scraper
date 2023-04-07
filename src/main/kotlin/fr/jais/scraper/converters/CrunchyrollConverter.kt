@@ -108,7 +108,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         val name = jsonObject.get("seriesTitle")?.asString() ?: throw AnimeNameNotFoundException("No name found")
         Logger.config("Name: $name")
 
-        if (!whitelistAnimes.contains(name) || (!isFilm(jsonObject) && platform.simulcasts[checkedCountry]?.contains(name.lowercase()) != true)) {
+        if (!whitelistAnimes.contains(name) && (!isFilm(jsonObject) && platform.simulcasts[checkedCountry]?.contains(name.lowercase()) != true)) {
             Logger.info("Anime is not simulcasted")
             throw NotSimulcastAnimeException("Anime is not simulcasted")
         }
