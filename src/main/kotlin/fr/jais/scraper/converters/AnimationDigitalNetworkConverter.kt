@@ -1,5 +1,6 @@
 package fr.jais.scraper.converters
 
+import com.google.gson.Gson
 import com.google.gson.JsonObject
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Anime
@@ -8,12 +9,21 @@ import fr.jais.scraper.exceptions.animes.*
 import fr.jais.scraper.exceptions.episodes.*
 import fr.jais.scraper.platforms.AnimationDigitalNetworkPlatform
 import fr.jais.scraper.utils.*
+import java.io.File
 
 class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNetworkPlatform) {
+    private val file = File("animation_digital_network.json")
+
     /// Convert anime from AnimationDigitalNetworkPlatform jsonObject to entity Anime
     private fun convertAnime(checkedCountry: ICountry, jsonObject: JsonObject): Anime {
         val showJson = jsonObject.getAsJsonObject("show") ?: throw AnimeNotFoundException("No show found")
 //        Logger.config("Convert anime from $showJson")
+        if (!file.exists()) {
+            file.createNewFile()
+            file.writeText("[]")
+        }
+
+        val whitelistAnimes = Gson().fromJson(file.readText(), Array<String>::class.java).toList()
 
         // ----- NAME -----
         Logger.info("Get name...")
@@ -54,12 +64,15 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         Logger.config("Simulcasted: $simulcasted")
 
         val descriptionLowercase = description?.lowercase()
-        val isAlternativeSimulcast =
-            descriptionLowercase?.startsWith("(Premier épisode ".lowercase()) == true ||
+        val isAlternativeSimulcast = whitelistAnimes.contains(name) || (descriptionLowercase?.startsWith("(Premier épisode ".lowercase()) == true ||
                     descriptionLowercase?.startsWith("(Diffusion des ".lowercase()) == true ||
                     descriptionLowercase?.startsWith("(Diffusion du premier épisode".lowercase()) == true ||
-                    descriptionLowercase?.startsWith("(Diffusion de l'épisode 1 le".lowercase()) == true ||
-                    name.lowercase().startsWith("Kubo Won’t Let Me Be Invisible".lowercase())
+                    descriptionLowercase?.startsWith("(Diffusion de l'épisode 1 le".lowercase()) == true)
+
+//                    name.lowercase().startsWith("Kubo Won’t Let Me Be Invisible".lowercase()) ||
+//                    name.lowercase().startsWith("MIX : Meisei Story".lowercase()) ||
+//                    name.lowercase().startsWith("Edens Zero".lowercase()) ||
+//                    name.lowercase().startsWith("The Dangers in My Heart".lowercase())
         if (!simulcasted && !isAlternativeSimulcast) throw NotSimulcastAnimeException("Anime is not simulcasted")
 
         return Anime(checkedCountry.getCountry(), name, image, description, genres)
