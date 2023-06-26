@@ -23,7 +23,7 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
     "crunchyroll.png",
     listOf(FranceCountry::class.java)
 ) {
-    private val converter = CrunchyrollConverter(this)
+    val converter = CrunchyrollConverter(this)
     private var lastSimulcastCheck = 0L
     val simulcasts = mutableMapOf<ICountry, Set<String>>()
 
@@ -92,7 +92,7 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
         Logger.config("Simulcasts: ${simulcasts[iCountry]?.joinToString(", ")}")
     }
 
-    private fun xmlToJson(content: String) =
+    fun xmlToJson(content: String) =
         Const.gson.fromJson(
             Const.objectMapper.writeValueAsString(Const.xmlMapper.readTree(content)),
             JsonObject::class.java
