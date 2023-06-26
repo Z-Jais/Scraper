@@ -128,7 +128,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         } else {
             val episodeUrl = jsonObject["link"]?.asString()
             val animeId =
-                episodeUrl?.split("/")?.get(3) ?: throw AnimeNotFoundException("No anime id found in $episodeUrl")
+                episodeUrl?.split("/")?.get(4) ?: throw AnimeNotFoundException("No anime id found in $episodeUrl")
 
             if (useApi) {
                 val pair = getFromApi(jsonObject, checkedCountry)
