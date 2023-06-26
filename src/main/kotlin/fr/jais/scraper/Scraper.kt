@@ -12,8 +12,7 @@ class Scraper {
     val platforms = listOf(
         AnimationDigitalNetworkPlatform(this),
         CrunchyrollPlatform(this),
-        // NetflixPlatform(this),
-        // WakanimPlatform(this)
+        // NetflixPlatform(this)
     )
     val countries = platforms.flatMap { it.countries }.distinct().mapNotNull { it.getConstructor().newInstance() }
 
