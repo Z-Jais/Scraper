@@ -64,15 +64,25 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
         val countryTag = converter.getCountryTag(iCountry)
         Logger.info("Loading simulcasts for ${iCountry.name}...")
 
-        val content1 = Browser(
-            Browser.BrowserType.FIREFOX,
-            "https://www.crunchyroll.com/$countryTag/simulcasts"
-        ).launchAndWaitForSelector("#content > div > div.app-body-wrapper > div > div > div.erc-browse-collection > div > div:nth-child(1) > div > div > h4 > a")
-        val currentSimulcastAnimes = content1.select(".erc-browse-cards-collection > .browse-card > div > div > h4 > a")
+        val content = try {
+            Browser(
+                Browser.BrowserType.FIREFOX,
+                "https://www.crunchyroll.com/$countryTag/simulcasts"
+            ).launchAndWaitForSelector("#content > div > div.app-body-wrapper > div > div > div.erc-browse-collection > div > div:nth-child(1) > div > div > h4 > a")
+        } catch (_: Exception) {
+            Logger.warning("No simulcasts found for ${iCountry.name}! (Empty page or error)")
+
+            Browser(
+                Browser.BrowserType.FIREFOX,
+                "https://www.crunchyroll.com/$countryTag/simulcasts"
+            ).launchAndWaitForSelector("#content > div > div.app-body-wrapper > div > div > div.info-box--wxFEW.erc-simulcast-no-results")
+        }
+
+        val currentSimulcastAnimes = content.select(".erc-browse-cards-collection > .browse-card > div > div > h4 > a")
             .map { it.text().lowercase() }.toSet()
 
         val simulcastName =
-            content1.select("#content > div > div.app-body-wrapper > div > div > div.header > div > div > span.call-to-action--PEidl.call-to-action--is-m--RVdkI.select-trigger__title-cta--C5-uH.select-trigger__title-cta--is-displayed-on-mobile--6oNk1")
+            content.select("#content > div > div.app-body-wrapper > div > div > div.header > div > div > span.call-to-action--PEidl.call-to-action--is-m--RVdkI.select-trigger__title-cta--C5-uH.select-trigger__title-cta--is-displayed-on-mobile--6oNk1")
                 .text()
         val simulcastCode = getSimulcastCode(simulcastName)
         Logger.info("Simulcast code for ${iCountry.name}: $simulcastCode")
