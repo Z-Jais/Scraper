@@ -45,7 +45,7 @@ class AnimationDigitalNetworkPlatform(scraper: Scraper) :
             Logger.info("Getting episodes for $name in ${country.name}...")
             getAPIContent(country, calendar)?.mapNotNull {
                 try {
-                    converter.convertEpisode(country, it, cachedEpisodes)
+                    converter.convertEpisode(country, calendar, it, cachedEpisodes)
                 } catch (e: Exception) {
                     if (e !is EpisodeException) {
                         Logger.log(Level.SEVERE, "Error while converting episode", e)

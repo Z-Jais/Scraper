@@ -6,13 +6,15 @@ import fr.jais.scraper.platforms.AnimationDigitalNetworkPlatform
 import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.platforms.IPlatform
 import fr.jais.scraper.utils.*
+import java.text.SimpleDateFormat
+import java.time.LocalDateTime
+import java.time.ZoneOffset
 import java.util.*
 
 class Scraper {
     val platforms = listOf(
         AnimationDigitalNetworkPlatform(this),
         CrunchyrollPlatform(this),
-        // NetflixPlatform(this)
     )
     val countries = platforms.flatMap { it.countries }.distinct().mapNotNull { it.getConstructor().newInstance() }
 
@@ -64,6 +66,38 @@ class Scraper {
             }
         }
     }
+
+    fun startThreadCommand() {
+        ThreadManager.start("Command") {
+            while (true) {
+                val command = readlnOrNull() ?: continue
+                val args = command.split(" ")
+                val argsWithoutCommand = args.drop(1)
+
+                when (args[0]) {
+                    "scrap" -> {
+                        if (argsWithoutCommand.isEmpty()) {
+                            Logger.info("Please specify a date")
+                            continue
+                        }
+
+                        val date = argsWithoutCommand[0]
+                        val parsedDate = SimpleDateFormat("yyyy-MM-dd").parse(date)
+                        val localDateTime = LocalDateTime.ofInstant(parsedDate.toInstant(), TimeZone.getDefault().toZoneId())
+                            .withHour(23).withMinute(59).withSecond(59)
+                        val calendar = Calendar.getInstance().apply { time = Date.from(localDateTime.toInstant(ZoneOffset.UTC)) }
+                        println(calendar.toISO8601())
+
+                        getAllEpisodes(calendar).forEach { println(it) }
+                    }
+
+                    else -> {
+                        Logger.info("Unknown command")
+                    }
+                }
+            }
+        }
+    }
 }
 
 fun main() {
@@ -74,4 +108,6 @@ fun main() {
     val scraper = Scraper()
     Logger.info("Start main thread...")
     scraper.startThreadCheck()
+    Logger.info("Start command thread...")
+    scraper.startThreadCommand()
 }
