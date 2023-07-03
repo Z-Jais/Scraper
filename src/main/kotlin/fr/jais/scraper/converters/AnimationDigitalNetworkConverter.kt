@@ -10,14 +10,15 @@ import fr.jais.scraper.exceptions.episodes.*
 import fr.jais.scraper.platforms.AnimationDigitalNetworkPlatform
 import fr.jais.scraper.utils.*
 import java.io.File
+import java.util.*
 
 class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNetworkPlatform) {
     private val file = File("animation_digital_network.json")
 
     /// Convert anime from AnimationDigitalNetworkPlatform jsonObject to entity Anime
-    private fun convertAnime(checkedCountry: ICountry, jsonObject: JsonObject): Anime {
+    private fun convertAnime(checkedCountry: ICountry, calendar: Calendar, jsonObject: JsonObject): Anime {
         val showJson = jsonObject.getAsJsonObject("show") ?: throw AnimeNotFoundException("No show found")
-//        Logger.config("Convert anime from $showJson")
+
         if (!file.exists()) {
             file.createNewFile()
             file.writeText("[]")
@@ -27,11 +28,10 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
 
         // ----- NAME -----
         Logger.info("Get name...")
-        var name = (
-                showJson.get("shortTitle")?.asString() ?: showJson.get("title")
-                    ?.asString()
-                )?.replace(Regex("Saison \\d"), "")?.trim()
-            ?: throw AnimeNameNotFoundException("No name found")
+        var name =
+            (showJson["shortTitle"]?.asString() ?: showJson["title"]?.asString())?.replace(Regex("Saison \\d"), "")?.trim() ?: throw AnimeNameNotFoundException(
+                "No name found"
+            )
         // Remove " -" at the end of the name
         if (name.endsWith(" -")) name = name.substring(0, name.length - 2)
         name = name.trim()
@@ -39,13 +39,12 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
 
         // ----- IMAGE -----
         Logger.info("Get image...")
-        val image =
-            showJson.get("image2x")?.asString()?.toHTTPS() ?: throw AnimeImageNotFoundException("No image found")
+        val image = showJson["image2x"]?.asString()?.toHTTPS() ?: throw AnimeImageNotFoundException("No image found")
         Logger.config("Image: $image")
 
         // ----- DESCRIPTION -----
         Logger.info("Get description...")
-        val description = showJson.get("summary")?.asString() ?: run {
+        val description = showJson["summary"]?.asString() ?: run {
             Logger.warning("No description found")
             null
         }
@@ -60,42 +59,36 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
 
         // ----- SIMULCAST -----
         Logger.info("Checking if anime is simulcasted...")
-        val simulcasted = showJson.get("simulcast")?.asBoolean ?: false
+        val simulcasted = showJson["simulcast"]?.asBoolean == true || showJson["firstReleaseYear"]?.asString == calendar.getYear()
         Logger.config("Simulcasted: $simulcasted")
 
         val descriptionLowercase = description?.lowercase()
         val isAlternativeSimulcast = whitelistAnimes.contains(name) || (descriptionLowercase?.startsWith("(Premier épisode ".lowercase()) == true ||
-                    descriptionLowercase?.startsWith("(Diffusion des ".lowercase()) == true ||
-                    descriptionLowercase?.startsWith("(Diffusion du premier épisode".lowercase()) == true ||
-                    descriptionLowercase?.startsWith("(Diffusion de l'épisode 1 le".lowercase()) == true)
+                descriptionLowercase?.startsWith("(Diffusion des ".lowercase()) == true ||
+                descriptionLowercase?.startsWith("(Diffusion du premier épisode".lowercase()) == true ||
+                descriptionLowercase?.startsWith("(Diffusion de l'épisode 1 le".lowercase()) == true)
 
-//                    name.lowercase().startsWith("Kubo Won’t Let Me Be Invisible".lowercase()) ||
-//                    name.lowercase().startsWith("MIX : Meisei Story".lowercase()) ||
-//                    name.lowercase().startsWith("Edens Zero".lowercase()) ||
-//                    name.lowercase().startsWith("The Dangers in My Heart".lowercase())
         if (!simulcasted && !isAlternativeSimulcast) throw NotSimulcastAnimeException("Anime is not simulcasted")
 
         return Anime(checkedCountry.getCountry(), name, image, description, genres)
     }
 
     /// Convert episode from AnimationDigitalNetworkPlatform jsonObject to entity Episode
-    fun convertEpisode(checkedCountry: ICountry, jsonObject: JsonObject, cachedEpisodes: List<String>): Episode {
-//        Logger.config("Convert episode from $jsonObject")
-
+    fun convertEpisode(checkedCountry: ICountry, calendar: Calendar, jsonObject: JsonObject, cachedEpisodes: List<String>): Episode {
         // ----- ANIME -----
         Logger.info("Convert anime...")
-        val anime = convertAnime(checkedCountry, jsonObject)
+        val anime = convertAnime(checkedCountry, calendar, jsonObject)
         Logger.config("Anime: $anime")
 
         // ----- RELEASE DATE -----
         Logger.info("Get release date...")
-        val releaseDate = CalendarConverter.fromUTCDate(jsonObject.get("releaseDate")?.asString())
-            ?: throw EpisodeReleaseDateNotFoundException("No release date found")
+        val releaseDate =
+            CalendarConverter.fromUTCDate(jsonObject["releaseDate"]?.asString()) ?: throw EpisodeReleaseDateNotFoundException("No release date found")
         Logger.config("Release date: ${releaseDate.toISO8601()}")
 
         // ----- SEASON -----
         Logger.info("Get season...")
-        val season = jsonObject.get("season")?.asString()?.toIntOrNull() ?: run {
+        val season = jsonObject["season"]?.asString()?.toIntOrNull() ?: run {
             Logger.warning("No season found, using 1")
             1
         }
@@ -103,7 +96,7 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
 
         // ----- NUMBER -----
         Logger.info("Get number...")
-        val number = jsonObject.get("shortNumber")?.asString()?.toIntOrNull() ?: run {
+        val number = jsonObject["shortNumber"]?.asString()?.toIntOrNull() ?: run {
             Logger.warning("No number found, using -1...")
             -1
         }
@@ -111,7 +104,7 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
 
         // ----- EPISODE TYPE -----
         Logger.info("Get episode type...")
-        val episodeType = when (jsonObject.get("shortNumber")?.asString()) {
+        val episodeType = when (jsonObject["shortNumber"]?.asString()) {
             "OAV" -> EpisodeType.SPECIAL
             "Film" -> EpisodeType.FILM
             else -> EpisodeType.EPISODE
@@ -120,14 +113,14 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
 
         // ----- LANG TYPE -----
         Logger.info("Get lang type...")
-        val langType = LangType.fromString(jsonObject.get("languages")?.asJsonArray()?.lastOrNull()?.asString() ?: "")
+        val langType = LangType.fromString(jsonObject["languages"]?.asJsonArray()?.lastOrNull()?.asString() ?: "")
         Logger.config("Lang type: $langType")
 
         if (langType == LangType.UNKNOWN) throw EpisodeLangTypeNotFoundException("No lang type found")
 
         // ----- ID -----
         Logger.info("Get id...")
-        val id = jsonObject.get("id")?.asLong() ?: throw EpisodeIdNotFoundException("No id found")
+        val id = jsonObject["id"]?.asLong() ?: throw EpisodeIdNotFoundException("No id found")
         Logger.config("Id: $id")
 
         if (cachedEpisodes.contains(
@@ -144,7 +137,7 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
 
         // ----- TITLE -----
         Logger.info("Get title...")
-        val title = jsonObject.get("name")?.asString() ?: run {
+        val title = jsonObject["name"]?.asString() ?: run {
             Logger.warning("No title found")
             null
         }
@@ -152,18 +145,17 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
 
         // ----- URL -----
         Logger.info("Get url...")
-        val url = jsonObject.get("url")?.asString()?.toHTTPS() ?: throw EpisodeUrlNotFoundException("No url found")
+        val url = jsonObject["url"]?.asString()?.toHTTPS() ?: throw EpisodeUrlNotFoundException("No url found")
         Logger.config("Url: $url")
 
         // ----- IMAGE -----
         Logger.info("Get image...")
-        val image =
-            jsonObject.get("image2x")?.asString()?.toHTTPS() ?: throw EpisodeImageNotFoundException("No image found")
+        val image = jsonObject["image2x"]?.asString()?.toHTTPS() ?: throw EpisodeImageNotFoundException("No image found")
         Logger.config("Image: $image")
 
         // ----- DURATION -----
         Logger.info("Get duration...")
-        val duration = jsonObject.get("duration")?.asLong() ?: run {
+        val duration = jsonObject["duration"]?.asLong() ?: run {
             Logger.warning("No duration found, using -1...")
             -1
         }
