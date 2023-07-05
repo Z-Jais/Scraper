@@ -5,6 +5,7 @@ import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.platforms.AnimationDigitalNetworkPlatform
 import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.platforms.IPlatform
+import fr.jais.scraper.platforms.NetflixPlatform
 import fr.jais.scraper.utils.*
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
@@ -15,6 +16,7 @@ class Scraper {
     val platforms = listOf(
         AnimationDigitalNetworkPlatform(this),
         CrunchyrollPlatform(this),
+        NetflixPlatform(this)
     )
     val countries = platforms.flatMap { it.countries }.distinct().mapNotNull { it.getConstructor().newInstance() }
 

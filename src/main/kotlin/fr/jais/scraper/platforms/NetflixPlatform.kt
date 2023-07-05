@@ -52,16 +52,21 @@ class NetflixPlatform(scraper: Scraper) : IPlatform(
 
     private val converter = NetflixConverter(this)
     private val contents = mutableListOf(
+//        NetflixContent(
+//            81499847,
+//            "https://cdn.myanimelist.net/images/anime/1743/125204.jpg",
+//            Calendar.WEDNESDAY
+//        ),
+//        NetflixContent(
+//            81177634,
+//            "https://cdn.myanimelist.net/images/anime/1435/131396.jpg",
+//            Calendar.THURSDAY
+//        ),
         NetflixContent(
-            81499847,
-            "https://cdn.myanimelist.net/images/anime/1743/125204.jpg",
+            81564905,
+            "https://cdn.myanimelist.net/images/anime/1147/122444.jpg",
             Calendar.WEDNESDAY
         ),
-        NetflixContent(
-            81177634,
-            "https://cdn.myanimelist.net/images/anime/1435/131396.jpg",
-            Calendar.THURSDAY
-        )
     )
     private val cache = mutableListOf<Cache>()
 
@@ -160,7 +165,7 @@ class NetflixPlatform(scraper: Scraper) : IPlatform(
 
         return countries.flatMap { country ->
             Logger.info("Getting episodes for $name in ${country.name}...")
-            val filter = contents.filter { calendar.get(Calendar.DAY_OF_WEEK) == it.releaseDay }
+            val filter = contents.filter { calendar[Calendar.DAY_OF_WEEK] == it.releaseDay }
             Logger.config("Release content today: ${filter.size}")
 
             if (filter.isEmpty()) emptyList<Episode>()
