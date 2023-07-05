@@ -65,7 +65,8 @@ class NetflixPlatform(scraper: Scraper) : IPlatform(
         NetflixContent(
             81564905,
             "https://cdn.myanimelist.net/images/anime/1147/122444.jpg",
-            Calendar.WEDNESDAY
+            Calendar.WEDNESDAY,
+            releaseTime = "14:30:00"
         ),
     )
     private val cache = mutableListOf<Cache>()
