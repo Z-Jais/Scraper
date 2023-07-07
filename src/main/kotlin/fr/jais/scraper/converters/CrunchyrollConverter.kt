@@ -105,7 +105,10 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         val name = jsonObject["seriesTitle"]?.asString() ?: throw AnimeNameNotFoundException("No name found")
         Logger.config("Name: $name")
 
-        if (!whitelistAnimes.contains(name) && (!isFilm(jsonObject) && platform.simulcasts[checkedCountry]?.contains(name.lowercase()) != true)) {
+        if (!whitelistAnimes.contains(name) && (!isFilm(jsonObject) && platform.simulcasts[checkedCountry]?.contains(
+                name.lowercase()
+            ) != true)
+        ) {
             Logger.info("Anime is not simulcasted")
             throw NotSimulcastAnimeException("Anime is not simulcasted")
         }
@@ -319,7 +322,8 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         Logger.info("Get image...")
         val thumbnails = jsonObject.getAsJsonArray("thumbnail")?.mapNotNull { it.asJsonObject() }
         val largeThumbnail = thumbnails?.maxByOrNull { it["width"].asLong }
-        val image = largeThumbnail?.get("url")?.asString()?.toHTTPS() ?: "https://jais.ziedelth.fr/attachments/banner_640x360.png"
+        val image = largeThumbnail?.get("url")?.asString()?.toHTTPS()
+            ?: "https://jais.ziedelth.fr/attachments/banner_640x360.png"
         Logger.config("Image: $image")
 
         // ----- DURATION -----
