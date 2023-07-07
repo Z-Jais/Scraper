@@ -29,7 +29,8 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         // ----- NAME -----
         Logger.info("Get name...")
         var name =
-            (showJson["shortTitle"]?.asString() ?: showJson["title"]?.asString())?.replace(Regex("Saison \\d"), "")?.trim() ?: throw AnimeNameNotFoundException(
+            (showJson["shortTitle"]?.asString() ?: showJson["title"]?.asString())?.replace(Regex("Saison \\d"), "")
+                ?.trim() ?: throw AnimeNameNotFoundException(
                 "No name found"
             )
         // Remove " -" at the end of the name
@@ -59,14 +60,16 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
 
         // ----- SIMULCAST -----
         Logger.info("Checking if anime is simulcasted...")
-        val simulcasted = showJson["simulcast"]?.asBoolean == true || showJson["firstReleaseYear"]?.asString == calendar.getYear()
+        val simulcasted =
+            showJson["simulcast"]?.asBoolean == true || showJson["firstReleaseYear"]?.asString == calendar.getYear()
         Logger.config("Simulcasted: $simulcasted")
 
         val descriptionLowercase = description?.lowercase()
-        val isAlternativeSimulcast = whitelistAnimes.contains(name) || (descriptionLowercase?.startsWith("(Premier épisode ".lowercase()) == true ||
-                descriptionLowercase?.startsWith("(Diffusion des ".lowercase()) == true ||
-                descriptionLowercase?.startsWith("(Diffusion du premier épisode".lowercase()) == true ||
-                descriptionLowercase?.startsWith("(Diffusion de l'épisode 1 le".lowercase()) == true)
+        val isAlternativeSimulcast =
+            whitelistAnimes.contains(name) || (descriptionLowercase?.startsWith("(Premier épisode ".lowercase()) == true ||
+                    descriptionLowercase?.startsWith("(Diffusion des ".lowercase()) == true ||
+                    descriptionLowercase?.startsWith("(Diffusion du premier épisode".lowercase()) == true ||
+                    descriptionLowercase?.startsWith("(Diffusion de l'épisode 1 le".lowercase()) == true)
 
         if (!simulcasted && !isAlternativeSimulcast) throw NotSimulcastAnimeException("Anime is not simulcasted")
 
@@ -74,7 +77,12 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
     }
 
     /// Convert episode from AnimationDigitalNetworkPlatform jsonObject to entity Episode
-    fun convertEpisode(checkedCountry: ICountry, calendar: Calendar, jsonObject: JsonObject, cachedEpisodes: List<String>): Episode {
+    fun convertEpisode(
+        checkedCountry: ICountry,
+        calendar: Calendar,
+        jsonObject: JsonObject,
+        cachedEpisodes: List<String>
+    ): Episode {
         // ----- ANIME -----
         Logger.info("Convert anime...")
         val anime = convertAnime(checkedCountry, calendar, jsonObject)
@@ -83,7 +91,8 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         // ----- RELEASE DATE -----
         Logger.info("Get release date...")
         val releaseDate =
-            CalendarConverter.fromUTCDate(jsonObject["releaseDate"]?.asString()) ?: throw EpisodeReleaseDateNotFoundException("No release date found")
+            CalendarConverter.fromUTCDate(jsonObject["releaseDate"]?.asString())
+                ?: throw EpisodeReleaseDateNotFoundException("No release date found")
         Logger.config("Release date: ${releaseDate.toISO8601()}")
 
         // ----- SEASON -----
@@ -150,7 +159,8 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
 
         // ----- IMAGE -----
         Logger.info("Get image...")
-        val image = jsonObject["image2x"]?.asString()?.toHTTPS() ?: throw EpisodeImageNotFoundException("No image found")
+        val image =
+            jsonObject["image2x"]?.asString()?.toHTTPS() ?: throw EpisodeImageNotFoundException("No image found")
         Logger.config("Image: $image")
 
         // ----- DURATION -----

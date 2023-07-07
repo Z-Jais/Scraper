@@ -15,4 +15,6 @@ object Const {
     private val playwright: Playwright = Playwright.create()
     val chromium: BrowserType = playwright.chromium()
     val firefox: BrowserType = playwright.firefox()
+    val multipleSpaceRegex = "\\s+".toRegex()
+    const val calendarBaseUrl = "https://anime.icotaku.com"
 }

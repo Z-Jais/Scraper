@@ -2,6 +2,8 @@ package fr.jais.scraper
 
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Episode
+import fr.jais.scraper.jobs.AyaneJob
+import fr.jais.scraper.jobs.JobManager
 import fr.jais.scraper.platforms.AnimationDigitalNetworkPlatform
 import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.platforms.IPlatform
@@ -19,6 +21,7 @@ class Scraper {
         NetflixPlatform(this)
     )
     val countries = platforms.flatMap { it.countries }.distinct().mapNotNull { it.getConstructor().newInstance() }
+    private val jobManager = JobManager()
 
     fun getCountries(platform: IPlatform): List<ICountry> =
         countries.filter { platform.countries.contains(it.javaClass) }
@@ -85,9 +88,11 @@ class Scraper {
 
                         val date = argsWithoutCommand[0]
                         val parsedDate = SimpleDateFormat("yyyy-MM-dd").parse(date)
-                        val localDateTime = LocalDateTime.ofInstant(parsedDate.toInstant(), TimeZone.getDefault().toZoneId())
-                            .withHour(23).withMinute(59).withSecond(59)
-                        val calendar = Calendar.getInstance().apply { time = Date.from(localDateTime.toInstant(ZoneOffset.UTC)) }
+                        val localDateTime =
+                            LocalDateTime.ofInstant(parsedDate.toInstant(), TimeZone.getDefault().toZoneId())
+                                .withHour(23).withMinute(59).withSecond(59)
+                        val calendar =
+                            Calendar.getInstance().apply { time = Date.from(localDateTime.toInstant(ZoneOffset.UTC)) }
                         println(calendar.toISO8601())
 
                         getAllEpisodes(calendar).forEach { println(it) }
@@ -99,6 +104,11 @@ class Scraper {
                 }
             }
         }
+    }
+
+    fun startThreadCron() {
+        jobManager.scheduleJob("0 0 7 * * ?", AyaneJob::class.java)
+        jobManager.start()
     }
 }
 
@@ -112,4 +122,6 @@ fun main() {
     scraper.startThreadCheck()
     Logger.info("Start command thread...")
     scraper.startThreadCommand()
+    Logger.info("Start cron thread...")
+    scraper.startThreadCron()
 }
