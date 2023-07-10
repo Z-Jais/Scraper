@@ -1,10 +1,10 @@
 package fr.jais.scraper.jobs
 
 import com.google.gson.Gson
+import com.google.gson.JsonObject
 import com.microsoft.playwright.Playwright
 import com.mortennobel.imagescaling.ResampleOp
 import fr.jais.scraper.utils.*
-import io.github.cdimascio.dotenv.dotenv
 import org.quartz.Job
 import org.quartz.JobExecutionContext
 import java.awt.Color
@@ -66,18 +66,26 @@ Bonne journée ! 😊"""
                 imageToBase64(generateImage(font, chunked, backgroundImage, adnImage, crunchyrollImage, netflixImage))
             }
 
-            val dotenv = dotenv()
+            val fileConf = File("ayane.json")
 
-            requireNotNull(dotenv["TWITTER_EMAIL"]) { "TWITTER_EMAIL is not defined in .env file" }
-            requireNotNull(dotenv["TWITTER_PSEUDO"]) { "TWITTER_PSEUDO is not defined in .env file" }
-            requireNotNull(dotenv["TWITTER_PASSWORD"]) { "TWITTER_PASSWORD is not defined in .env file" }
+            if (!fileConf.exists()) {
+                fileConf.createNewFile()
+                fileConf.writeText("{}")
+                Logger.warning("ayane.json file created, please fill it")
+                return
+            }
+
+            val conf = Gson().fromJson(fileConf.readText(), JsonObject::class.java)
+            requireNotNull(conf["TWITTER_EMAIL"]) { "TWITTER_EMAIL is not defined in .env file" }
+            requireNotNull(conf["TWITTER_PSEUDO"]) { "TWITTER_PSEUDO is not defined in .env file" }
+            requireNotNull(conf["TWITTER_PASSWORD"]) { "TWITTER_PASSWORD is not defined in .env file" }
 
             post(
                 Gson().toJson(
                     mapOf(
-                        "email" to dotenv["TWITTER_EMAIL"],
-                        "pseudo" to dotenv["TWITTER_PSEUDO"],
-                        "password" to dotenv["TWITTER_PASSWORD"],
+                        "email" to conf["TWITTER_EMAIL"].asString,
+                        "pseudo" to conf["TWITTER_PSEUDO"].asString,
+                        "password" to conf["TWITTER_PASSWORD"].asString,
                         "tweets" to listOf(
                             mapOf(
                                 "message" to string,

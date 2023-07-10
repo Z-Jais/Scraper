@@ -98,6 +98,10 @@ class Scraper {
                         getAllEpisodes(calendar).forEach { println(it) }
                     }
 
+                    "ayane" -> {
+                        AyaneJob().execute(null)
+                    }
+
                     else -> {
                         Logger.info("Unknown command")
                     }
