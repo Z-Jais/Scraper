@@ -29,14 +29,16 @@ class AyaneJob : Job {
 
     override fun execute(p0: JobExecutionContext?) {
         Logger.info("Starting AyaneJob...")
+        val folder = File("ayane")
+        if (!folder.exists()) folder.mkdirs()
 
-        val font = getResource("Rubik.ttf")
+        val font = File(folder, "ayane/Rubik.ttf")
         val backgroundImage =
             ImageIO.read(URL("https://cdn.discordapp.com/attachments/1093774447636385883/1095284174883147877/Ziedelth_solo_1girl_adult_beautiful_shy_yellow_hair_smooth_hair_fd121b3f-3739-4dbe-b1d3-fec13fff64fd.png"))
                 .opacity(0.1f)
-        val crunchyrollImage = ImageIO.read(getResource("crunchyroll.png")).invert()
-        val adnImage = ImageIO.read(getResource("animation_digital_network.png")).invert()
-        val netflixImage = ImageIO.read(getResource("netflix.png")).invert()
+        val crunchyrollImage = ImageIO.read(File(folder, "ayane/crunchyroll.png")).invert()
+        val adnImage = ImageIO.read(File(folder, "ayane/animation_digital_network.png")).invert()
+        val netflixImage = ImageIO.read(File(folder, "ayane/netflix.png")).invert()
 
         try {
             val episodes = getEpisodes()
@@ -66,12 +68,12 @@ Bonne journée ! 😊"""
                 imageToBase64(generateImage(font, chunked, backgroundImage, adnImage, crunchyrollImage, netflixImage))
             }
 
-            val fileConf = File("ayane.json")
+            val fileConf = File(folder, "conf.json")
 
             if (!fileConf.exists()) {
                 fileConf.createNewFile()
                 fileConf.writeText("{}")
-                Logger.warning("ayane.json file created, please fill it")
+                Logger.warning("ayane/conf.json file created, please fill it")
                 return
             }
 
@@ -115,10 +117,6 @@ Bonne journée ! 😊"""
         val outputStream = ByteArrayOutputStream()
         ImageIO.write(image, "png", outputStream)
         return Base64.getEncoder().encodeToString(outputStream.toByteArray())
-    }
-
-    private fun getResource(name: String): File? {
-        return ClassLoader.getSystemResource(name)?.let { File(it.toURI()) }
     }
 
     private fun generateImage(
