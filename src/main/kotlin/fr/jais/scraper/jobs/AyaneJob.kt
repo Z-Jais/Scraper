@@ -32,13 +32,13 @@ class AyaneJob : Job {
         val folder = File("ayane")
         if (!folder.exists()) folder.mkdirs()
 
-        val font = File(folder, "ayane/Rubik.ttf")
+        val font = File(folder, "Rubik.ttf")
         val backgroundImage =
             ImageIO.read(URL("https://cdn.discordapp.com/attachments/1093774447636385883/1095284174883147877/Ziedelth_solo_1girl_adult_beautiful_shy_yellow_hair_smooth_hair_fd121b3f-3739-4dbe-b1d3-fec13fff64fd.png"))
                 .opacity(0.1f)
-        val crunchyrollImage = ImageIO.read(File(folder, "ayane/crunchyroll.png")).invert()
-        val adnImage = ImageIO.read(File(folder, "ayane/animation_digital_network.png")).invert()
-        val netflixImage = ImageIO.read(File(folder, "ayane/netflix.png")).invert()
+        val crunchyrollImage = ImageIO.read(File(folder, "crunchyroll.png")).invert()
+        val adnImage = ImageIO.read(File(folder, "animation_digital_network.png")).invert()
+        val netflixImage = ImageIO.read(File(folder, "netflix.png")).invert()
 
         try {
             val episodes = getEpisodes()
@@ -323,6 +323,10 @@ Bonne journée ! 😊"""
                 number
             } else {
                 1
+            }
+
+            if (name == "Shūmatsu no Walküre 2") {
+                return@mapNotNull null
             }
 
             val episode =
