@@ -17,7 +17,7 @@
         <kotlin.compiler.jvmTarget>11</kotlin.compiler.jvmTarget>
         <kotlin.version>1.9.0</kotlin.version>
         <mainClass>fr.jais.scraper.ScraperKt</mainClass>
-        <junit-jupiter.version>5.9.3</junit-jupiter.version>
+        <junit-jupiter.version>5.10.0</junit-jupiter.version>
     </properties>
 
     <repositories>
