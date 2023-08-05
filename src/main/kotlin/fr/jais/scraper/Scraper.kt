@@ -66,8 +66,8 @@ class Scraper {
 
                 getAllEpisodes(calendar).forEach { println(it) }
 
-                // Wait 5 minutes
-                Thread.sleep(5 * 60 * 1000)
+                // Wait 3 minutes
+                Thread.sleep(3 * 60 * 1000)
             }
         }
     }
