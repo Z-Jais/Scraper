@@ -143,16 +143,17 @@ class NetflixPlatform(scraper: Scraper) : IPlatform(
         return try {
             val cache = cache.firstOrNull { it.netflixId == netflixId && it.iCountry == checkedCountry } ?: Cache(
                 checkedCountry,
-                netflixId
+                netflixId,
             ).also { cache.add(it) }
 
-            if (System.currentTimeMillis() - cache.lastCheck < 1 * 60 * 60 * 1000) {
+            if (cache.lastCheck != 0L && System.currentTimeMillis() - cache.lastCheck < 1 * 60 * 60 * 1000) {
                 Logger.info("Getting content from cache")
                 return convertToNetflixEpisodes(cache.content!!)
             }
 
             val apiUrl = "https://www.netflix.com/$lang/title/$netflixId"
             val content = Browser(Browser.BrowserType.CHROME, apiUrl).launch()
+            cache.lastCheck = System.currentTimeMillis()
             cache.content = content
             convertToNetflixEpisodes(content)
         } catch (e: Exception) {
