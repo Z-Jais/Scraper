@@ -11,9 +11,6 @@ import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.util.logging.Level
 
-private const val URL = "https://beta-api.ziedelth.fr/"
-//private const val URL = "http://localhost:8080/"
-
 object API {
     private fun get(url: String): HttpResponse<String> {
         val request = HttpRequest.newBuilder()
@@ -32,20 +29,20 @@ object API {
     }
 
     private fun getCountry(country: Country): JsonObject? {
-        val response = get("${URL}countries")
+        val response = get("${Const.apiUrl}countries")
         val json = Const.gson.fromJson(response.body(), JsonArray::class.java) ?: return null
         return json.firstOrNull { it.asJsonObject["tag"].asString == country.tag }?.asJsonObject
     }
 
     private fun createCountry(country: Country): JsonObject? {
-        val response = post("${URL}countries", Const.gson.toJson(country))
+        val response = post("${Const.apiUrl}countries", Const.gson.toJson(country))
         return if (response.statusCode() == 201) Const.gson.fromJson(response.body(), JsonObject::class.java) else null
     }
 
     private fun getAnimeByHash(country: Country, anime: Anime): JsonObject? {
         val hash = anime.name.lowercase().filter { it.isLetterOrDigit() || it.isWhitespace() || it == '-' }.trim()
             .replace("\\s+".toRegex(), "-").replace("--", "-")
-        val response = get("${URL}animes/country/${country.tag}/search/hash/$hash")
+        val response = get("${Const.apiUrl}animes/country/${country.tag}/search/hash/$hash")
         return if (response.statusCode() == 200) Const.gson.fromJson(response.body(), JsonObject::class.java) else null
     }
 
@@ -59,40 +56,40 @@ object API {
     }
 
     private fun createAnime(country: JsonObject, releaseDate: String, anime: Anime): JsonObject? {
-        val response = post("${URL}animes", toAnime(country, anime, releaseDate).toString())
+        val response = post("${Const.apiUrl}animes", toAnime(country, anime, releaseDate).toString())
         return if (response.statusCode() == 201) Const.gson.fromJson(response.body(), JsonObject::class.java) else null
     }
 
     private fun getPlatform(platform: Platform): JsonObject? {
-        val response = get("${URL}platforms")
+        val response = get("${Const.apiUrl}platforms")
         val json = Const.gson.fromJson(response.body(), JsonArray::class.java) ?: return null
         return json.firstOrNull { it.asJsonObject["name"].asString == platform.name }?.asJsonObject
     }
 
     private fun createPlatform(platform: Platform): JsonObject? {
-        val response = post("${URL}platforms", Const.gson.toJson(platform))
+        val response = post("${Const.apiUrl}platforms", Const.gson.toJson(platform))
         return if (response.statusCode() == 201) Const.gson.fromJson(response.body(), JsonObject::class.java) else null
     }
 
     private fun getEpisodeType(type: EpisodeType): JsonObject? {
-        val response = get("${URL}episodetypes")
+        val response = get("${Const.apiUrl}episodetypes")
         val json = Const.gson.fromJson(response.body(), JsonArray::class.java) ?: return null
         return json.firstOrNull { it.asJsonObject["name"].asString == type.name }?.asJsonObject
     }
 
     private fun createEpisodeType(type: EpisodeType): JsonObject? {
-        val response = post("${URL}episodetypes", JsonObject().apply { addProperty("name", type.name) }.toString())
+        val response = post("${Const.apiUrl}episodetypes", JsonObject().apply { addProperty("name", type.name) }.toString())
         return if (response.statusCode() == 201) Const.gson.fromJson(response.body(), JsonObject::class.java) else null
     }
 
     private fun getLangType(type: LangType): JsonObject? {
-        val response = get("${URL}langtypes")
+        val response = get("${Const.apiUrl}langtypes")
         val json = Const.gson.fromJson(response.body(), JsonArray::class.java) ?: return null
         return json.firstOrNull { it.asJsonObject["name"].asString == type.name }?.asJsonObject
     }
 
     private fun createLangType(type: LangType): JsonObject? {
-        val response = post("${URL}langtypes", JsonObject().apply { addProperty("name", type.name) }.toString())
+        val response = post("${Const.apiUrl}langtypes", JsonObject().apply { addProperty("name", type.name) }.toString())
         return if (response.statusCode() == 201) Const.gson.fromJson(response.body(), JsonObject::class.java) else null
     }
 
@@ -154,7 +151,7 @@ object API {
                 return
             }
 
-            post("${URL}episodes/multiple", Const.gson.toJson(episodesApi))
+            post("${Const.apiUrl}episodes/multiple", Const.gson.toJson(episodesApi))
         } catch (e: Exception) {
             Logger.log(Level.SEVERE, "Error saving episodes", e)
         }
@@ -162,7 +159,7 @@ object API {
 
     fun saveAyane(message: String, images: List<String>) {
         try {
-            post("${URL}ayane", Const.gson.toJson(mapOf("message" to message, "images" to images)))
+            post("${Const.apiUrl}ayane", Const.gson.toJson(mapOf("message" to message, "images" to images)))
         } catch (e: Exception) {
             Logger.log(Level.SEVERE, "Error saving episodes", e)
         }

@@ -32,7 +32,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
     private val useApi = false
     val cache = mutableListOf<CrunchyrollAnime>()
     private val sessionId: String = crunchyrollSession()
-    private val file = File("crunchyroll.json")
+    private val file = File("data/crunchyroll.json")
 
     fun getCountryTag(checkedCountry: ICountry): String {
         val country = when (checkedCountry) {

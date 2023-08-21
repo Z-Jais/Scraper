@@ -28,13 +28,19 @@ class Browser(type: BrowserType = BrowserType.CHROME, val url: String) {
         context = browser?.newContext()
         Logger.info("Creating page...")
         page = context?.newPage()
-        page?.setDefaultTimeout(30_000.0)
-        page?.setDefaultNavigationTimeout(30_000.0)
+        page?.setDefaultTimeout(60_000.0)
+        page?.setDefaultNavigationTimeout(60_000.0)
         Logger.config("URL: $url")
-        Logger.info("Navigating...")
-        page?.navigate(url)
-        Logger.info("Waiting for load...")
-        page?.waitForLoadState()
+
+        try {
+            Logger.info("Navigating...")
+            page?.navigate(url)
+            Logger.info("Waiting for load...")
+            page?.waitForLoadState()
+        } catch (e: Exception) {
+            close()
+            throw e
+        }
     }
 
     fun launch(): Document {
@@ -46,7 +52,13 @@ class Browser(type: BrowserType = BrowserType.CHROME, val url: String) {
     }
 
     fun launchAndWaitForSelector(selector: String): Document {
-        page?.waitForSelector(selector)
+        try {
+            page?.waitForSelector(selector)
+        } catch (e: Exception) {
+            close()
+            throw e
+        }
+
         val content = page?.content()
         close()
 

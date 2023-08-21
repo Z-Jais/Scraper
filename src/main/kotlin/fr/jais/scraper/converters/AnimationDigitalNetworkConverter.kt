@@ -13,7 +13,7 @@ import java.io.File
 import java.util.*
 
 class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNetworkPlatform) {
-    private val file = File("animation_digital_network.json")
+    private val file = File("data/animation_digital_network.json")
 
     /// Convert anime from AnimationDigitalNetworkPlatform jsonObject to entity Anime
     private fun convertAnime(checkedCountry: ICountry, calendar: Calendar, jsonObject: JsonObject): Anime {
@@ -105,6 +105,11 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
 
         // ----- NUMBER -----
         Logger.info("Get number...")
+
+        if ("Bande-annonce" == jsonObject["shortNumber"]?.asString) {
+            throw EpisodeNotAvailableException("Trailer detected")
+        }
+
         val number = jsonObject["shortNumber"]?.asString()?.toIntOrNull() ?: run {
             Logger.warning("No number found, using -1...")
             -1

@@ -23,7 +23,7 @@ class AyaneJob : Job {
 
     override fun execute(p0: JobExecutionContext?) {
         Logger.info("Starting AyaneJob...")
-        val folder = File("ayane")
+        val folder = File("data/ayane")
         if (!folder.exists()) folder.mkdirs()
 
         val font = File(folder, "Rubik.ttf")

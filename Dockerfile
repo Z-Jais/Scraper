@@ -1,10 +1,32 @@
-FROM maven:3.8.6-jdk-11-slim
+FROM maven:3.9.4-amazoncorretto-17 AS build
 WORKDIR /app
 COPY . /app
-RUN apt-get update && apt-get install -y libgtk-3-0 libasound2 libx11-6 libxcomposite1 libxdamage1 libxext6 libxfixes3 libxrandr2 libxrender1 libxtst6 libfreetype6 libfontconfig1 libpangocairo-1.0-0 libpangocairo-1.0-0 libpango-1.0-0 libatk1.0-0 libcairo-gobject2 libcairo2 libgdk-pixbuf-2.0-0 libglib2.0-0 libdbus-glib-1-2 libdbus-1-3 libxcb-shm0 libx11-xcb1 libxcb1 libxcursor1 libxi6 libnss3 libnspr4 libdrm2 libgbm1
 RUN mvn clean package -DskipTests
-RUN ls -lash
-RUN mv target/scraper-1.0-SNAPSHOT-jar-with-dependencies.jar /scraper.jar
-RUN rm -rf /app/**
-RUN mv /scraper.jar /app/scraper.jar
+
+FROM mcr.microsoft.com/playwright:v1.38.0-jammy
+
+ARG version=17.0.8.8-1
+RUN set -eux \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+        curl ca-certificates gnupg software-properties-common fontconfig java-common \
+    && curl -fL https://apt.corretto.aws/corretto.key | apt-key add - \
+    && add-apt-repository 'deb https://apt.corretto.aws stable main' \
+    && mkdir -p /usr/share/man/man1 || true \
+    && apt-get update \
+    && apt-get install -y java-17-amazon-corretto-jdk=1:$version \
+    && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
+        curl gnupg software-properties-common
+
+ENV LANG C.UTF-8
+ENV JAVA_HOME=/usr/lib/jvm/java-17-amazon-corretto
+
+COPY --from=build /app/target/scraper-1.0-SNAPSHOT-jar-with-dependencies.jar /app/scraper.jar
+
+RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install tzdata
+ENV TZ=Europe/Paris
+RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
+RUN dpkg-reconfigure --frontend noninteractive tzdata
+
+WORKDIR /app
 CMD ["java", "-jar", "scraper.jar"]

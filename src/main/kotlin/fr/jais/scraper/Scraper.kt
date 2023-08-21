@@ -8,16 +8,17 @@ import fr.jais.scraper.jobs.JobManager
 import fr.jais.scraper.platforms.AnimationDigitalNetworkPlatform
 import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.platforms.IPlatform
-import fr.jais.scraper.platforms.NetflixPlatform
 import fr.jais.scraper.utils.Const
 import fr.jais.scraper.utils.Logger
 import fr.jais.scraper.utils.ThreadManager
+import java.io.File
+import java.util.*
 
 class Scraper {
     val platforms = listOf(
         AnimationDigitalNetworkPlatform(this),
         CrunchyrollPlatform(this),
-        NetflixPlatform(this)
+        // NetflixPlatform(this)
     )
     val countries = platforms.flatMap { it.countries }.distinct().mapNotNull { it.getConstructor().newInstance() }
     private val jobManager = JobManager()
@@ -27,18 +28,17 @@ class Scraper {
 
     fun startThreadCommand() {
         ThreadManager.start("Command") {
-            while (true) {
-                val command = readlnOrNull() ?: continue
-                val args = command.split(" ")
+            val scanner = Scanner(System.`in`)
 
-                when (args[0]) {
-                    "ayane" -> {
+            while (true) {
+                try {
+                    val line = scanner.nextLine()
+
+                    if (line == "ayane") {
                         AyaneJob().execute(null)
                     }
-
-                    else -> {
-                        Logger.info("Unknown command")
-                    }
+                } catch (_: Exception) {
+                    Thread.sleep(1000)
                 }
             }
         }
@@ -58,6 +58,7 @@ class Scraper {
 
 fun main() {
     Logger.info("Initializing...")
+    File("data").mkdirs()
     Const.gson
     Logger.info("Initialization done!")
 

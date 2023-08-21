@@ -14,7 +14,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <kotlin.code.style>official</kotlin.code.style>
-        <kotlin.compiler.jvmTarget>11</kotlin.compiler.jvmTarget>
+        <kotlin.compiler.jvmTarget>17</kotlin.compiler.jvmTarget>
         <kotlin.version>1.9.10</kotlin.version>
         <mainClass>fr.jais.scraper.ScraperKt</mainClass>
         <junit-jupiter.version>5.10.0</junit-jupiter.version>
@@ -157,7 +157,7 @@
         <dependency>
             <groupId>org.quartz-scheduler</groupId>
             <artifactId>quartz</artifactId>
-            <version>2.3.2</version>
+            <version>2.5.0-rc1</version>
         </dependency>
     </dependencies>
 </project>
