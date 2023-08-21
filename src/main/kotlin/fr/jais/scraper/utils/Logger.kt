@@ -51,7 +51,7 @@ object Logger : Logger("Scraper", null) {
         consoleHandler.formatter = formatter
         consoleHandler.level = Level.ALL
         this.addHandler(consoleHandler)
-        val logsFolder = File("logs")
+        val logsFolder = File("data/logs")
         if (!logsFolder.exists()) logsFolder.mkdirs()
         val fileHandler = FileHandler("${logsFolder.absolutePath}${File.separator}log.log", 5 * 1024 * 1024, 1, true)
         fileHandler.formatter = formatter

@@ -10,7 +10,7 @@ class Database {
         val episodes: MutableList<Episode> = mutableListOf()
     )
 
-    private val file = File("database.txt")
+    private val file = File("data/database.txt")
 
     fun load(): DB =
         Const.gson.fromJson(

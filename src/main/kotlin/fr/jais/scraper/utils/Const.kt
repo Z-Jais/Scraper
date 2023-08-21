@@ -17,4 +17,5 @@ object Const {
     val firefox: BrowserType = playwright.firefox()
     val multipleSpaceRegex = "\\s+".toRegex()
     const val calendarBaseUrl = "https://anime.icotaku.com"
+    val apiUrl = System.getenv("API_URL") ?: "http://localhost:8080/"
 }

@@ -58,48 +58,42 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
     }
 
     private fun checkSimulcasts(iCountry: ICountry) {
-        Logger.info("Checking simulcasts for ${iCountry.name}...")
-        // Clear simulcast for this country if exists
-        simulcasts.remove(iCountry)
         val countryTag = converter.getCountryTag(iCountry)
         Logger.info("Loading simulcasts for ${iCountry.name}...")
 
-        val content = try {
-            Browser(
-                Browser.BrowserType.FIREFOX,
-                "https://www.crunchyroll.com/$countryTag/simulcasts"
-            ).launchAndWaitForSelector("#content > div > div.app-body-wrapper > div > div > div.erc-browse-collection > div > div:nth-child(1) > div > div > h4 > a")
-        } catch (_: Exception) {
-            Logger.warning("No simulcasts found for ${iCountry.name}! (Empty page or error)")
+        val selector = "#content > div > div.app-body-wrapper > div > div > div.erc-browse-collection > div > div:nth-child(1) > div > div > h4 > a"
+        val simulcastSelector = ".erc-browse-cards-collection > .browse-card > div > div > h4 > a"
 
-            Browser(
-                Browser.BrowserType.FIREFOX,
-                "https://www.crunchyroll.com/$countryTag/simulcasts"
-            ).launchAndWaitForSelector("#content > div > div.app-body-wrapper > div > div > div.info-box--wxFEW.erc-simulcast-no-results")
-        }
-
-        val currentSimulcastAnimes = content.select(".erc-browse-cards-collection > .browse-card > div > div > h4 > a")
-            .map { it.text().lowercase() }.toSet()
+        val contentCurrentSimulcast = Browser(
+            Browser.BrowserType.FIREFOX,
+            "https://www.crunchyroll.com/$countryTag/simulcasts"
+        ).launchAndWaitForSelector(selector)
 
         val simulcastName =
-            content.select("#content > div > div.app-body-wrapper > div > div > div.header > div > div > span.call-to-action--PEidl.call-to-action--is-m--RVdkI.select-trigger__title-cta--C5-uH.select-trigger__title-cta--is-displayed-on-mobile--6oNk1")
-                .text()
+            contentCurrentSimulcast.select("#content > div > div.app-body-wrapper > div > div > div.header > div > div > span.call-to-action--PEidl.call-to-action--is-m--RVdkI.select-trigger__title-cta--C5-uH.select-trigger__title-cta--is-displayed-on-mobile--6oNk1").text()
         val simulcastCode = getSimulcastCode(simulcastName)
-        Logger.info("Simulcast code for ${iCountry.name}: $simulcastCode")
+        Logger.info("Current simulcast code for ${iCountry.name}: $simulcastCode")
+
+        val currentSimulcastAnimes = contentCurrentSimulcast.select(simulcastSelector)
+            .map { it.text().lowercase() }.toSet()
+        Logger.config("Found ${currentSimulcastAnimes.size} animes for the current simulcast")
+
         val previousSimulcastCode = getPreviousSimulcastCode(simulcastCode)
         Logger.info("Previous simulcast code for ${iCountry.name}: $previousSimulcastCode")
 
-        val content2 = Browser(
+        val contentPreviousSimulcast = Browser(
             Browser.BrowserType.FIREFOX,
             "https://www.crunchyroll.com/$countryTag/simulcasts/seasons/$previousSimulcastCode"
-        ).launchAndWaitForSelector("#content > div > div.app-body-wrapper > div > div > div.erc-browse-collection > div > div:nth-child(1) > div > div > h4 > a")
-        val previousSimulcastAnimes =
-            content2.select(".erc-browse-cards-collection > .browse-card > div > div > h4 > a")
-                .map { it.text().lowercase() }.toSet()
+        ).launchAndWaitForSelector(selector)
 
-        simulcasts[iCountry] = (currentSimulcastAnimes + previousSimulcastAnimes).toSet()
-        Logger.info("Found ${simulcasts[iCountry]?.size} simulcasts for ${iCountry.name}!")
-        Logger.config("Simulcasts: ${simulcasts[iCountry]?.joinToString(", ")}")
+        val previousSimulcastAnimes =
+            contentPreviousSimulcast.select(simulcastSelector).map { it.text().lowercase() }.toSet()
+        Logger.config("Found ${previousSimulcastAnimes.size} animes for the previous simulcast")
+
+        val combinedSimulcastAnimes = (currentSimulcastAnimes + previousSimulcastAnimes).toSet()
+        simulcasts[iCountry] = combinedSimulcastAnimes
+        Logger.info("Found ${combinedSimulcastAnimes.size} simulcasts for ${iCountry.name}!")
+        Logger.config("Simulcasts: ${combinedSimulcastAnimes.joinToString(", ")}")
     }
 
     fun xmlToJson(content: String) =
@@ -137,12 +131,11 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
             countries.forEach {
                 try {
                     checkSimulcasts(it)
+                    lastSimulcastCheck = System.currentTimeMillis()
                 } catch (e: Exception) {
                     Logger.log(Level.SEVERE, "Error while checking simulcasts", e)
                 }
             }
-
-            lastSimulcastCheck = System.currentTimeMillis()
         }
 
         return countries.flatMap { country ->

@@ -47,10 +47,7 @@ class AnimationDigitalNetworkPlatform(scraper: Scraper) :
                 try {
                     converter.convertEpisode(country, calendar, it, cachedEpisodes)
                 } catch (e: Exception) {
-                    if (e !is EpisodeException) {
-                        Logger.log(Level.SEVERE, "Error while converting episode", e)
-                    }
-
+                    Logger.log(Level.SEVERE, "Error while converting episode", e)
                     null
                 }
             } ?: emptyList()
