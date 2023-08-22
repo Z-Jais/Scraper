@@ -111,7 +111,7 @@ class Scraper {
     }
 
     fun startThreadCron() {
-        jobManager.scheduleJob("0 0 7 * * ?", AyaneJob::class.java)
+        jobManager.scheduleJob("0 0 9 * * ?", AyaneJob::class.java)
         jobManager.start()
     }
 }
