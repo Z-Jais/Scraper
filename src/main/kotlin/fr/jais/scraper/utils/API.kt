@@ -159,4 +159,12 @@ object API {
             Logger.log(Level.SEVERE, "Error saving episodes", e)
         }
     }
+
+    fun saveAyane(message: String, images: List<String>) {
+        try {
+            post("${URL}ayane", Const.gson.toJson(mapOf("message" to message, "images" to images)))
+        } catch (e: Exception) {
+            Logger.log(Level.SEVERE, "Error saving episodes", e)
+        }
+    }
 }

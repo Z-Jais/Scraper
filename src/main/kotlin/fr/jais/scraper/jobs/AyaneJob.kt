@@ -1,7 +1,5 @@
 package fr.jais.scraper.jobs
 
-import com.google.gson.Gson
-import com.google.gson.JsonObject
 import com.microsoft.playwright.Playwright
 import com.mortennobel.imagescaling.ResampleOp
 import fr.jais.scraper.utils.*
@@ -13,11 +11,7 @@ import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.net.URI
 import java.net.URL
-import java.net.http.HttpClient
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -54,7 +48,7 @@ class AyaneJob : Job {
 
             episodes.forEach {
                 string += "\n#${
-                    it.first.name.split(":").first().capitalizeWords().onlyLettersAndDigits()
+                    it.first.name.split(":", ",", "-").first().capitalizeWords().onlyLettersAndDigits()
                 } EP${it.second.split(" ")[1]}"
             }
 
@@ -68,49 +62,12 @@ Bonne journée ! 😊"""
                 imageToBase64(generateImage(font, chunked, backgroundImage, adnImage, crunchyrollImage, netflixImage))
             }
 
-            val fileConf = File(folder, "conf.json")
-
-            if (!fileConf.exists()) {
-                fileConf.createNewFile()
-                fileConf.writeText("{}")
-                Logger.warning("ayane/conf.json file created, please fill it")
-                return
-            }
-
-            val conf = Gson().fromJson(fileConf.readText(), JsonObject::class.java)
-            requireNotNull(conf["TWITTER_EMAIL"]) { "TWITTER_EMAIL is not defined in .env file" }
-            requireNotNull(conf["TWITTER_PSEUDO"]) { "TWITTER_PSEUDO is not defined in .env file" }
-            requireNotNull(conf["TWITTER_PASSWORD"]) { "TWITTER_PASSWORD is not defined in .env file" }
-
-            post(
-                Gson().toJson(
-                    mapOf(
-                        "email" to conf["TWITTER_EMAIL"].asString,
-                        "pseudo" to conf["TWITTER_PSEUDO"].asString,
-                        "password" to conf["TWITTER_PASSWORD"].asString,
-                        "tweets" to listOf(
-                            mapOf(
-                                "message" to string,
-                                "images" to images
-                            )
-                        )
-                    )
-                )
-            )
+            API.saveAyane(string, images)
         } catch (e: Exception) {
             println("Error: $e")
         }
 
         Logger.info("Ayane is released!")
-    }
-
-    private fun post(body: String): HttpResponse<String> {
-        val request = HttpRequest.newBuilder()
-            .uri(URI.create("http://192.168.1.179:8082/"))
-            .header("Content-Type", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(body))
-            .build()
-        return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString())
     }
 
     private fun imageToBase64(image: BufferedImage): String {

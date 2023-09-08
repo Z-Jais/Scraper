@@ -47,7 +47,8 @@ internal class CrunchyrollEpisodeWithNoImagePreviewIsNotScrap {
 </rss>
         """.trimIndent()
 
-        platform.simulcasts[country] = mutableSetOf("Je me fais isekai pour la deuxième fois... Ça commence à faire beaucoup.".lowercase())
+        platform.simulcasts[country] =
+            mutableSetOf("Je me fais isekai pour la deuxième fois... Ça commence à faire beaucoup.".lowercase())
         val jsonEpisode = platform.xmlToJson(xmlEpisode)!!.get(0).asJsonObject
         println(jsonEpisode)
         platform.converter.convertEpisode(country, jsonEpisode, emptyList())
