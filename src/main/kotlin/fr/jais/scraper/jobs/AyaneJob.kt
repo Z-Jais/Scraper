@@ -44,17 +44,21 @@ class AyaneJob : Job {
             val day = LocalDate.now().dayOfWeek.getDisplayName(TextStyle.FULL, Locale.FRANCE).lowercase()
             val date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM"))
 
-            var string = "🎯 | Votre planning #anime pour ce $day $date :\n"
+            var string: String
 
-            episodes.forEach {
-                string += "\n#${
-                    it.first.name.split(":", ",", "-").first().capitalizeWords().onlyLettersAndDigits()
-                } EP${it.second.split(" ")[1]}"
-            }
+            do {
+                string = "🎯 | Votre planning #anime pour ce $day $date :\n"
 
-            string += """
+                episodes.shuffled().take(7).forEach {
+                    string += "\n#${
+                        it.first.name.split(":", ",", "-").first().capitalizeWords().onlyLettersAndDigits()
+                    } EP${it.second.split(" ")[1]}"
+                }
+
+                string += """
 
 Bonne journée ! 😊"""
+            } while (string.length > 250)
 
             Logger.info(string)
 
