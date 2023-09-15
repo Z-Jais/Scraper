@@ -51,7 +51,7 @@ class AyaneJob : Job {
 
                 episodes.shuffled().take(7).forEach {
                     string += "\n#${
-                        it.first.name.split(":", ",", "-").first().capitalizeWords().onlyLettersAndDigits()
+                        it.first.name.split(":", ",").first().capitalizeWords().onlyLettersAndDigits()
                     } EP${it.second.split(" ")[1]}"
                 }
 
