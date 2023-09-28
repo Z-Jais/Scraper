@@ -20,10 +20,15 @@ object API {
     }
 
     private fun post(url: String, json: String): HttpResponse<String> {
-        val request = HttpRequest.newBuilder()
+        val requestBuilder = HttpRequest.newBuilder()
             .uri(URI.create(url))
             .header("Content-Type", "application/json")
-            .POST(HttpRequest.BodyPublishers.ofString(json))
+
+        if (!Const.secureKey.isNullOrBlank()) {
+            requestBuilder.header("Authorization", Const.secureKey)
+        }
+
+        val request = requestBuilder.POST(HttpRequest.BodyPublishers.ofString(json))
             .build()
         return Const.httpClient.send(request, HttpResponse.BodyHandlers.ofString())
     }
