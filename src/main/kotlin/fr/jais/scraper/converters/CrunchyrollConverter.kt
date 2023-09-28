@@ -170,10 +170,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         Logger.info("Get anime page...")
         val url = "https://www.crunchyroll.com/$country/$animeId"
         Logger.config("Anime page: $url")
-        val result = Browser(
-            Browser.BrowserType.FIREFOX,
-            url
-        ).launchAndWaitForSelector("div.undefined:nth-child(1) > figure:nth-child(1) > picture:nth-child(1) > img:nth-child(2)")
+        val result = Browser(url).launchAndWaitForSelector("div.undefined:nth-child(1) > figure:nth-child(1) > picture:nth-child(1) > img:nth-child(2)")
 
         // ----- IMAGE -----
         Logger.info("Get image...")

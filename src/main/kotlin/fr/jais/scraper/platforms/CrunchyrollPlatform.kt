@@ -64,13 +64,11 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
         val selector = "#content > div > div.app-body-wrapper > div > div > div.erc-browse-collection > div > div:nth-child(1) > div > div > h4 > a"
         val simulcastSelector = ".erc-browse-cards-collection > .browse-card > div > div > h4 > a"
 
-        val contentCurrentSimulcast = Browser(
-            Browser.BrowserType.FIREFOX,
-            "https://www.crunchyroll.com/$countryTag/simulcasts"
-        ).launchAndWaitForSelector(selector)
+        val contentCurrentSimulcast = Browser("https://www.crunchyroll.com/$countryTag/simulcasts").launchAndWaitForSelector(selector)
 
         val simulcastName =
-            contentCurrentSimulcast.select("#content > div > div.app-body-wrapper > div > div > div.header > div > div > span.call-to-action--PEidl.call-to-action--is-m--RVdkI.select-trigger__title-cta--C5-uH.select-trigger__title-cta--is-displayed-on-mobile--6oNk1").text()
+            contentCurrentSimulcast.select("#content > div > div.app-body-wrapper > div > div > div.header > div > div > span.call-to-action--PEidl.call-to-action--is-m--RVdkI.select-trigger__title-cta--C5-uH.select-trigger__title-cta--is-displayed-on-mobile--6oNk1")
+                .text()
         val simulcastCode = getSimulcastCode(simulcastName)
         Logger.info("Current simulcast code for ${iCountry.name}: $simulcastCode")
 
@@ -81,10 +79,8 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
         val previousSimulcastCode = getPreviousSimulcastCode(simulcastCode)
         Logger.info("Previous simulcast code for ${iCountry.name}: $previousSimulcastCode")
 
-        val contentPreviousSimulcast = Browser(
-            Browser.BrowserType.FIREFOX,
-            "https://www.crunchyroll.com/$countryTag/simulcasts/seasons/$previousSimulcastCode"
-        ).launchAndWaitForSelector(selector)
+        val contentPreviousSimulcast =
+            Browser("https://www.crunchyroll.com/$countryTag/simulcasts/seasons/$previousSimulcastCode").launchAndWaitForSelector(selector)
 
         val previousSimulcastAnimes =
             contentPreviousSimulcast.select(simulcastSelector).map { it.text().lowercase() }.toSet()
