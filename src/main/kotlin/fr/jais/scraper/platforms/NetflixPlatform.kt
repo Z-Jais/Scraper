@@ -152,7 +152,7 @@ class NetflixPlatform(scraper: Scraper) : IPlatform(
             }
 
             val apiUrl = "https://www.netflix.com/$lang/title/$netflixId"
-            val content = Browser(Browser.BrowserType.CHROME, apiUrl).launch()
+            val content = Browser(apiUrl, Browser.BrowserType.CHROME).launch()
             cache.lastCheck = System.currentTimeMillis()
             cache.content = content
             convertToNetflixEpisodes(content)

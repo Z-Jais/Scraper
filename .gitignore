@@ -1,7 +1,4 @@
 /.idea/
 /scraper.iml
 /target/
-/logs/
-/database.json
-/tmp/
-/ayane/
+/data/*

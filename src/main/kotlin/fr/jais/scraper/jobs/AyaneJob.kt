@@ -1,6 +1,5 @@
 package fr.jais.scraper.jobs
 
-import com.microsoft.playwright.Playwright
 import com.mortennobel.imagescaling.ResampleOp
 import fr.jais.scraper.utils.*
 import org.quartz.Job
@@ -16,6 +15,7 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
 import java.util.*
+import java.util.logging.Level
 import javax.imageio.ImageIO
 
 class AyaneJob : Job {
@@ -23,16 +23,6 @@ class AyaneJob : Job {
 
     override fun execute(p0: JobExecutionContext?) {
         Logger.info("Starting AyaneJob...")
-        val folder = File("data/ayane")
-        if (!folder.exists()) folder.mkdirs()
-
-        val font = File(folder, "Rubik.ttf")
-        val backgroundImage =
-            ImageIO.read(URL("https://cdn.discordapp.com/attachments/1093774447636385883/1095284174883147877/Ziedelth_solo_1girl_adult_beautiful_shy_yellow_hair_smooth_hair_fd121b3f-3739-4dbe-b1d3-fec13fff64fd.png"))
-                .opacity(0.1f)
-        val crunchyrollImage = ImageIO.read(File(folder, "crunchyroll.png")).invert()
-        val adnImage = ImageIO.read(File(folder, "animation_digital_network.png")).invert()
-        val netflixImage = ImageIO.read(File(folder, "netflix.png")).invert()
 
         try {
             val episodes = getEpisodes()
@@ -41,15 +31,39 @@ class AyaneJob : Job {
                 return
             }
 
+            val folder = File("data/ayane")
+
+            if (!folder.exists()) {
+                Logger.config("Creating Ayane folder...")
+                folder.mkdirs()
+            }
+
+            Logger.config("Getting Ayane font...")
+            val font = File(folder, "Rubik.ttf")
+            Logger.config("Getting Ayane background image...")
+            val backgroundImage =
+                ImageIO.read(URL("https://cdn.discordapp.com/attachments/1093774447636385883/1095284174883147877/Ziedelth_solo_1girl_adult_beautiful_shy_yellow_hair_smooth_hair_fd121b3f-3739-4dbe-b1d3-fec13fff64fd.png"))
+                    .opacity(0.1f)
+            Logger.config("Getting Ayane Crunchyroll image...")
+            val crunchyrollImage = ImageIO.read(File(folder, "crunchyroll.png")).invert()
+            Logger.config("Getting Ayane ADN image...")
+            val adnImage = ImageIO.read(File(folder, "animation_digital_network.png")).invert()
+            Logger.config("Getting Ayane Netflix image...")
+            val netflixImage = ImageIO.read(File(folder, "netflix.png")).invert()
+
             val day = LocalDate.now().dayOfWeek.getDisplayName(TextStyle.FULL, Locale.FRANCE).lowercase()
             val date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM"))
 
             var string: String
+            var epochs = 0
+            var take = 7
+
+            Logger.info("Building text...")
 
             do {
                 string = "🎯 | Votre planning #anime pour ce $day $date :\n"
 
-                episodes.shuffled().take(7).forEach {
+                episodes.shuffled().take(take).forEach {
                     string += "\n#${
                         it.first.name.split(":", ",").first().capitalizeWords().onlyLettersAndDigits()
                     } EP${it.second.split(" ")[1]}"
@@ -58,6 +72,13 @@ class AyaneJob : Job {
                 string += """
 
 Bonne journée ! 😊"""
+
+                epochs++
+
+                if (epochs % 10 == 0) {
+                    take--
+                    Logger.warning("$epochs has passed to attempting build the text, reducing take to $take")
+                }
             } while (string.length > 250)
 
             Logger.info(string)
@@ -68,7 +89,8 @@ Bonne journée ! 😊"""
 
             API.saveAyane(string, images)
         } catch (e: Exception) {
-            println("Error: $e")
+            Logger.log(Level.SEVERE, "Error with Ayane", e)
+            return
         }
 
         Logger.info("Ayane is released!")
@@ -258,24 +280,18 @@ Bonne journée ! 😊"""
         return bufferedImage
     }
 
-    @Throws(Exception::class)
     private fun getEpisodes(): List<Pair<Anime, String>> {
-        val playwright = Playwright.create()
-        val browser = playwright.firefox().launch()
-        val context = browser.newContext()
-        val page = context.newPage()
+        val content = Browser("${Const.calendarBaseUrl}/calendrier_diffusion.html").launch()
 
-        page.navigate("${Const.calendarBaseUrl}/calendrier_diffusion.html")
-
-        val todayCalendar = page.querySelectorAll("table.calendrier_diffusion")
-            .find { true == it.querySelector("th")?.textContent()?.contains("Aujourd'hui", true) }
+        val todayCalendar = content.select("table.calendrier_diffusion")
+            .find { true == it.getElementsByTag("th").text().contains("Aujourd'hui", true) }
             ?: throw Exception("No anime today")
 
-        val episodes = todayCalendar.querySelectorAll("td").mapNotNull {
-            val animeElement = it.querySelector("a") ?: return@mapNotNull null
+        val episodes = todayCalendar.getElementsByTag("td").mapNotNull {
+            val animeElement = it.getElementsByTag("a") ?: return@mapNotNull null
 
-            var name = animeElement.textContent().trim().replace(Const.multipleSpaceRegex, " ")
-            val url = "${Const.calendarBaseUrl}${animeElement.getAttribute("href")}"
+            var name = animeElement.text().trim().replace(Const.multipleSpaceRegex, " ")
+            val url = "${Const.calendarBaseUrl}${animeElement.attr("href")}"
 
             val season = if (name.contains("Saison", true)) {
                 val number = name.split("Saison", ignoreCase = true)[1].trim().split(" ")[0].toInt()
@@ -286,17 +302,13 @@ Bonne journée ! 😊"""
                 1
             }
 
-            if (name == "Shūmatsu no Walküre 2") {
-                return@mapNotNull null
-            }
-
-            val episode =
-                it.querySelector(".calendrier_episode").textContent().trim().replace(Const.multipleSpaceRegex, " ")
+            val episode = it.select(".calendrier_episode").text().trim().replace(Const.multipleSpaceRegex, " ")
             Anime(name, url, season) to episode
         }.filter { (anime, _) ->
-            page.navigate(anime.url)
-            val infos = page.querySelectorAll(".info_fiche > div")
-            val licenceElement = infos.find { it.textContent().contains("Licence VOD", true) }
+            val subcontent = Browser(anime.url).launch()
+
+            val infos = subcontent.select(".info_fiche > div")
+            val licenceElement = infos.find { it.text().contains("Licence VOD", true) }
 
             if (licenceElement == null) {
                 println("No licence for ${anime.name}")
@@ -304,18 +316,13 @@ Bonne journée ! 😊"""
             }
 
             val licencePlatform =
-                licenceElement.textContent().split(":")[1].trim().replace(Const.multipleSpaceRegex, " ").split(",")
+                licenceElement.text().split(":")[1].trim().replace(Const.multipleSpaceRegex, " ").split(",")
                     .map { it.trim() }
             anime.licences.addAll(licencePlatform)
             licencePlatform.contains("Animation Digital Network") || licencePlatform.contains("Crunchyroll") || licencePlatform.contains(
                 "Netflix"
             )
         }
-
-        page.close()
-        context.close()
-        browser.close()
-        playwright.close()
 
         return episodes
     }
