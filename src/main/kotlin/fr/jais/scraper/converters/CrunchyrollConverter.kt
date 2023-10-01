@@ -174,9 +174,13 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
 
         // ----- IMAGE -----
         Logger.info("Get image...")
-        val image =
-            result.selectXpath("//*[@id=\"content\"]/div/div[2]/div/div[1]/div[2]/div/div/div[2]/div[2]/figure/picture/img")
-                .attr("src").toHTTPS()
+        var image =
+            result.selectXpath("//*[@id=\"content\"]/div/div[2]/div/div[1]/div[2]/div/div/div[2]/div[2]/figure/picture/img").attr("src").toHTTPS()
+
+        if (image.isBlank()) {
+            image = result.selectXpath("#content > div > div.app-body-wrapper > div > div.erc-series-key-art > div.content-wrapper--MF5LS > div > div > div.background-image > div.content-image--3na7E.undefined.background.tall-image > figure > picture > img").attr("src").toHTTPS()
+        }
+
         Logger.config("Image: $image")
 
         // ----- DESCRIPTION -----
