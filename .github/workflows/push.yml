@@ -81,7 +81,6 @@ jobs:
 
     needs:
       - build
-      - sonar
 
     steps:
       - uses: actions/checkout@v4
