@@ -57,6 +57,7 @@ jobs:
         uses: actions/setup-java@v3
         with:
           java-version: 17
+          distribution: 'adopt'
       - name: Cache SonarQube packages
         uses: actions/cache@v3
         with:
@@ -80,7 +81,6 @@ jobs:
 
     needs:
       - build
-      - sonar
 
     steps:
       - uses: actions/checkout@v4
