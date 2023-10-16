@@ -18,11 +18,11 @@ import java.util.*
 import java.util.logging.Level
 import javax.imageio.ImageIO
 
-class AyaneJob : Job {
+class CalendarJob : Job {
     private val maxEpisodesPerImage = 7
 
     override fun execute(p0: JobExecutionContext?) {
-        Logger.info("Starting AyaneJob...")
+        Logger.info("Starting calendar job...")
 
         try {
             val episodes = getEpisodes()
@@ -31,24 +31,24 @@ class AyaneJob : Job {
                 return
             }
 
-            val folder = File("data/ayane")
+            val folder = File("data/calendar")
 
             if (!folder.exists()) {
-                Logger.config("Creating Ayane folder...")
+                Logger.config("Creating calendar folder...")
                 folder.mkdirs()
             }
 
-            Logger.config("Getting Ayane font...")
+            Logger.config("Getting calendar font...")
             val font = File(folder, "Rubik.ttf")
-            Logger.config("Getting Ayane background image...")
+            Logger.config("Getting calendar background image...")
             val backgroundImage =
                 ImageIO.read(URL("https://cdn.discordapp.com/attachments/1093774447636385883/1095284174883147877/Ziedelth_solo_1girl_adult_beautiful_shy_yellow_hair_smooth_hair_fd121b3f-3739-4dbe-b1d3-fec13fff64fd.png"))
                     .opacity(0.1f)
-            Logger.config("Getting Ayane Crunchyroll image...")
+            Logger.config("Getting calendar Crunchyroll image...")
             val crunchyrollImage = ImageIO.read(File(folder, "crunchyroll.png")).invert()
-            Logger.config("Getting Ayane ADN image...")
+            Logger.config("Getting calendar ADN image...")
             val adnImage = ImageIO.read(File(folder, "animation_digital_network.png")).invert()
-            Logger.config("Getting Ayane Netflix image...")
+            Logger.config("Getting calendar Netflix image...")
             val netflixImage = ImageIO.read(File(folder, "netflix.png")).invert()
 
             val day = LocalDate.now().dayOfWeek.getDisplayName(TextStyle.FULL, Locale.FRANCE).lowercase()
@@ -87,13 +87,13 @@ Bonne journée ! 😊"""
                 imageToBase64(generateImage(font, chunked, backgroundImage, adnImage, crunchyrollImage, netflixImage))
             }
 
-            API.saveAyane(string, images)
+            API.saveCalendar(string, images)
         } catch (e: Exception) {
-            Logger.log(Level.SEVERE, "Error with Ayane", e)
+            Logger.log(Level.SEVERE, "Error with the calendar", e)
             return
         }
 
-        Logger.info("Ayane is released!")
+        Logger.info("The calendar is released!")
     }
 
     private fun imageToBase64(image: BufferedImage): String {
