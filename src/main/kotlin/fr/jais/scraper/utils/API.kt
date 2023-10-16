@@ -162,7 +162,7 @@ object API {
         }
     }
 
-    fun saveAyane(message: String, images: List<String>) {
+    fun saveCalendar(message: String, images: List<String>) {
         try {
             post("${Const.apiUrl}ayane", Const.gson.toJson(mapOf("message" to message, "images" to images)))
         } catch (e: Exception) {
