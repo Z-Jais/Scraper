@@ -38,6 +38,7 @@ class Scraper {
                     val line = file.readText().trim()
 
                     if (line.isNotBlank()) {
+                        file.writeText("")
                         Logger.info("Command enter: \"$line\"")
 
                         when (line) {
