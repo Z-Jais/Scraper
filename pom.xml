@@ -18,6 +18,7 @@
         <kotlin.version>1.9.10</kotlin.version>
         <mainClass>fr.jais.scraper.ScraperKt</mainClass>
         <junit-jupiter.version>5.10.0</junit-jupiter.version>
+        <apache.maven.plugins.version>3.2.1</apache.maven.plugins.version>
     </properties>
 
     <repositories>
@@ -56,11 +57,11 @@
             </plugin>
             <plugin>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.1.2</version>
+                <version>${apache.maven.plugins.version}</version>
             </plugin>
             <plugin>
                 <artifactId>maven-failsafe-plugin</artifactId>
-                <version>3.1.2</version>
+                <version>${apache.maven.plugins.version}</version>
             </plugin>
             <plugin>
                 <groupId>org.codehaus.mojo</groupId>

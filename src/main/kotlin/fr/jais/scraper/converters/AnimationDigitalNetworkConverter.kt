@@ -106,7 +106,7 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         // ----- NUMBER -----
         Logger.info("Get number...")
 
-        if ("Bande-annonce" == jsonObject["shortNumber"]?.asString) {
+        if (jsonObject["shortNumber"]?.asString?.startsWith("Bande-annonce", true) == true) {
             throw EpisodeNotAvailableException("Trailer detected")
         }
 
