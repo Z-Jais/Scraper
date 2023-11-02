@@ -30,11 +30,15 @@ fun String.toMD5(): String {
     return BigInteger(1, md.digest(this.toByteArray())).toString(16).padStart(32, '0')
 }
 
-fun String.capitalizeWords(): String = split(" ", "-").joinToString(" ") {
-    it.replaceFirstChar {
-        if (it.isLowerCase()) it.titlecase(
-            Locale.getDefault()
-        ) else it.toString()
+fun String.capitalizeWords(): String {
+    val delimiters = arrayOf(" ", "-", ",")
+
+    return this.split(*delimiters).joinToString(" ") {
+        it.replaceFirstChar { char ->
+            if (char.isLowerCase()) char.titlecase(
+                Locale.getDefault()
+            ) else char.toString()
+        }
     }
 }
 

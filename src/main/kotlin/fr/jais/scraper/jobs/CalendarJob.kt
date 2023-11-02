@@ -10,7 +10,6 @@ import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.net.URL
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -41,9 +40,7 @@ class CalendarJob : Job {
             Logger.config("Getting calendar font...")
             val font = File(folder, "Rubik.ttf")
             Logger.config("Getting calendar background image...")
-            val backgroundImage =
-                ImageIO.read(URL("https://cdn.discordapp.com/attachments/1093774447636385883/1095284174883147877/Ziedelth_solo_1girl_adult_beautiful_shy_yellow_hair_smooth_hair_fd121b3f-3739-4dbe-b1d3-fec13fff64fd.png"))
-                    .opacity(0.1f)
+            val backgroundImage = ImageIO.read(File(folder, "background.png")).opacity(0.1f)
             Logger.config("Getting calendar Crunchyroll image...")
             val crunchyrollImage = ImageIO.read(File(folder, "crunchyroll.png")).invert()
             Logger.config("Getting calendar ADN image...")
@@ -61,11 +58,11 @@ class CalendarJob : Job {
             Logger.info("Building text...")
 
             do {
-                string = "🎯 | Votre planning #anime pour ce $day $date :\n"
+                string = "📅 | Votre calendrier #anime pour ce $day $date :\n"
 
                 episodes.shuffled().take(take).forEach {
                     string += "\n#${
-                        it.first.name.split(":", ",").first().capitalizeWords().onlyLettersAndDigits()
+                        it.first.name.split(":", ",").first().capitalizeWords().onlyLettersAndDigits().trim('-').trim()
                     } EP${it.second.split(" ")[1]}"
                 }
 
@@ -99,6 +96,7 @@ Bonne journée ! 😊"""
     private fun imageToBase64(image: BufferedImage): String {
         val outputStream = ByteArrayOutputStream()
         ImageIO.write(image, "png", outputStream)
+//        ImageIO.write(image, "png", File("tmp-calendar-${UUID.randomUUID()}.png"))
         return Base64.getEncoder().encodeToString(outputStream.toByteArray())
     }
 
@@ -134,7 +132,7 @@ Bonne journée ! 😊"""
         graphics.color = Color(0xF6F6F6)
         graphics.fillRect(0, 0, width, height)
 
-        graphics.color = Color(0xffa500)
+        graphics.color = Color(0x731F26)
         val margin = 0
         val border = 10
         graphics.fillRoundRect(margin, margin, width - margin * 2, height - margin * 2, 50, 50)
@@ -161,7 +159,7 @@ Bonne journée ! 😊"""
         // Draw a rect start at horizontalMargin and with width of width - horizontalMargin * 2
         graphics.fillRoundRectShadow(horizontalMargin, dayY, width - horizontalMargin * 2, 50, 20, 20)
         // Draw an orange rect in the middle of the rect
-        graphics.color = Color(0xffa500)
+        graphics.color = Color(0x731F26)
         graphics.fillRoundRectShadow(width / 2 - 30, dayY - 5, 60, 60, 10, 10)
         // Draw the current day in the middle of the orange circle
         graphics.color = Color.WHITE
@@ -284,7 +282,7 @@ Bonne journée ! 😊"""
         val content = Browser("${Const.calendarBaseUrl}/calendrier_diffusion.html").launch()
 
         val todayCalendar = content.select("table.calendrier_diffusion")
-            .find { true == it.getElementsByTag("th").text().contains("Aujourd'hui", true) }
+            .find { it.getElementsByTag("th").text().contains("Aujourd'hui", true) }
             ?: throw Exception("No anime today")
 
         val episodes = todayCalendar.getElementsByTag("td").mapNotNull {
