@@ -22,7 +22,7 @@ class AnimationDigitalNetworkPlatform(scraper: Scraper) :
         "animation_digital_network.png",
         listOf(FranceCountry::class.java)
     ) {
-    private val converter = AnimationDigitalNetworkConverter(this)
+    val converter = AnimationDigitalNetworkConverter(this)
 
     private fun getAPIContent(checkedCountry: ICountry, calendar: Calendar): List<JsonObject>? {
         if (checkedCountry !is FranceCountry) throw CountryNotSupportedException("Country not supported")
@@ -30,13 +30,16 @@ class AnimationDigitalNetworkPlatform(scraper: Scraper) :
         return try {
             val apiUrl = "https://gw.api.animationdigitalnetwork.fr/video/calendar?date=${calendar.toDate()}"
             val content = URL(apiUrl).readText()
-            Const.gson.fromJson(content, JsonObject::class.java)?.getAsJsonArray("videos")
-                ?.mapNotNull { it.asJsonObject }
+            getVideosArray(content)
         } catch (e: Exception) {
             Logger.log(Level.SEVERE, "Error while getting API content", e)
             null
         }
     }
+
+    fun getVideosArray(content: String) =
+        Const.gson.fromJson(content, JsonObject::class.java)?.getAsJsonArray("videos")
+            ?.mapNotNull { it.asJsonObject }
 
     override fun getEpisodes(calendar: Calendar, cachedEpisodes: List<String>): List<Episode> {
         val countries = scraper.getCountries(this)
