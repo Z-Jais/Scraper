@@ -19,20 +19,28 @@ class CheckJob : Job {
         val cachedEpisodes = Database.loadEpisodes().map { it.hash }
 
         Logger.info("Get all episodes...")
-        val episodes = Scraper.instance.platforms
-            .flatMap { it.getEpisodes(calendar, cachedEpisodes) }
-            .filter { calendar.after(CalendarConverter.fromUTCDate(it.releaseDate)) }
-            .sortedWith(
-                compareBy(
-                    { CalendarConverter.fromUTCDate(it.releaseDate) },
-                    { it.anime.name.lowercase() },
-                    { it.season },
-                    { it.number }
-                )
-            )
+        val allEpisodes = Scraper.instance.platforms.flatMap { it.getEpisodes(calendar, cachedEpisodes) }
+        val episodes = getEpisodesAfterDate(allEpisodes, calendar)
+
         Logger.config("Episodes: ${episodes.size}")
         Database.saveEpisodes(episodes)
         API.saveEpisodes(episodes)
         return episodes
     }
+
+    fun getEpisodesAfterDate(
+        allEpisodes: List<Episode>,
+        calendar: Calendar
+    ) = allEpisodes.filter {
+        val convertedReleaseDate = CalendarConverter.fromUTCDate(it.releaseDate)
+        calendar == convertedReleaseDate || calendar.after(convertedReleaseDate)
+    }
+        .sortedWith(
+            compareBy(
+                { CalendarConverter.fromUTCDate(it.releaseDate) },
+                { it.anime.name.lowercase() },
+                { it.season },
+                { it.number }
+            )
+        )
 }
