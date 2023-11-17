@@ -3,7 +3,7 @@ WORKDIR /app
 COPY . /app
 RUN mvn clean package -DskipTests
 
-FROM mcr.microsoft.com/playwright:v1.39.0-jammy
+FROM mcr.microsoft.com/playwright:v1.40.0-jammy
 
 ARG version=17.0.8.8-1
 RUN set -eux \
