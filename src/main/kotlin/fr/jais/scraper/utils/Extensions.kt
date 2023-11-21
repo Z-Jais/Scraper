@@ -76,12 +76,9 @@ fun Graphics.fillRoundRectShadow(x: Int, y: Int, width: Int, height: Int, arcWid
 }
 
 fun BufferedImage.invert(): BufferedImage {
-    val pixels = IntArray(width * height)
-    getRGB(0, 0, width, height, pixels, 0, width)
-
     for (x in 0 until width) {
         for (y in 0 until height) {
-            val rgba = pixels[x * width + y]
+            val rgba = getRGB(x, y)
             val alpha = rgba shr 24 and 0xFF
             val red = rgba shr 16 and 0xFF
             val green = rgba shr 8 and 0xFF
@@ -89,10 +86,9 @@ fun BufferedImage.invert(): BufferedImage {
             val rgb = red shl 16 or (green shl 8) or blue
 
             val invert = 0xFF - rgb
-            pixels[x * width + y] = alpha shl 24 or invert
+            setRGB(x, y, alpha shl 24 or invert)
         }
     }
 
-    setRGB(0, 0, width, height, pixels, 0, width)
     return this
 }
