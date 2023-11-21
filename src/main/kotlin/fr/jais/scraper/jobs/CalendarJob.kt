@@ -10,6 +10,7 @@ import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.net.URL
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -39,14 +40,14 @@ class CalendarJob : Job {
 
             Logger.config("Getting calendar font...")
             val font = File(folder, "Rubik.ttf")
-            Logger.config("Getting calendar background image...")
-            val backgroundImage = ImageIO.read(File(folder, "background.png")).opacity(0.1f)
             Logger.config("Getting calendar Crunchyroll image...")
             val crunchyrollImage = ImageIO.read(File(folder, "crunchyroll.png")).invert()
             Logger.config("Getting calendar ADN image...")
             val adnImage = ImageIO.read(File(folder, "animation_digital_network.png")).invert()
             Logger.config("Getting calendar Netflix image...")
             val netflixImage = ImageIO.read(File(folder, "netflix.png")).invert()
+            Logger.config("Getting calendar Disney+ image...")
+            val disneyPlusImage = ImageIO.read(File(folder, "disney_plus.png")).invert()
 
             val day = LocalDate.now().dayOfWeek.getDisplayName(TextStyle.FULL, Locale.FRANCE).lowercase()
             val date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM"))
@@ -79,9 +80,18 @@ Bonne journée ! 😊"""
             } while (string.length > 250)
 
             Logger.info(string)
+            val anime = episodes.filter { it.first.image?.isNotBlank() == true }.map { it.first }.distinctBy { it.name.lowercase() }.random()
 
             val images = episodes.chunked(maxEpisodesPerImage).map { chunked ->
-                imageToBase64(generateImage(font, chunked, backgroundImage, adnImage, crunchyrollImage, netflixImage))
+                imageToBase64(generateImage(
+                    font,
+                    chunked,
+                    ImageIO.read(URL(anime.image)).opacity(0.1F),
+                    adnImage,
+                    crunchyrollImage,
+                    netflixImage,
+                    disneyPlusImage,
+                ))
             }
 
             API.saveCalendar(string, images)
@@ -106,7 +116,8 @@ Bonne journée ! 😊"""
         backgroundImage: BufferedImage,
         adnImage: BufferedImage,
         crunchyrollImage: BufferedImage,
-        netflixImage: BufferedImage
+        netflixImage: BufferedImage,
+        disneyPlusImage: BufferedImage,
     ): BufferedImage {
         val width = 600
         val height = 720
@@ -114,6 +125,7 @@ Bonne journée ! 😊"""
         val animeHeight = 65
         val verticallyPadding = 20
         val horizontalPadding = 10
+        val mainColor = Color(0x6F6F6F)
 
         val imageSize = animeHeight - verticallyPadding
         val xImage = horizontalMargin + horizontalPadding
@@ -132,7 +144,7 @@ Bonne journée ! 😊"""
         graphics.color = Color(0xF6F6F6)
         graphics.fillRect(0, 0, width, height)
 
-        graphics.color = Color(0x731F26)
+        graphics.color = mainColor
         val margin = 0
         val border = 10
         graphics.fillRoundRect(margin, margin, width - margin * 2, height - margin * 2, 50, 50)
@@ -159,7 +171,7 @@ Bonne journée ! 😊"""
         // Draw a rect start at horizontalMargin and with width of width - horizontalMargin * 2
         graphics.fillRoundRectShadow(horizontalMargin, dayY, width - horizontalMargin * 2, 50, 20, 20)
         // Draw an orange rect in the middle of the rect
-        graphics.color = Color(0x731F26)
+        graphics.color = mainColor
         graphics.fillRoundRectShadow(width / 2 - 30, dayY - 5, 60, 60, 10, 10)
         // Draw the current day in the middle of the orange circle
         graphics.color = Color.WHITE
@@ -193,7 +205,7 @@ Bonne journée ! 😊"""
         episodes.forEachIndexed { index, (anime, episode) ->
             val y = 70 + animeHeight + index * (animeHeight + verticallyPadding)
 
-            graphics.color = Color(0xf2ebdc)
+            graphics.color = Color(0xEFEFEF)
             graphics.fillRoundRectShadow(
                 horizontalMargin,
                 y - (animeHeight / 2),
@@ -228,12 +240,19 @@ Bonne journée ! 😊"""
                     null
                 )
             } else {
-                val image = if (anime.licences.contains("Animation Digital Network")) {
-                    adnImage
-                } else if (anime.licences.contains("Crunchyroll")) {
-                    crunchyrollImage
-                } else {
-                    netflixImage
+                val image = when {
+                    anime.licences.contains("Animation Digital Network") -> {
+                        adnImage
+                    }
+                    anime.licences.contains("Crunchyroll") -> {
+                        crunchyrollImage
+                    }
+                    anime.licences.contains("Disney+") -> {
+                        disneyPlusImage
+                    }
+                    else -> {
+                        netflixImage
+                    }
                 }
 
                 graphics.drawImage(
@@ -299,11 +318,13 @@ Bonne journée ! 😊"""
             } else {
                 1
             }
-
             val episode = it.select(".calendrier_episode").text().trim().replace(Const.multipleSpaceRegex, " ")
             Anime(name, url, season) to episode
         }.filter { (anime, _) ->
             val subcontent = Browser(anime.url).launch()
+
+            val image = subcontent.select(".complements > p:nth-child(2) > img:nth-child(1)").firstOrNull()?.attr("src")
+            anime.image = if (!image.isNullOrBlank()) "${Const.calendarBaseUrl}${image}" else null
 
             val infos = subcontent.select(".info_fiche > div")
             val licenceElement = infos.find { it.text().contains("Licence VOD", true) }
@@ -317,9 +338,12 @@ Bonne journée ! 😊"""
                 licenceElement.text().split(":")[1].trim().replace(Const.multipleSpaceRegex, " ").split(",")
                     .map { it.trim() }
             anime.licences.addAll(licencePlatform)
-            licencePlatform.contains("Animation Digital Network") || licencePlatform.contains("Crunchyroll") || licencePlatform.contains(
-                "Netflix"
-            )
+            anime.licences.remove("TF1 Vidéo")
+
+            licencePlatform.contains("Animation Digital Network") ||
+                    licencePlatform.contains("Crunchyroll") ||
+                    licencePlatform.contains("Netflix") ||
+                    licencePlatform.contains("Disney+")
         }
 
         return episodes
@@ -330,5 +354,6 @@ data class Anime(
     val name: String,
     val url: String,
     val season: Int = 1,
+    var image: String? = null,
     val licences: MutableList<String> = mutableListOf(),
 )
