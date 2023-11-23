@@ -164,7 +164,7 @@ object API {
 
     fun saveCalendar(message: String, images: List<String>) {
         try {
-            post("${Const.apiUrl}ayane", Const.gson.toJson(mapOf("message" to message, "images" to images)))
+            post("${Const.apiUrl}calendar", Const.gson.toJson(mapOf("message" to message, "images" to images)))
         } catch (e: Exception) {
             Logger.log(Level.SEVERE, "Error saving episodes", e)
         }
