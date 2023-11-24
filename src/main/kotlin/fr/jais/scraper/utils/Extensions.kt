@@ -31,7 +31,7 @@ fun String.toMD5(): String {
 }
 
 fun String.capitalizeWords(): String {
-    val delimiters = arrayOf(" ", "-", ",")
+    val delimiters = arrayOf(" ", ",")
 
     return this.split(*delimiters).joinToString(" ") {
         it.replaceFirstChar { char ->
