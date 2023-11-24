@@ -21,6 +21,22 @@ import javax.imageio.ImageIO
 class CalendarJob : Job {
     private val maxEpisodesPerImage = 7
 
+    private fun getHashtag(anime: Anime): String {
+        var name = anime.name.capitalizeWords()
+
+        if (name.contains(":")) {
+            val splitted = name.split(":")
+            val first = splitted[0].trim()
+            val last = splitted.subList(1, splitted.size).joinToString(" ").trim()
+
+            if (last.count { it == ' ' } >= 2) {
+                name = first
+            }
+        }
+
+        return name.split("-").first().onlyLettersAndDigits().trim('-').trim()
+    }
+
     override fun execute(p0: JobExecutionContext?) {
         Logger.info("Starting calendar job...")
 
@@ -49,8 +65,9 @@ class CalendarJob : Job {
             Logger.config("Getting calendar Disney+ image...")
             val disneyPlusImage = ImageIO.read(File(folder, "disney_plus.png")).invert()
 
-            val day = LocalDate.now().dayOfWeek.getDisplayName(TextStyle.FULL, Locale.FRANCE).lowercase()
-            val date = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM"))
+            val now = LocalDate.now()
+            val day = now.dayOfWeek.getDisplayName(TextStyle.FULL, Locale.FRANCE).lowercase()
+            val date = now.format(DateTimeFormatter.ofPattern("dd/MM"))
 
             var string: String
             var epochs = 0
@@ -59,12 +76,10 @@ class CalendarJob : Job {
             Logger.info("Building text...")
 
             do {
-                string = "📅 | Votre calendrier #anime pour ce $day $date :\n"
+                string = "📅 Votre calendrier #anime pour ce $day $date :\n"
 
                 episodes.shuffled().take(take).forEach {
-                    string += "\n#${
-                        it.first.name.split(":", ",").first().capitalizeWords().onlyLettersAndDigits().trim('-').trim()
-                    } EP${it.second.split(" ")[1]}"
+                    string += "\n#${getHashtag(it.first)} EP${it.second.split(" ")[1]}"
                 }
 
                 string += """
@@ -319,6 +334,15 @@ Bonne journée ! 😊"""
                 1
             }
             val episode = it.select(".calendrier_episode").text().trim().replace(Const.multipleSpaceRegex, " ")
+
+            name = name.trim('-')
+
+            if (name.contains("Cour ", ignoreCase = true)) {
+                name = name.split("Cour ", ignoreCase = true)[0].trim()
+            }
+
+            name = name.trim()
+
             Anime(name, url, season) to episode
         }.filter { (anime, _) ->
             val subcontent = Browser(anime.url).launch()
