@@ -21,8 +21,11 @@ import javax.imageio.ImageIO
 class CalendarJob : Job {
     private val maxEpisodesPerImage = 7
 
-    private fun getHashtag(anime: Anime): String {
-        var name = anime.name.capitalizeWords()
+    fun getHashtag(animeName: String): String {
+        val regex1 = "-.*-".toRegex()
+        val regex2 = "Cour \\d*".toRegex()
+        val regex3 = "Saison \\d*".toRegex()
+        var name = animeName.capitalizeWords()
 
         if (name.contains(":")) {
             val splitted = name.split(":")
@@ -34,7 +37,12 @@ class CalendarJob : Job {
             }
         }
 
-        return name.split("-").first().onlyLettersAndDigits().trim('-').trim()
+        name = name.replace(regex1, "")
+        name = name.replace(regex2, "")
+        name = name.replace(regex3, "")
+        name = name.trim('-')
+
+        return name.trim().onlyLettersAndDigits()
     }
 
     override fun execute(p0: JobExecutionContext?) {
@@ -79,7 +87,7 @@ class CalendarJob : Job {
                 string = "📅 Votre calendrier #anime pour ce $day $date :\n"
 
                 episodes.shuffled().take(take).forEach {
-                    string += "\n#${getHashtag(it.first)} EP${it.second.split(" ")[1]}"
+                    string += "\n#${getHashtag(it.first.name)} EP${it.second.split(" ")[1]}"
                 }
 
                 string += """
