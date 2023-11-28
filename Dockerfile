@@ -5,7 +5,7 @@ RUN mvn clean package -DskipTests
 
 FROM mcr.microsoft.com/playwright:v1.40.0-jammy
 
-ARG version=17.0.8.8-1
+ARG version=21.0.1.12-1
 RUN set -eux \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
@@ -14,13 +14,13 @@ RUN set -eux \
     && add-apt-repository 'deb https://apt.corretto.aws stable main' \
     && mkdir -p /usr/share/man/man1 || true \
     && apt-get update \
-    && apt-get install -y java-17-amazon-corretto-jdk=1:"$version" \
+    && apt-get install -y java-21-amazon-corretto-jdk=1:"$version" \
     && apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false \
         curl gnupg software-properties-common \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 ENV LANG C.UTF-8
-ENV JAVA_HOME=/usr/lib/jvm/java-17-amazon-corretto
+ENV JAVA_HOME=/usr/lib/jvm/java-21-amazon-corretto
 
 COPY --from=build /app/target/scraper-1.0-SNAPSHOT-jar-with-dependencies.jar /app/scraper.jar
 
@@ -30,4 +30,4 @@ RUN ln -snf /usr/share/zoneinfo/"$TZ" /etc/localtime && echo "$TZ" > /etc/timezo
 RUN dpkg-reconfigure --frontend noninteractive tzdata
 
 WORKDIR /app
-CMD ["java", "-jar", "scraper.jar"]
+CMD ["java", "-XX:+UnlockExperimentalVMOptions", "-XX:+UseG1GC", "-XX:G1NewSizePercent=20", "-XX:G1ReservePercent=20", "-XX:MaxGCPauseMillis=50", "-XX:G1HeapRegionSize=32M", "-jar", "scraper.jar"]

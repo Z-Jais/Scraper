@@ -33,7 +33,9 @@ class CheckJob : Job {
         calendar: Calendar
     ) = allEpisodes.filter {
         val convertedReleaseDate = CalendarConverter.fromUTCDate(it.releaseDate)
-        calendar == convertedReleaseDate || calendar.toISO8601() == convertedReleaseDate?.toISO8601() || calendar.after(convertedReleaseDate)
+        calendar == convertedReleaseDate || calendar.toISO8601() == convertedReleaseDate?.toISO8601() || calendar.after(
+            convertedReleaseDate
+        )
     }
         .sortedWith(
             compareBy(
