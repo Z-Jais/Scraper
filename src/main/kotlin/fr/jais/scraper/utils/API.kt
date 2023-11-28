@@ -83,7 +83,8 @@ object API {
     }
 
     private fun createEpisodeType(type: EpisodeType): JsonObject? {
-        val response = post("${Const.apiUrl}episodetypes", JsonObject().apply { addProperty("name", type.name) }.toString())
+        val response =
+            post("${Const.apiUrl}episodetypes", JsonObject().apply { addProperty("name", type.name) }.toString())
         return if (response.statusCode() == 201) Const.gson.fromJson(response.body(), JsonObject::class.java) else null
     }
 
@@ -94,7 +95,8 @@ object API {
     }
 
     private fun createLangType(type: LangType): JsonObject? {
-        val response = post("${Const.apiUrl}langtypes", JsonObject().apply { addProperty("name", type.name) }.toString())
+        val response =
+            post("${Const.apiUrl}langtypes", JsonObject().apply { addProperty("name", type.name) }.toString())
         return if (response.statusCode() == 201) Const.gson.fromJson(response.body(), JsonObject::class.java) else null
     }
 

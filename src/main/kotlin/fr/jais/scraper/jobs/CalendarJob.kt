@@ -103,18 +103,21 @@ Bonne journée ! 😊"""
             } while (string.length > 250)
 
             Logger.info(string)
-            val anime = episodes.filter { it.first.image?.isNotBlank() == true }.map { it.first }.distinctBy { it.name.lowercase() }.random()
+            val anime = episodes.filter { it.first.image?.isNotBlank() == true }.map { it.first }
+                .distinctBy { it.name.lowercase() }.random()
 
             val images = episodes.chunked(maxEpisodesPerImage).map { chunked ->
-                imageToBase64(generateImage(
-                    font,
-                    chunked,
-                    ImageIO.read(URL(anime.image)).opacity(0.1F),
-                    adnImage,
-                    crunchyrollImage,
-                    netflixImage,
-                    disneyPlusImage,
-                ))
+                imageToBase64(
+                    generateImage(
+                        font,
+                        chunked,
+                        ImageIO.read(URL(anime.image)).opacity(0.1F),
+                        adnImage,
+                        crunchyrollImage,
+                        netflixImage,
+                        disneyPlusImage,
+                    )
+                )
             }
 
             API.saveCalendar(string, images)
@@ -267,12 +270,15 @@ Bonne journée ! 😊"""
                     anime.licences.contains("Animation Digital Network") -> {
                         adnImage
                     }
+
                     anime.licences.contains("Crunchyroll") -> {
                         crunchyrollImage
                     }
+
                     anime.licences.contains("Disney+") -> {
                         disneyPlusImage
                     }
+
                     else -> {
                         netflixImage
                     }
@@ -328,7 +334,7 @@ Bonne journée ! 😊"""
             ?: throw Exception("No anime today")
 
         val episodes = todayCalendar.getElementsByTag("td").mapNotNull {
-            val animeElement = it.getElementsByTag("a") ?: return@mapNotNull null
+            val animeElement = it.getElementsByTag("a")
 
             var name = animeElement.text().trim().replace(Const.multipleSpaceRegex, " ")
             val url = "${Const.calendarBaseUrl}${animeElement.attr("href")}"
