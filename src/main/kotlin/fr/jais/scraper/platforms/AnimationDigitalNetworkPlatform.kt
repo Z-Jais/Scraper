@@ -23,18 +23,27 @@ class AnimationDigitalNetworkPlatform(scraper: Scraper) :
         listOf(FranceCountry::class.java)
     ) {
     val converter = AnimationDigitalNetworkConverter(this)
+    private var apiContent: List<JsonObject>? = null
+    private var lastCheck = 0L
 
     private fun getAPIContent(checkedCountry: ICountry, calendar: Calendar): List<JsonObject>? {
         if (checkedCountry !is FranceCountry) throw CountryNotSupportedException("Country not supported")
 
-        return try {
-            val apiUrl = "https://gw.api.animationdigitalnetwork.fr/video/calendar?date=${calendar.toDate()}"
-            val content = URI(apiUrl).toURL().readText()
-            getVideosArray(content)
-        } catch (e: Exception) {
-            Logger.log(Level.SEVERE, "Error while getting API content", e)
-            null
+        if (apiContent == null || System.currentTimeMillis() - lastCheck > 1 * 60 * 60 * 1000) {
+            lastCheck = System.currentTimeMillis()
+            Logger.info("Getting API content...")
+
+            apiContent = try {
+                val apiUrl = "https://gw.api.animationdigitalnetwork.fr/video/calendar?date=${calendar.toDate()}"
+                val content = URI(apiUrl).toURL().readText()
+                getVideosArray(content)
+            } catch (e: Exception) {
+                Logger.log(Level.SEVERE, "Error while getting API content", e)
+                null
+            }
         }
+
+        return apiContent
     }
 
     fun getVideosArray(content: String) =
@@ -54,5 +63,9 @@ class AnimationDigitalNetworkPlatform(scraper: Scraper) :
                 }
             } ?: emptyList()
         }
+    }
+
+    override fun reset() {
+        apiContent = null
     }
 }
