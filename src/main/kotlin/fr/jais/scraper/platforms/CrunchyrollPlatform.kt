@@ -1,5 +1,8 @@
 package fr.jais.scraper.platforms
 
+import com.ctc.wstx.stax.WstxInputFactory
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.dataformat.xml.XmlMapper
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import fr.jais.scraper.Scraper
@@ -12,9 +15,10 @@ import fr.jais.scraper.exceptions.EpisodeException
 import fr.jais.scraper.utils.Browser
 import fr.jais.scraper.utils.Const
 import fr.jais.scraper.utils.Logger
-import java.net.URL
+import java.net.URI
 import java.util.*
 import java.util.logging.Level
+import javax.xml.stream.XMLInputFactory
 
 class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
     scraper,
@@ -26,13 +30,23 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
     val converter = CrunchyrollConverter(this)
     private var lastSimulcastCheck = 0L
     val simulcasts = mutableMapOf<ICountry, Set<String>>()
+    private val itemRegex = "<item>(.*?)</item>".toRegex()
+    private val xmlInputFactory = WstxInputFactory()
+    private val xmlMapper: XmlMapper
+    private val objectMapper = ObjectMapper()
+
+    init {
+        xmlInputFactory.configureForSpeed()
+        xmlInputFactory.setProperty(XMLInputFactory.IS_NAMESPACE_AWARE, false)
+        xmlMapper = XmlMapper(xmlInputFactory)
+    }
 
     fun getSimulcastCode(name: String): String {
         // Transform simulcastName to simulcastCode like "spring-2023"
-        val simulcastCodeTmp = name.lowercase().replace(" ", "-") // "Printemps 2023" -> "printemps-2023"
-        val simulcastYear = simulcastCodeTmp.split("-").last() // "printemps-2023" -> "2023"
+        val simulcastCodeTmp = name.lowercase().replace(" ", "-") // "Printemps 2023" → "printemps-2023"
+        val simulcastYear = simulcastCodeTmp.split("-").last() // "printemps-2023" → "2023"
 
-        val simulcastSeasonCode = when (simulcastCodeTmp.split("-").first()) { // "printemps-2023" -> "printemps"
+        val simulcastSeasonCode = when (simulcastCodeTmp.split("-").first()) { // "printemps-2023" → "printemps"
             "printemps" -> "spring"
             "été" -> "summer"
             "automne" -> "fall"
@@ -96,14 +110,20 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
         Logger.config("Simulcasts: ${combinedSimulcastAnimes.joinToString(", ")}")
     }
 
-    fun xmlToJson(content: String) =
-        Const.gson.fromJson(
-            Const.objectMapper.writeValueAsString(Const.xmlMapper.readTree(content)),
-            JsonObject::class.java
-        )
-            ?.getAsJsonObject("channel")?.getAsJsonArray("item")
+    fun xmlToJson(content: String): JsonArray {
+        val cleanedContent = content.replace("\n", "")
 
-    fun getLang(checkedCountry: ICountry): String {
+        return JsonArray().apply {
+            itemRegex.findAll(cleanedContent).forEach {
+                val xmlTree = xmlMapper.readTree(it.value)
+                val jsonRepresentation = objectMapper.writeValueAsString(xmlTree)
+                val jsonObject = Const.gson.fromJson(jsonRepresentation, JsonObject::class.java)
+                add(jsonObject)
+            }
+        }
+    }
+
+    private fun getLang(checkedCountry: ICountry): String {
         val lang = when (checkedCountry) {
             is FranceCountry -> "frFR"
             else -> throw CountryNotSupportedException("Country not supported")
@@ -116,7 +136,7 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
 
         return try {
             val apiUrl = "https://www.crunchyroll.com/rss/anime?lang=$lang"
-            val content = URL(apiUrl).readText()
+            val content = URI(apiUrl).toURL().readText()
             xmlToJson(content)
         } catch (e: Exception) {
             Logger.log(Level.SEVERE, "Error while getting API content", e)

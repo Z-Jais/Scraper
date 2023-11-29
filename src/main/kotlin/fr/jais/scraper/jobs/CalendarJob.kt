@@ -10,7 +10,7 @@ import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.io.File
-import java.net.URL
+import java.net.URI
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.TextStyle
@@ -111,7 +111,7 @@ Bonne journée ! 😊"""
                     generateImage(
                         font,
                         chunked,
-                        ImageIO.read(URL(anime.image)).opacity(0.1F),
+                        ImageIO.read(URI(anime.image!!).toURL()).opacity(0.1F),
                         adnImage,
                         crunchyrollImage,
                         netflixImage,

@@ -7,6 +7,7 @@ import fr.jais.scraper.entities.Country
 import fr.jais.scraper.entities.Episode
 import fr.jais.scraper.entities.Platform
 import java.net.URI
+import java.net.http.HttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpResponse
 import java.util.logging.Level
@@ -16,7 +17,12 @@ object API {
         val request = HttpRequest.newBuilder()
             .uri(URI.create(url))
             .build()
-        return Const.httpClient.send(request, HttpResponse.BodyHandlers.ofString())
+
+        val httpClient = HttpClient.newHttpClient()
+        val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
+        httpClient.close()
+
+        return response
     }
 
     private fun post(url: String, json: String): HttpResponse<String> {
@@ -30,7 +36,12 @@ object API {
 
         val request = requestBuilder.POST(HttpRequest.BodyPublishers.ofString(json))
             .build()
-        return Const.httpClient.send(request, HttpResponse.BodyHandlers.ofString())
+
+        val httpClient = HttpClient.newHttpClient()
+        val response = httpClient.send(request, HttpResponse.BodyHandlers.ofString())
+        httpClient.close()
+
+        return response
     }
 
     private fun getCountry(country: Country): JsonObject? {

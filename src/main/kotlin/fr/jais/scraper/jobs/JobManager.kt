@@ -25,8 +25,4 @@ class JobManager {
     fun start() {
         scheduler.start()
     }
-
-    fun shutdown() {
-        scheduler.shutdown()
-    }
 }
