@@ -10,7 +10,7 @@ import fr.jais.scraper.exceptions.CountryNotSupportedException
 import fr.jais.scraper.utils.Const
 import fr.jais.scraper.utils.Logger
 import fr.jais.scraper.utils.toDate
-import java.net.URL
+import java.net.URI
 import java.util.*
 import java.util.logging.Level
 
@@ -29,7 +29,7 @@ class AnimationDigitalNetworkPlatform(scraper: Scraper) :
 
         return try {
             val apiUrl = "https://gw.api.animationdigitalnetwork.fr/video/calendar?date=${calendar.toDate()}"
-            val content = URL(apiUrl).readText()
+            val content = URI(apiUrl).toURL().readText()
             getVideosArray(content)
         } catch (e: Exception) {
             Logger.log(Level.SEVERE, "Error while getting API content", e)

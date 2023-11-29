@@ -1,6 +1,5 @@
 package fr.jais.scraper.converters
 
-import com.google.gson.Gson
 import com.google.gson.JsonObject
 import fr.jais.scraper.countries.ICountry
 import fr.jais.scraper.entities.Anime
@@ -24,7 +23,7 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
             file.writeText("[]")
         }
 
-        val whitelistAnimes = Gson().fromJson(file.readText(), Array<String>::class.java).toList()
+        val whitelistAnimes = Const.gson.fromJson(file.readText(), Array<String>::class.java).toList()
 
         // ----- NAME -----
         Logger.info("Get name...")

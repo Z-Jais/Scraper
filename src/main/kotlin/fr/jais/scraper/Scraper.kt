@@ -8,7 +8,6 @@ import fr.jais.scraper.jobs.JobManager
 import fr.jais.scraper.platforms.AnimationDigitalNetworkPlatform
 import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.platforms.IPlatform
-import fr.jais.scraper.utils.Const
 import fr.jais.scraper.utils.Logger
 import fr.jais.scraper.utils.ThreadManager
 import java.io.File
@@ -70,7 +69,6 @@ class Scraper {
 fun main() {
     Logger.info("Initializing...")
     File("data").mkdirs()
-    Const.gson
     Logger.info("Initialization done!")
 
     Logger.info("Start command thread...")
