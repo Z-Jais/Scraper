@@ -34,6 +34,7 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
     private val xmlInputFactory = WstxInputFactory()
     private val xmlMapper: XmlMapper
     private val objectMapper = ObjectMapper()
+    private var previousContent: String? = null
 
     init {
         xmlInputFactory.configureForSpeed()
@@ -112,9 +113,17 @@ class CrunchyrollPlatform(scraper: Scraper) : IPlatform(
 
     fun xmlToJson(content: String): JsonArray {
         val cleanedContent = content.replace("\n", "")
+        val matchingItems = itemRegex.findAll(cleanedContent)
+        val actualContent = matchingItems.joinToString("||") { it.value }
 
+        if (actualContent == previousContent) {
+            Logger.warning("Content is the same as previous one, skipping...")
+            return JsonArray()
+        }
+
+        previousContent = actualContent
         return JsonArray().apply {
-            itemRegex.findAll(cleanedContent).forEach {
+            matchingItems.forEach {
                 val xmlTree = xmlMapper.readTree(it.value)
                 val jsonRepresentation = objectMapper.writeValueAsString(xmlTree)
                 val jsonObject = Const.gson.fromJson(jsonRepresentation, JsonObject::class.java)
