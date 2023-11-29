@@ -1,6 +1,5 @@
 package fr.jais.scraper.converters
 
-import com.google.gson.Gson
 import com.google.gson.JsonObject
 import fr.jais.scraper.countries.FranceCountry
 import fr.jais.scraper.countries.ICountry
@@ -15,9 +14,6 @@ import fr.jais.scraper.exceptions.episodes.*
 import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.utils.*
 import java.io.File
-import java.net.URI
-import java.net.http.HttpRequest
-import java.net.http.HttpResponse
 import java.util.*
 
 class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
@@ -29,9 +25,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         val description: String?
     )
 
-    private val useApi = false
     val cache = mutableListOf<CrunchyrollAnime>()
-    private val sessionId: String = crunchyrollSession()
     private val file = File("data/crunchyroll.json")
 
     fun getCountryTag(checkedCountry: ICountry): String {
@@ -42,67 +36,17 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         return country
     }
 
-    private fun crunchyrollSession(): String {
-        val request = HttpRequest.newBuilder()
-            .uri(URI.create("https://api.crunchyroll.com/start_session.0.json?access_token=LNDJgOit5yaRIWN&device_type=com.crunchyroll.windows.desktop&device_id=${UUID.randomUUID()}"))
-            .build()
-        val response = Const.httpClient.send(request, HttpResponse.BodyHandlers.ofString())
-
-        if (response.statusCode() != 200) {
-            throw Exception("Error while getting crunchyroll session ${response.statusCode()} : ${response.body()}")
-        }
-
-        return Const.gson.fromJson(response.body(), JsonObject::class.java)["data"].asJsonObject["session_id"].asString
-    }
-
-    private fun getSeriesId(mediaId: String): String {
-        val request = HttpRequest.newBuilder()
-            .uri(URI.create("https://api.crunchyroll.com/info.0.json?session_id=$sessionId&media_id=$mediaId"))
-            .build()
-        val response = Const.httpClient.send(request, HttpResponse.BodyHandlers.ofString())
-
-        if (response.statusCode() != 200) {
-            throw Exception("Error while getting crunchyroll session")
-        }
-
-        return Const.gson.fromJson(response.body(), JsonObject::class.java)["data"].asJsonObject["series_id"].asString
-    }
-
-    private fun getAnimeDetail(iCountry: ICountry, mediaId: String): Pair<String?, String?> {
-        val seriesId = getSeriesId(mediaId)
-
-        val request = HttpRequest.newBuilder()
-            .uri(
-                URI.create(
-                    "https://api.crunchyroll.com/info.0.json?session_id=$sessionId&series_id=$seriesId&locale=${
-                        platform.getLang(
-                            iCountry
-                        )
-                    }"
-                )
-            )
-            .build()
-        val response = Const.httpClient.send(request, HttpResponse.BodyHandlers.ofString())
-
-        if (response.statusCode() != 200) {
-            throw Exception("Error while getting crunchyroll session")
-        }
-
-        val data = Const.gson.fromJson(response.body(), JsonObject::class.java)["data"].asJsonObject
-        return data["portrait_image"].asJsonObject["full_url"].asString to data["description"].asString
-    }
-
     private fun convertAnime(checkedCountry: ICountry, jsonObject: JsonObject): Anime {
         if (!file.exists()) {
             file.createNewFile()
             file.writeText("[]")
         }
 
-        val whitelistAnimes = Gson().fromJson(file.readText(), Array<String>::class.java).toList()
+        val whitelistAnimes = Const.gson.fromJson(file.readText(), Array<String>::class.java).toList()
 
         // ----- NAME -----
         Logger.info("Get name...")
-        val name = jsonObject["seriesTitle"]?.asString() ?: throw AnimeNameNotFoundException("No name found")
+        val name = jsonObject["crunchyroll:seriesTitle"]?.asString() ?: throw AnimeNameNotFoundException("No name found")
         Logger.config("Name: $name")
 
         if (!whitelistAnimes.contains(name) && (!isFilm(jsonObject) && platform.simulcasts[checkedCountry]?.contains(
@@ -134,16 +78,9 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
             val split = episodeUrl?.split("/")
             val animeId = split?.get(split.size - 2) ?: throw AnimeNotFoundException("No anime id found in $episodeUrl")
 
-            if (useApi) {
-                val pair = getFromApi(jsonObject, checkedCountry)
-                description = pair.first
-                image = pair.second
-            } else {
-                val pair = parseWebsite(checkedCountry, animeId)
-                description = pair.first
-                image = pair.second
-            }
-
+            val (pDescription, pImage) = parseWebsite(checkedCountry, animeId)
+            description = pDescription
+            image = pImage
             if (image.isNullOrBlank()) throw AnimeImageNotFoundException("No image found")
 
             cache.add(CrunchyrollAnime(checkedCountry, animeId, name, image, description))
@@ -151,7 +88,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
 
         // ----- GENRES -----
         Logger.info("Get genres...")
-        val genres = jsonObject["keywords"]?.asString()?.split(", ") ?: emptyList()
+        val genres = jsonObject["media:keywords"]?.asString()?.split(", ") ?: emptyList()
         Logger.config("Genres: ${genres.joinToString(", ")}")
 
         return Anime(checkedCountry.getCountry(), name, image, description, genres)
@@ -190,19 +127,6 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         return Pair(description, image)
     }
 
-    private fun getFromApi(
-        jsonObject: JsonObject,
-        checkedCountry: ICountry,
-    ): Pair<String?, String?> {
-        // ----- MEDIA ID -----
-        Logger.info("Get media id...")
-        val id = jsonObject["mediaId"]?.asString() ?: throw EpisodeIdNotFoundException("No media id found")
-        Logger.config("Media id: $id")
-
-        val animeDetail = getAnimeDetail(checkedCountry, id)
-        return Pair(animeDetail.second, animeDetail.first ?: "")
-    }
-
     private fun getInCache(
         crunchyrollAnime: CrunchyrollAnime,
         iCountry: ICountry,
@@ -229,7 +153,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
         // ----- RESTRICTIONS -----
         Logger.info("Get restrictions...")
         val countryRestrictions =
-            jsonObject.getAsJsonObject("restriction")?.get("")?.asString?.split(" ") ?: emptyList()
+            jsonObject.getAsJsonObject("media:restriction")?.get("")?.asString?.split(" ") ?: emptyList()
         val restrictionTag = getCountryTag(checkedCountry)
         Logger.config("Country restrictions: ${countryRestrictions.joinToString(", ")}")
         Logger.config("Restriction tag: $restrictionTag")
@@ -240,7 +164,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
 
         // ----- SUBTITLES -----
         Logger.info("Get subtitles...")
-        val subtitles = jsonObject["subtitleLanguages"]?.asString?.split(",") ?: emptyList()
+        val subtitles = jsonObject["crunchyroll:subtitleLanguages"]?.asString?.split(",") ?: emptyList()
         val countrySubtitles = when (checkedCountry) {
             is FranceCountry -> "fr - fr"
             else -> throw CountryNotSupportedException("Country not supported: $checkedCountry")
@@ -254,7 +178,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
 
         // ----- ID -----
         Logger.info("Get id...")
-        val id = jsonObject["mediaId"]?.asLong() ?: throw EpisodeIdNotFoundException("No id found")
+        val id = jsonObject["crunchyroll:mediaId"]?.asString?.toLongOrNull() ?: throw EpisodeIdNotFoundException("No id found")
         Logger.config("Id: $id")
 
         // ----- LANG TYPE -----
@@ -287,7 +211,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
 
         // ----- SEASON -----
         Logger.info("Get season...")
-        val season = jsonObject["season"]?.asString()?.toIntOrNull() ?: run {
+        val season = jsonObject["crunchyroll:season"]?.asString()?.toIntOrNull() ?: run {
             Logger.warning("No season found, using 1")
             1
         }
@@ -295,7 +219,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
 
         // ----- NUMBER -----
         Logger.info("Get number...")
-        val number = jsonObject["episodeNumber"]?.asString()?.toIntOrNull() ?: run {
+        val number = jsonObject["crunchyroll:episodeNumber"]?.asString()?.toIntOrNull() ?: run {
             Logger.warning("No number found, using -1...")
             -1
         }
@@ -309,7 +233,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
 
         // ----- TITLE -----
         Logger.info("Get title...")
-        val title = jsonObject["episodeTitle"]?.asString() ?: run {
+        val title = jsonObject["crunchyroll:episodeTitle"]?.asString() ?: run {
             Logger.warning("No title found")
             null
         }
@@ -322,7 +246,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
 
         // ----- IMAGE -----
         Logger.info("Get image...")
-        val thumbnails = jsonObject.getAsJsonArray("thumbnail")?.mapNotNull { it.asJsonObject() }
+        val thumbnails = jsonObject.getAsJsonArray("media:thumbnail")?.mapNotNull { it.asJsonObject() }
         val largeThumbnail = thumbnails?.maxByOrNull { it["width"].asLong }
         val image = largeThumbnail?.get("url")?.asString()?.toHTTPS()
             ?: "https://jais.ziedelth.fr/attachments/banner_640x360.png"
@@ -330,7 +254,7 @@ class CrunchyrollConverter(private val platform: CrunchyrollPlatform) {
 
         // ----- DURATION -----
         Logger.info("Get duration...")
-        val duration = jsonObject["duration"]?.asLong() ?: run {
+        val duration = jsonObject["crunchyroll:duration"]?.asLong() ?: run {
             Logger.warning("No duration found, using -1...")
             -1
         }

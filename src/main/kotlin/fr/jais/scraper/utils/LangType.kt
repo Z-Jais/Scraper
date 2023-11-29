@@ -10,7 +10,7 @@ enum class LangType(vararg data: String) {
 
     companion object {
         fun fromString(string: String): LangType {
-            return values().firstOrNull { it.data.contains(string.lowercase()) } ?: UNKNOWN
+            return entries.firstOrNull { it.data.contains(string.lowercase()) } ?: UNKNOWN
         }
     }
 }
