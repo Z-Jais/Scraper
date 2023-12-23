@@ -19,7 +19,7 @@ data class Episode(
     val image: String,
     val duration: Long
 ) {
-    val hash = calculateHash(platform, id, anime.country.tag, langType)
+    var hash = calculateHash(platform, id, anime.country.tag, langType)
 
     init {
         title = title?.ifBlank { null }
