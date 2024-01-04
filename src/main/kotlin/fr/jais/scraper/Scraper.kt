@@ -8,6 +8,7 @@ import fr.jais.scraper.jobs.JobManager
 import fr.jais.scraper.platforms.AnimationDigitalNetworkPlatform
 import fr.jais.scraper.platforms.CrunchyrollPlatform
 import fr.jais.scraper.platforms.IPlatform
+import fr.jais.scraper.platforms.NetflixPlatform
 import fr.jais.scraper.utils.Logger
 import fr.jais.scraper.utils.ThreadManager
 import java.io.File
@@ -17,6 +18,7 @@ class Scraper {
     val platforms = listOf(
         AnimationDigitalNetworkPlatform(this),
         CrunchyrollPlatform(this),
+        NetflixPlatform(this),
     )
     val countries = platforms.flatMap { it.countries }.distinct().mapNotNull { it.getConstructor().newInstance() }
     private val jobManager = JobManager()
