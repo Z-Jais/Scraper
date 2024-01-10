@@ -55,21 +55,24 @@ class AnimationDigitalNetworkConverter(private val platform: AnimationDigitalNet
         val genres = showJson.getAsJsonArray("genres")?.mapNotNull { it.asString() } ?: emptyList()
         Logger.config("Genres: ${genres.joinToString(", ")}")
 
+        val contains = whitelistAnimes.contains(name)
+
+        if ((!genres.any { it.startsWith("Animation ", true) }) && !contains) throw NotJapaneseAnimeException("Show is not an anime")
+
         // ----- SIMULCAST -----
         Logger.info("Checking if anime is simulcasted...")
-        val simulcasted =
-            showJson["simulcast"]?.asBoolean == true || showJson["firstReleaseYear"]?.asString == calendar.getYear()
+        var simulcasted =
+            showJson["simulcast"]?.asBoolean == true || showJson["firstReleaseYear"]?.asString == calendar.getYear() || contains
         Logger.config("Simulcasted: $simulcasted")
 
-        val descriptionLowercase = description?.lowercase()
-        val isAlternativeSimulcast =
-            (whitelistAnimes.contains(name) || genres.any { it.startsWith("Animation ", true) }) ||
-                    (descriptionLowercase?.startsWith("(Premier épisode ".lowercase()) == true ||
-                            descriptionLowercase?.startsWith("(Diffusion des ".lowercase()) == true ||
-                            descriptionLowercase?.startsWith("(Diffusion du premier épisode".lowercase()) == true ||
-                            descriptionLowercase?.startsWith("(Diffusion de l'épisode 1 le".lowercase()) == true)
+        val descriptionLowercase = description?.lowercase() ?: ""
 
-        if (!simulcasted && !isAlternativeSimulcast) throw NotSimulcastAnimeException("Anime is not simulcasted")
+        simulcasted = simulcasted || descriptionLowercase.startsWith("(premier épisode ") ||
+                descriptionLowercase.startsWith("(diffusion des ") ||
+                descriptionLowercase.startsWith("(diffusion du premier épisode") ||
+                descriptionLowercase.startsWith("(diffusion de l'épisode 1 le")
+
+        if (!simulcasted) throw NotSimulcastAnimeException("Anime is not simulcasted")
 
         return Anime(checkedCountry.getCountry(), name, image, description, genres)
     }
